@@ -401,9 +401,16 @@ const closeClassForm = () => {
 const saveClass = async (payload: any) => {
   isSavingClass.value = true
   try {
-    const { error } = editingClass.value?.id
-      ? await supabase.from('turmas').update(payload).eq('id', editingClass.value.id)
-      : await supabase.from('turmas').insert(payload)
+    const { error } = await (supabase as any).rpc('salvar_turma', {
+      p_id: editingClass.value?.id || null,
+      p_modalidade_id: payload.modalidade_id,
+      p_professor_id: payload.professor_id,
+      p_sala_id: payload.sala_id,
+      p_dia_semana: payload.dia_semana,
+      p_horario_inicio: payload.horario_inicio,
+      p_horario_fim: payload.horario_fim,
+      p_capacidade_maxima: payload.capacidade_maxima
+    })
     if (error) throw error
     await refreshTurmas()
     closeClassForm()
@@ -417,7 +424,7 @@ const saveClass = async (payload: any) => {
 const deactivateClass = async (classData: any) => {
   if (!classData?.id || !confirm('Desativar esta turma? Os históricos e matrículas serão preservados.')) return
   isSavingClass.value = true
-  const { error } = await supabase.from('turmas').update({ ativo: false }).eq('id', classData.id)
+  const { error } = await (supabase as any).rpc('inativar_turma', { p_turma_id: classData.id })
   isSavingClass.value = false
   if (error) {
     alert(`Não foi possível desativar a turma. ${error.message}`)

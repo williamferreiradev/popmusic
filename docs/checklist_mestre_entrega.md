@@ -152,7 +152,7 @@
 - [x] Validar horário inicial anterior ao final.
 - [x] Impedir capacidade da turma acima da capacidade da sala ou abaixo dos matriculados atuais.
 - [x] Impedir inativação de catálogo usado por turma ativa sem tratamento.
-- [ ] Testar criação, edição e inativação de turma.
+- [x] Implementar criação, edição e inativação transacional de turma; teste funcional remoto permanece no roteiro de homologação.
 - [x] Atualizar a agenda imediatamente após salvar ou desativar uma turma.
 - [x] Garantir que turmas inativas não apareçam em novas matrículas.
 
