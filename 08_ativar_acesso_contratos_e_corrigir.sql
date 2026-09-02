@@ -1,0 +1,8 @@
+-- ARQUIVO LEGADO - NAO EXECUTAR
+--
+-- Este arquivo concedia FOR ALL para anon nas tabelas financeiras e de
+-- frequencia. Executa-lo depois das novas migracoes reabriria o banco.
+-- Use, nesta ordem:
+--   1. supabase/migrations/202608310001_security_hardening.sql
+--   2. supabase/migrations/202608310002_integrity_audit.sql
+--   3. supabase/migrations/202608310003_integrity_constraints.sql

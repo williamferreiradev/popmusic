@@ -1,0 +1,8 @@
+-- ARQUIVO LEGADO - NAO EXECUTAR
+--
+-- Este script tornava fotografias faciais publicas e permitia upload anonimo.
+-- O bucket agora e fechado pela migracao:
+--   supabase/migrations/202608310001_security_hardening.sql
+--
+-- Novos campos do banco devem ser adicionados por uma migracao versionada
+-- somente depois de confirmar o schema real do projeto conectado.

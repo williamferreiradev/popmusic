@@ -1,0 +1,6 @@
+-- ARQUIVO LEGADO - NAO EXECUTAR
+--
+-- As policies deste arquivo davam acesso anonimo a alunos, contratos,
+-- cobrancas, matriculas e presencas. Elas foram substituidas por policies por
+-- papel em:
+--   supabase/migrations/202608310001_security_hardening.sql

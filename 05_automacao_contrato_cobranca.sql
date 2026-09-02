@@ -1,0 +1,12 @@
+-- ARQUIVO LEGADO - NAO EXECUTAR
+--
+-- A automacao anterior usava colunas que nao existem no schema atual
+-- (data_inicio, data_fim, data_vencimento e mes_referencia), adotava R$ 250
+-- como mensalidade e podia duplicar as cobrancas geradas pela aplicacao.
+--
+-- O fluxo de assinatura deve ser executado exclusivamente pelo backend com
+-- service_role e, na proxima etapa, sera consolidado em uma RPC transacional.
+-- As correcoes atuais estao em:
+--   supabase/migrations/202608310001_security_hardening.sql
+--   supabase/migrations/202608310002_integrity_audit.sql
+--   supabase/migrations/202608310003_integrity_constraints.sql
