@@ -18,17 +18,18 @@
             <th class="py-3 px-4">Nome</th>
             <th class="py-3 px-4">Modalidade Padrão</th>
             <th class="py-3 px-4 text-center">Capacidade Máxima</th>
+            <th class="py-3 px-4 text-center">Status</th>
             <th class="py-3 px-4 w-24 text-center">Ações</th>
           </tr>
         </thead>
         <tbody class="text-sm">
           <tr v-if="pending">
-            <td colspan="4" class="py-8 text-center">
+            <td colspan="5" class="py-8 text-center">
               <div class="flex justify-center"><Loader2 class="w-6 h-6 animate-spin text-primary" /></div>
             </td>
           </tr>
           <tr v-else-if="!rooms || rooms.length === 0">
-            <td colspan="4" class="py-8 text-center text-light-text/50 dark:text-offwhite/50">Nenhuma sala cadastrada ainda.</td>
+            <td colspan="5" class="py-8 text-center text-light-text/50 dark:text-offwhite/50">Nenhuma sala cadastrada ainda.</td>
           </tr>
           <tr 
             v-else
@@ -39,13 +40,14 @@
             <td class="py-3 px-4 font-medium text-light-text dark:text-offwhite">{{ room.name }}</td>
             <td class="py-3 px-4 text-light-text dark:text-offwhite">{{ room.defaultModalityName }}</td>
             <td class="py-3 px-4 text-center text-light-text dark:text-offwhite">{{ room.capacity }} alunos</td>
+            <td class="py-3 px-4 text-center"><BaseBadge :variant="room.active ? 'success' : 'neutral'">{{ room.active ? 'Ativa' : 'Inativa' }}</BaseBadge></td>
             <td class="py-3 px-4 text-center">
               <div class="flex items-center justify-center gap-2">
                 <button @click="openModal(room)" class="p-1.5 text-light-text/60 dark:text-offwhite/60 hover:text-primary transition-colors" title="Editar">
                   <Pencil class="w-4 h-4" />
                 </button>
-                <button @click="confirmDelete(room)" class="p-1.5 text-light-text/60 dark:text-offwhite/60 hover:text-red-500 transition-colors" title="Excluir">
-                  <Trash2 class="w-4 h-4" />
+                <button @click="toggleActive(room)" class="p-1.5 text-light-text/60 dark:text-offwhite/60 transition-colors" :class="room.active ? 'hover:text-red-500' : 'hover:text-green-500'" :title="room.active ? 'Inativar' : 'Reativar'">
+                  <UserX v-if="room.active" class="w-4 h-4" /><UserCheck v-else class="w-4 h-4" />
                 </button>
               </div>
             </td>
@@ -78,11 +80,12 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Plus, Pencil, Trash2, Loader2 } from '@lucide/vue'
+import { Plus, Pencil, UserCheck, UserX, Loader2 } from '@lucide/vue'
 import BaseButton from '../BaseButton.vue'
 import BaseModal from '../BaseModal.vue'
 import BaseInput from '../BaseInput.vue'
 import BaseSelect from '../BaseSelect.vue'
+import BaseBadge from '../BaseBadge.vue'
 
 const emit = defineEmits(['unsaved-changes'])
 const supabase = useSupabaseClient()
@@ -105,7 +108,7 @@ const { data: rooms, pending, refresh } = await useAsyncData('config_salas', asy
     .select(`
       *,
       modalidades (nome),
-      turmas (id)
+      turmas (id, ativo)
     `)
     .order('nome')
 
@@ -117,7 +120,7 @@ const { data: rooms, pending, refresh } = await useAsyncData('config_salas', asy
   return (data || []).map((room: any) => {
     let activeClasses = 0
     if (room.turmas) {
-      activeClasses = room.turmas.length // Considera todas vinculadas como ativas ou relevantes para bloqueio
+      activeClasses = room.turmas.filter((item: any) => item.ativo).length
     }
     return {
       id: room.id,
@@ -126,6 +129,7 @@ const { data: rooms, pending, refresh } = await useAsyncData('config_salas', asy
       defaultModalityId: room.modalidade_padrao_id || '',
       defaultModalityName: room.modalidades?.nome || 'Uso geral',
       activeClasses,
+      active: room.ativo,
       raw: room
     }
   })
@@ -163,28 +167,11 @@ const save = async () => {
   const modalidade_padrao_id = formData.value.defaultModality ? formData.value.defaultModality : null
   
   try {
-    if (isEditing.value) {
-      const { error } = await supabase
-        .from('salas')
-        .update({
-          nome: formData.value.name,
-          capacidade_padrao: capacity,
-          modalidade_padrao_id
-        })
-        .eq('id', formData.value.id)
-        
-      if (error) throw error
-    } else {
-      const { error } = await supabase
-        .from('salas')
-        .insert({
-          nome: formData.value.name,
-          capacidade_padrao: capacity,
-          modalidade_padrao_id
-        })
-        
-      if (error) throw error
-    }
+    const { error } = await (supabase as any).rpc('salvar_sala', {
+      p_id: isEditing.value ? formData.value.id : null,
+      p_nome: formData.value.name, p_capacidade: capacity, p_modalidade_id: modalidade_padrao_id
+    })
+    if (error) throw error
     await refresh()
     closeModal()
   } catch (error: any) {
@@ -195,21 +182,11 @@ const save = async () => {
   }
 }
 
-const confirmDelete = async (room: any) => {
-  if (room.activeClasses > 0) {
-    alert(`Esta sala tem ${room.activeClasses} turmas ativas vinculadas e não pode ser excluída. Aloque as turmas em outra sala primeiro.`)
-    return
-  }
-  
-  if (confirm(`Tem certeza que deseja excluir ${room.name}?`)) {
-    try {
-      const { error } = await supabase.from('salas').delete().eq('id', room.id)
-      if (error) throw error
-      await refresh()
-    } catch (error: any) {
-      console.error('Erro ao excluir sala:', error)
-      alert(`Não foi possível excluir. ${error.message || 'Tente novamente.'}`)
-    }
-  }
+const toggleActive = async (room: any) => {
+  const action = room.active ? 'inativar' : 'reativar'
+  if (!confirm(`Deseja ${action} ${room.name}?`)) return
+  const { error } = await (supabase as any).rpc('alterar_status_sala', { p_sala_id: room.id, p_ativo: !room.active })
+  if (error) { alert(`Não foi possível ${action}. ${error.message}`); return }
+  await refresh()
 }
 </script>

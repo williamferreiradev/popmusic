@@ -19,17 +19,18 @@
             <th class="py-3 px-4">Valor Padrão</th>
             <th class="py-3 px-4">Cor no Calendário</th>
             <th class="py-3 px-4 text-center">Alunos Vinculados</th>
+            <th class="py-3 px-4 text-center">Status</th>
             <th class="py-3 px-4 w-24 text-center">Ações</th>
           </tr>
         </thead>
         <tbody class="text-sm">
           <tr v-if="pending">
-            <td colspan="5" class="py-8 text-center">
+            <td colspan="6" class="py-8 text-center">
               <div class="flex justify-center"><Loader2 class="w-6 h-6 animate-spin text-primary" /></div>
             </td>
           </tr>
           <tr v-else-if="!modalities || modalities.length === 0">
-            <td colspan="5" class="py-8 text-center text-light-text/50 dark:text-offwhite/50">Nenhuma modalidade cadastrada ainda.</td>
+            <td colspan="6" class="py-8 text-center text-light-text/50 dark:text-offwhite/50">Nenhuma modalidade cadastrada ainda.</td>
           </tr>
           <tr 
             v-else
@@ -46,13 +47,14 @@
               </div>
             </td>
             <td class="py-3 px-4 text-center text-light-text dark:text-offwhite">{{ mod.activeStudents }}</td>
+            <td class="py-3 px-4 text-center"><BaseBadge :variant="mod.active ? 'success' : 'neutral'">{{ mod.active ? 'Ativa' : 'Inativa' }}</BaseBadge></td>
             <td class="py-3 px-4 text-center">
               <div class="flex items-center justify-center gap-2">
                 <button @click="openModal(mod)" class="p-1.5 text-light-text/60 dark:text-offwhite/60 hover:text-primary transition-colors" title="Editar">
                   <Pencil class="w-4 h-4" />
                 </button>
-                <button @click="confirmDelete(mod)" class="p-1.5 text-light-text/60 dark:text-offwhite/60 hover:text-red-500 transition-colors" title="Excluir">
-                  <Trash2 class="w-4 h-4" />
+                <button @click="toggleActive(mod)" class="p-1.5 text-light-text/60 dark:text-offwhite/60 transition-colors" :class="mod.active ? 'hover:text-red-500' : 'hover:text-green-500'" :title="mod.active ? 'Inativar' : 'Reativar'">
+                  <UserX v-if="mod.active" class="w-4 h-4" /><UserCheck v-else class="w-4 h-4" />
                 </button>
               </div>
             </td>
@@ -97,10 +99,11 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Plus, Pencil, Trash2, Loader2 } from '@lucide/vue'
+import { Plus, Pencil, UserCheck, UserX, Loader2 } from '@lucide/vue'
 import BaseButton from '../BaseButton.vue'
 import BaseModal from '../BaseModal.vue'
 import BaseInput from '../BaseInput.vue'
+import BaseBadge from '../BaseBadge.vue'
 
 const emit = defineEmits(['unsaved-changes'])
 const supabase = useSupabaseClient()
@@ -110,7 +113,7 @@ const { data: modalities, pending, refresh } = await useAsyncData('config_modali
     .from('modalidades')
     .select(`
       *,
-      turmas (
+      turmas ( id, ativo,
         matriculas_turma ( id, data_fim )
       )
     `)
@@ -136,6 +139,8 @@ const { data: modalities, pending, refresh } = await useAsyncData('config_modali
       price: mod.valor_padrao_mensalidade || 0,
       color: mod.cor_calendario || '#7A1F1F',
       activeStudents: activeCount,
+      active: mod.ativo,
+      activeClasses: (mod.turmas || []).filter((item: any) => item.ativo).length,
       raw: mod
     }
   })
@@ -174,29 +179,11 @@ const save = async () => {
   const price = parseFloat(formData.value.price)
   
   try {
-    if (isEditing.value) {
-      const { error } = await supabase
-        .from('modalidades')
-        .update({
-          nome: formData.value.name,
-          valor_padrao_mensalidade: price,
-          cor_calendario: formData.value.color
-        })
-        .eq('id', formData.value.id)
-        
-      if (error) throw error
-    } else {
-      const { error } = await supabase
-        .from('modalidades')
-        .insert({
-          nome: formData.value.name,
-          valor_padrao_mensalidade: price,
-          cor_calendario: formData.value.color,
-          ativo: true
-        })
-        
-      if (error) throw error
-    }
+    const { error } = await (supabase as any).rpc('salvar_modalidade', {
+      p_id: isEditing.value ? formData.value.id : null,
+      p_nome: formData.value.name, p_valor: price, p_cor: formData.value.color
+    })
+    if (error) throw error
     await refresh()
     closeModal()
   } catch (error: any) {
@@ -207,21 +194,11 @@ const save = async () => {
   }
 }
 
-const confirmDelete = async (mod: any) => {
-  if (mod.activeStudents > 0) {
-    alert(`Esta modalidade tem ${mod.activeStudents} alunos vinculados e não pode ser excluída. Migre os alunos para outra modalidade primeiro.`)
-    return
-  }
-  
-  if (confirm(`Tem certeza que deseja excluir ${mod.name}?`)) {
-    try {
-      const { error } = await supabase.from('modalidades').delete().eq('id', mod.id)
-      if (error) throw error
-      await refresh()
-    } catch (error: any) {
-      console.error('Erro ao excluir modalidade:', error)
-      alert(`Não foi possível excluir. ${error.message || 'Tente novamente.'}`)
-    }
-  }
+const toggleActive = async (mod: any) => {
+  const action = mod.active ? 'inativar' : 'reativar'
+  if (!confirm(`Deseja ${action} ${mod.name}?`)) return
+  const { error } = await (supabase as any).rpc('alterar_status_modalidade', { p_modalidade_id: mod.id, p_ativo: !mod.active })
+  if (error) { alert(`Não foi possível ${action}. ${error.message}`); return }
+  await refresh()
 }
 </script>

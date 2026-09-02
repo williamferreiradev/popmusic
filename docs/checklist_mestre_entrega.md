@@ -144,14 +144,14 @@
 ## 7. Modalidades, salas, professores e turmas — P0
 
 - [ ] Testar criação, edição, inativação e reativação de modalidade.
-- [ ] Impedir modalidade duplicada ou definir a regra para nomes iguais.
+- [x] Impedir modalidade duplicada ou definir a regra para nomes iguais.
 - [ ] Testar criação, edição, inativação e reativação de sala.
 - [x] Validar capacidade da sala maior que zero.
 - [x] Impedir conflito de sala no mesmo dia e horário, inclusive em gravações simultâneas.
 - [x] Impedir conflito de professor no mesmo dia e horário, inclusive em gravações simultâneas.
 - [x] Validar horário inicial anterior ao final.
 - [x] Impedir capacidade da turma acima da capacidade da sala ou abaixo dos matriculados atuais.
-- [ ] Impedir inativação de catálogo usado por turma ativa sem tratamento.
+- [x] Impedir inativação de catálogo usado por turma ativa sem tratamento.
 - [ ] Testar criação, edição e inativação de turma.
 - [x] Atualizar a agenda imediatamente após salvar ou desativar uma turma.
 - [x] Garantir que turmas inativas não apareçam em novas matrículas.
