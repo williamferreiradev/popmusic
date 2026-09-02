@@ -179,6 +179,7 @@ export default defineEventHandler(async (event) => {
           method: 'POST',
           headers: { 'x-internal-email-secret': process.env.INTERNAL_EMAIL_SECRET || '' },
           body: {
+            contractId: contract.id,
             studentName: aluno.nome,
             studentEmail: aluno.email,
             guardianName: isMenor ? (aluno.responsavel_nome || aluno.nome_responsavel) : undefined,

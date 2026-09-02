@@ -215,7 +215,7 @@
 - [ ] Validar domínio e remetente no Resend.
 - [x] Não retornar sucesso quando o provedor de e-mail não estiver configurado.
 - [x] Verificar `response.ok` e tratar falhas HTTP do provedor.
-- [ ] Registrar tentativa, destinatário, provedor, status e erro.
+- [x] Registrar tentativa, destinatário mascarado, provedor, status e código de erro.
 - [ ] Testar e-mail de contrato, confirmação, recibo e reenvio.
 - [ ] Testar endereço inválido, rejeição, timeout e indisponibilidade do provedor.
 - [ ] Escolher e configurar o provedor de WhatsApp.

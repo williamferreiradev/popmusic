@@ -1,8 +1,11 @@
 import { serverSupabaseServiceRole } from '#supabase/server'
 import { safeServerError } from '../utils/safeLog'
+import { finishEmailDelivery, startEmailDelivery } from '../utils/emailDeliveryLog'
 const escapeHtml = (value: unknown) => String(value ?? '').replace(/[&<>'"]/g, char => ({ '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;' }[char]!))
 
 export default defineEventHandler(async (event) => {
+  let admin: any = null
+  let deliveryId: string | null = null
   try {
     const internalSecret = process.env.INTERNAL_EMAIL_SECRET
     if (!internalSecret || getHeader(event, 'x-internal-email-secret') !== internalSecret) throw createError({ statusCode: 401, statusMessage: 'Chamada não autorizada.' })
@@ -13,13 +16,13 @@ export default defineEventHandler(async (event) => {
     const parsedUrl=new URL(String(body.contractUrl||'')), appUrl=useRuntimeConfig(event).public?.appUrl||getRequestURL(event).origin
     if(parsedUrl.origin!==new URL(appUrl).origin||!parsedUrl.pathname.startsWith('/assinar/')) throw createError({statusCode:400,statusMessage:'Link de contrato inválido.'})
     const contractUrl=escapeHtml(parsedUrl.toString())
-    const admin=serverSupabaseServiceRole(event) as any
+    admin=serverSupabaseServiceRole(event) as any
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(studentEmail)||!studentName) throw createError({statusCode:400,statusMessage:'Destinatário inválido.'})
+    deliveryId=await startEmailDelivery(admin,'contrato_confirmacao',studentEmail,body.contractId)
     const {data:escolaRow}=await admin.from('configuracoes').select('valor').eq('chave','escola').maybeSingle()
     const escola:any=escolaRow?.valor||{}, pixKey=escapeHtml(escola.pix_chave), escolaNome=escapeHtml(escola.nome||'Pop Music')
     const escolaRodape=[escola.cnpj,escola.endereco,escola.telefone,escola.email].filter(Boolean).map(escapeHtml).join(' • ')
     if(!escola.email_remetente) throw createError({statusCode:503,statusMessage:'E-mail remetente não configurado.'})
-
-    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(studentEmail)||!studentName) throw createError({statusCode:400,statusMessage:'Destinatário inválido.'})
 
     const greetingName = guardianName ? `${guardianName} (Responsável por ${studentName})` : studentName
 
@@ -117,10 +120,12 @@ export default defineEventHandler(async (event) => {
       })
 
       const resData = await res.json().catch(() => ({}))
-      if (!res.ok) throw createError({ statusCode: 502, statusMessage: `Falha no provedor de e-mail (${res.status}).` })
+      if (!res.ok) throw createError({ statusCode: 502, statusMessage: `Falha no provedor de e-mail (${res.status}).`, data: { providerStatus: res.status } })
+      await finishEmailDelivery(admin,deliveryId,'enviado',{providerId:String(resData?.id||'')})
       return { success: true, provider: 'resend', data: resData }
     }
   } catch (error: any) {
+    await finishEmailDelivery(admin,deliveryId,'falhou',{errorCode:String(error?.data?.providerStatus||error?.statusCode||error?.code||'UNEXPECTED')})
     safeServerError('email:confirmacao', error)
     throw error
   }

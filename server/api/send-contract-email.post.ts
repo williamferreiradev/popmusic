@@ -1,13 +1,16 @@
 import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 import { safeServerError } from '../utils/safeLog'
+import { finishEmailDelivery, startEmailDelivery } from '../utils/emailDeliveryLog'
 
 const escapeHtml = (value: unknown) => String(value ?? '').replace(/[&<>'"]/g, char => ({ '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;' }[char]!))
 
 export default defineEventHandler(async (event) => {
+  let admin: any = null
+  let deliveryId: string | null = null
   try {
     const authUser = await serverSupabaseUser(event)
     if (!authUser) throw createError({ statusCode: 401, statusMessage: 'Autenticação obrigatória.' })
-    const admin = serverSupabaseServiceRole(event) as any
+    admin = serverSupabaseServiceRole(event) as any
     const { data: requester } = await admin.from('usuarios').select('papel,ativo').eq('id', authUser.id).maybeSingle()
     if (!requester?.ativo || requester.papel !== 'gestao') throw createError({ statusCode: 403, statusMessage: 'Apenas a gestão pode enviar contratos.' })
     const body = await readBody(event)
@@ -22,6 +25,7 @@ export default defineEventHandler(async (event) => {
     const signUrl = escapeHtml(parsedUrl.toString())
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(studentEmail) || !studentName) throw createError({ statusCode: 400, statusMessage: 'Dados do destinatário inválidos.' })
+    deliveryId = await startEmailDelivery(admin, 'contrato_assinatura', studentEmail, body.contractId)
     const { data: escolaRow } = await admin.from('configuracoes').select('valor').eq('chave','escola').maybeSingle()
     const escola:any = escolaRow?.valor || {}
     const escolaNome = escapeHtml(escola.nome || 'Pop Music')
@@ -112,10 +116,12 @@ export default defineEventHandler(async (event) => {
       })
 
       const resData = await res.json().catch(() => ({}))
-      if (!res.ok) throw createError({ statusCode: 502, statusMessage: `Falha no provedor de e-mail (${res.status}).` })
+      if (!res.ok) throw createError({ statusCode: 502, statusMessage: `Falha no provedor de e-mail (${res.status}).`, data: { providerStatus: res.status } })
+      await finishEmailDelivery(admin, deliveryId, 'enviado', { providerId: String(resData?.id || '') })
       return { success: true, provider: 'resend', data: resData }
     }
   } catch (error: any) {
+    await finishEmailDelivery(admin, deliveryId, 'falhou', { errorCode: String(error?.data?.providerStatus || error?.statusCode || error?.code || 'UNEXPECTED') })
     safeServerError('email:contrato', error)
     throw error
   }

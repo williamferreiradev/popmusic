@@ -252,6 +252,7 @@ Dados oficiais da contratada disponíveis no cadastro da escola.`
     await $fetch('/api/send-contract-email', {
       method: 'POST',
       body: {
+        contractId: result.contrato_id || null,
         studentName: result.aluno_nome,
         studentEmail: recipient,
         guardianName: result.responsavel_nome || undefined,
