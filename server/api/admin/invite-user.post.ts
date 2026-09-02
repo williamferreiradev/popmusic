@@ -6,7 +6,7 @@ type InviteBody = { nome?: unknown; email?: unknown; papel?: unknown; professorI
 export default defineEventHandler(async (event) => {
   let createdUserId: string | null = null
   try {
-    const { admin } = await requireManagement(event)
+    const { admin, authUser } = await requireManagement(event)
     const body = await readBody<InviteBody>(event)
     const nome = String(body?.nome || '').trim()
     const email = String(body?.email || '').trim().toLowerCase()
@@ -47,6 +47,12 @@ export default defineEventHandler(async (event) => {
         .maybeSingle()
       if (linkError || !linked) throw new Error('Não foi possível vincular a conta ao professor.')
     }
+
+    const { error: auditError } = await admin.from('auditoria').insert({
+      tabela: 'usuarios', registro_id: createdUserId, acao: 'convite_enviado', usuario_id: authUser.id,
+      dados_depois: { papel, professor_id: professorId }
+    })
+    if (auditError) throw new Error('Não foi possível registrar a auditoria do convite.')
 
     return { success: true }
   } catch (error: any) {

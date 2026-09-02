@@ -82,7 +82,7 @@
 - [x] Executar compensação no convite: se perfil ou vínculo falhar, remover o usuário de autenticação órfão.
 - [x] Permitir reenviar acesso com segurança somente pela gestão e para professor vinculado.
 - [x] Permitir desativar acesso sem apagar histórico operacional.
-- [ ] Registrar quem criou, convidou, alterou papel ou desativou um usuário.
+- [x] Registrar quem criou, convidou, reenviou acesso, alterou ou desativou um usuário.
 
 ## 4. Cadastro e acesso do professor — P0
 

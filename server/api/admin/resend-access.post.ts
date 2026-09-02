@@ -3,7 +3,7 @@ import { safeServerError } from '../../utils/safeLog'
 
 export default defineEventHandler(async (event) => {
   try {
-    const { admin } = await requireManagement(event)
+    const { admin, authUser } = await requireManagement(event)
     const body = await readBody<{ userId?: unknown; professorId?: unknown }>(event)
     const userId = String(body?.userId || '')
     const professorId = body?.professorId ? String(body.professorId) : null
@@ -22,6 +22,11 @@ export default defineEventHandler(async (event) => {
     const appUrl = String(useRuntimeConfig(event).public.appUrl || getRequestURL(event).origin).replace(/\/$/, '')
     const { error } = await admin.auth.resetPasswordForEmail(email, { redirectTo: `${appUrl}/confirm?mode=recovery` })
     if (error) throw createError({ statusCode: 502, statusMessage: 'Não foi possível enviar o e-mail de acesso.' })
+    const { error: auditError } = await admin.from('auditoria').insert({
+      tabela: 'usuarios', registro_id: userId, acao: 'acesso_reenviado', usuario_id: authUser.id,
+      dados_depois: { papel: profile.papel, professor_id: professorId }
+    })
+    if (auditError) throw createError({ statusCode: 500, statusMessage: 'O acesso foi enviado, mas a auditoria falhou.' })
     return { success: true }
   } catch (error: any) {
     safeServerError('auth:resend', error)
