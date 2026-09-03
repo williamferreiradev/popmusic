@@ -86,9 +86,21 @@ const cashflow = ref<CashflowEntry[]>([])
 const accounts = ref<FinancialAccount[]>([])
 const isLoading = ref(false)
 const financialSummary = ref<FinancialSummary | null>(null)
+const chargeSummary = ref({ aReceber: 0, recebido: 0, atrasado: 0 })
 
 export const useFinanceiro = () => {
   const supabase = useSupabaseClient()
+
+  const fetchChargeSummary = async () => {
+    const { data, error } = await supabase.rpc('resumo_cobrancas')
+    if (error) throw error
+    const summary = data?.[0]
+    chargeSummary.value = {
+      aReceber: Number(summary?.a_receber) || 0,
+      recebido: Number(summary?.recebido) || 0,
+      atrasado: Number(summary?.atrasado) || 0
+    }
+  }
 
   // 1. Buscar Cobranças
   const fetchCharges = async () => {
@@ -537,7 +549,7 @@ export const useFinanceiro = () => {
       p_observacao: observation || null
     })
     if (error) throw error
-    await Promise.all([fetchCharges(), fetchReceipts(), fetchCashflow(), fetchFinancialSummary(), fetchTeachers()])
+    await Promise.all([fetchCharges(), fetchChargeSummary(), fetchReceipts(), fetchCashflow(), fetchFinancialSummary(), fetchTeachers()])
   }
 
   const cancelCharge = async (chargeId: string, reason: string) => {
@@ -548,7 +560,7 @@ export const useFinanceiro = () => {
       })
 
       if (error) throw error
-      await fetchCharges()
+      await Promise.all([fetchCharges(), fetchChargeSummary()])
     } catch (e) {
       console.error('Erro ao cancelar cobrança:', e)
       throw e
@@ -569,7 +581,7 @@ export const useFinanceiro = () => {
       p_motivo: reason
     })
     if (error) throw error
-    await Promise.all([fetchCharges(), fetchReceipts(), fetchCashflow(), fetchFinancialSummary()])
+    await Promise.all([fetchCharges(), fetchChargeSummary(), fetchReceipts(), fetchCashflow(), fetchFinancialSummary()])
   }
 
   // Ao pagar um professor: grava repasse e gera saída no fluxo de caixa
@@ -703,7 +715,7 @@ export const useFinanceiro = () => {
         status: 'pendente'
       })
 
-      await fetchCharges()
+      await Promise.all([fetchCharges(), fetchChargeSummary()])
     } catch (e) {
       console.error('Erro ao criar cobrança:', e)
     }
@@ -711,6 +723,7 @@ export const useFinanceiro = () => {
 
   return {
     charges,
+    chargeSummary,
     receipts,
     teachers,
     cashflow,
@@ -718,6 +731,7 @@ export const useFinanceiro = () => {
     isLoading,
     financialSummary,
     fetchCharges,
+    fetchChargeSummary,
     fetchReceipts,
     fetchAccounts,
     fetchCashflow,

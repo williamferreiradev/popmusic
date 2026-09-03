@@ -76,6 +76,8 @@ describe('histórico paginado de contratos', () => {
 
 describe('resumo escalável de cobranças', () => {
   const summary = normalize(read('supabase/migrations/202609030030_resumo_cobrancas.sql'))
+  const composable = normalize(read('app/composables/useFinanceiro.ts'))
+  const charges = normalize(read('app/components/financeiro/FinanceiroCharges.vue'))
 
   it('calcula recebíveis, recebimentos e atrasos no banco somente para gestão', () => {
     assert.ok(summary.includes('create or replace function public.resumo_cobrancas()'))
@@ -83,6 +85,13 @@ describe('resumo escalável de cobranças', () => {
     assert.ok(summary.includes("c.vencimento < current_date"))
     assert.ok(summary.includes("date_trunc('month', current_date)"))
     assert.ok(summary.includes('grant execute on function public.resumo_cobrancas() to authenticated'))
+  })
+
+  it('alimenta e atualiza os cards pelo RPC após operações financeiras', () => {
+    assert.ok(composable.includes("supabase.rpc('resumo_cobrancas')"))
+    assert.ok(composable.includes('fetchchargesummary()'))
+    assert.ok(charges.includes('chargesummary'))
+    assert.ok(charges.includes('fetchchargesummary()'))
   })
 })
 
@@ -190,7 +199,7 @@ describe('contrato de integração entre mensalidade e repasse', () => {
   it('atualiza cobrança, recibo, caixa, resumo e professor após a baixa', () => {
     assert.match(
       financeComposable,
-      /fetchcharges\(\), fetchreceipts\(\), fetchcashflow\(\), fetchfinancialsummary\(\), fetchteachers\(\)/
+      /fetchcharges\(\), fetchchargesummary\(\), fetchreceipts\(\), fetchcashflow\(\), fetchfinancialsummary\(\), fetchteachers\(\)/
     )
   })
 

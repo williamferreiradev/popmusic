@@ -307,10 +307,10 @@ const vClickOutside = {
   }
 }
 
-const { charges, accounts, fetchCharges, fetchAccounts, createCharge, payCharge, cancelCharge, refundCharge } = useFinanceiro()
+const { charges, chargeSummary, accounts, fetchCharges, fetchChargeSummary, fetchAccounts, createCharge, payCharge, cancelCharge, refundCharge } = useFinanceiro()
 
 onMounted(async () => {
-  await Promise.all([fetchCharges(), fetchAccounts()])
+  await Promise.all([fetchCharges(), fetchChargeSummary(), fetchAccounts()])
 })
 
 // Formatadores
@@ -325,22 +325,7 @@ const formatDateBR = (isoStr: string) => {
 }
 
 // Cards de Resumo
-const resumo = computed(() => {
-  let aReceber = 0
-  let recebido = 0
-  let atrasado = 0
-
-  filteredCharges.value.forEach(c => {
-    if (c.status === 'pendente') aReceber += c.amount
-    if (c.status === 'paga' || (c.status as any) === 'pago') recebido += c.amount
-    if (c.status === 'atrasada' || (c.status as any) === 'atrasado') {
-      aReceber += c.amount
-      atrasado += c.amount
-    }
-  })
-
-  return { aReceber, recebido, atrasado }
-})
+const resumo = computed(() => chargeSummary.value)
 
 // Filtros e Busca
 const activeFilter = ref('abertas')
