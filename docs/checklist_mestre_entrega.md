@@ -64,7 +64,7 @@
 - [x] Cobrir automaticamente os redirecionamentos e bloqueios de rota dos três papéis.
 - [ ] Impedir secretaria de abrir configurações e financeiro caso não tenha permissão.
 - [x] Garantir que esconder um botão não seja o único controle de segurança.
-- [ ] Testar expiração de sessão e redirecionamento para login.
+- [x] Validar sessão no servidor e testar redirecionamento ao login quando estiver expirada.
 - [x] Implementar solicitação de recuperação de senha com resposta neutra.
 - [x] Implementar definição de senha forte no primeiro acesso por convite.
 - [ ] Validar comportamento de convite expirado, já utilizado e inválido.

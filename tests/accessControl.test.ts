@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { describe, it } from 'node:test'
 import { canRoleAccessPath, isPublicPath, isUserRole, roleDestination } from '../app/utils/accessControl.ts'
+
+const authMiddleware = readFileSync(new URL('../app/middleware/auth.global.ts', import.meta.url), 'utf8')
 
 describe('controle de acesso às rotas', () => {
   it('reconhece apenas os três papéis permitidos', () => {
@@ -46,5 +49,13 @@ describe('controle de acesso às rotas', () => {
 
   it('nega por padrão uma rota interna desconhecida', () => {
     assert.equal(canRoleAccessPath('gestao', '/interno/desconhecido'), false)
+  })
+  it('valida a sessão no servidor antes de liberar uma rota interna', () => {
+    const sessionValidation = authMiddleware.indexOf('supabase.auth.getUser()')
+    const profileLookup = authMiddleware.indexOf(".from('usuarios')")
+
+    assert.ok(sessionValidation >= 0)
+    assert.ok(profileLookup > sessionValidation)
+    assert.match(authMiddleware, /login\?erro=sessao-expirada/)
   })
 })

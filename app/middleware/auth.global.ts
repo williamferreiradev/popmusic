@@ -16,10 +16,21 @@ export default defineNuxtRouteMiddleware(async (to) => {
   // Convites e recuperação autenticam temporariamente antes da definição da senha.
   if (to.path === '/confirm') return
 
+  // O estado reativo pode manter temporariamente um usuário em cache. Confirme a
+  // sessão com o servidor antes de consultar o perfil ou liberar uma rota interna.
+  const { data: authenticated, error: authError } = await supabase.auth.getUser()
+  const authenticatedUserId = authenticated.user?.id
+
+  if (authError || !authenticatedUserId) {
+    await supabase.auth.signOut()
+    if (to.path !== '/login') return navigateTo('/login?erro=sessao-expirada')
+    return
+  }
+
   const { data: profile, error } = await supabase
     .from('usuarios')
     .select('papel, ativo')
-    .eq('id', userId)
+    .eq('id', authenticatedUserId)
     .maybeSingle()
 
   const role = profile?.papel
