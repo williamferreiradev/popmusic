@@ -78,6 +78,8 @@
 import { ref, watch } from 'vue'
 import { navigateTo } from '#app'
 import { Eye, EyeOff } from '@lucide/vue'
+import { isValidAuthEmail, normalizeAuthEmail } from '~/utils/authRules'
+import { isUserRole, roleDestination } from '~/utils/accessControl'
 
 definePageMeta({ layout: false })
 
@@ -114,13 +116,7 @@ async function redirectUser(userId?: string) {
       return navigateTo('/login?erro=acesso-invalido')
     }
     const papel = userProfile.papel
-    if (papel === 'professor') {
-      return navigateTo('/professor')
-    }
-    if (papel === 'aluno') {
-      return navigateTo('/aluno')
-    }
-    if (papel === 'gestao') return navigateTo('/dashboard')
+    if (isUserRole(papel)) return navigateTo(roleDestination[papel])
     await supabase.auth.signOut()
     return navigateTo('/login?erro=acesso-invalido')
   } catch {
@@ -165,8 +161,8 @@ async function signInWithPassword() {
 async function requestPasswordRecovery() {
   errorMsg.value = ''
   successMsg.value = ''
-  const normalizedEmail = email.value.trim().toLowerCase()
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+  const normalizedEmail = normalizeAuthEmail(email.value)
+  if (!isValidAuthEmail(normalizedEmail)) {
     errorMsg.value = 'Informe seu e-mail acima para recuperar a senha.'
     return
   }

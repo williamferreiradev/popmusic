@@ -20,6 +20,9 @@
 </template>
 
 <script setup lang="ts">
+import { isStrongPassword } from '~/utils/authRules'
+import { isUserRole, roleDestination } from '~/utils/accessControl'
+
 definePageMeta({ layout: false })
 const supabase = useSupabaseClient()
 const user = useSupabaseUser()
@@ -44,14 +47,17 @@ onMounted(async () => {
 
 const destination = async () => {
   const { data } = await supabase.from('usuarios').select('papel, ativo').eq('id', user.value!.id).maybeSingle()
-  if (!data?.ativo) return '/login?erro=acesso-invalido'
-  return data.papel === 'professor' ? '/professor' : data.papel === 'aluno' ? '/aluno' : '/dashboard'
+  if (!data?.ativo || !isUserRole(data.papel)) {
+    await supabase.auth.signOut()
+    return '/login?erro=acesso-invalido'
+  }
+  return roleDestination[data.papel]
 }
 
 const savePassword = async () => {
   errorMsg.value = ''
   if (password.value !== confirmation.value) { errorMsg.value = 'As senhas não coincidem.'; return }
-  if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(password.value)) {
+  if (!isStrongPassword(password.value)) {
     errorMsg.value = 'A senha não atende aos requisitos mínimos.'; return
   }
   saving.value = true

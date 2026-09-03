@@ -68,7 +68,8 @@
 - [x] Implementar solicitação de recuperação de senha com resposta neutra.
 - [x] Implementar definição de senha forte no primeiro acesso por convite.
 - [ ] Validar comportamento de convite expirado, já utilizado e inválido.
-- [ ] Confirmar política de senha e proteção contra tentativas repetidas.
+- [x] Confirmar e testar a política de senha forte no primeiro acesso e na recuperação.
+- [ ] Configurar e testar proteção contra tentativas repetidas de login.
 
 ## 3. Convites e gerenciamento de usuários — P0
 
