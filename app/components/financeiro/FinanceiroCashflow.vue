@@ -26,6 +26,7 @@
         </div>
       </div>
     </div>
+    <div class="flex justify-between text-sm"><span>{{ pagedCashflowTotal }} lançamentos</span><div class="flex gap-2"><button :disabled="currentPage===1" @click="currentPage--">Anterior</button><button :disabled="currentPage>=totalPages" @click="currentPage++">Próximo</button></div></div>
 
     <!-- Barra de Filtros e Ações -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -140,17 +141,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { Plus, FileX } from '@lucide/vue'
 import { useFinanceiro, type CashflowEntry } from '../../composables/useFinanceiro'
 
 import CashflowEntryModal from '../modals/CashflowEntryModal.vue'
 import ReadonlyTransactionModal from '../modals/ReadonlyTransactionModal.vue'
 
-const { cashflow, accounts, fetchCashflow, fetchAccounts, addCashflowEntry } = useFinanceiro()
+const { pagedCashflow, pagedCashflowTotal, cashflowSummary, accounts, fetchPagedCashflow, fetchAccounts, addCashflowEntry } = useFinanceiro()
+const currentPage = ref(1)
+const pageSize = 10
+const totalPages = computed(() => Math.max(1, Math.ceil(pagedCashflowTotal.value / pageSize)))
 
 onMounted(async () => {
-  await Promise.all([fetchCashflow(), fetchAccounts()])
+  await fetchAccounts()
+  await fetchPagedCashflow(1, pageSize, null)
 })
 
 const formatCurrency = (value: number) => {
@@ -171,7 +176,7 @@ const accountFilters = computed(() => {
 const activeAccountFilter = ref('Todas as contas')
 
 const filteredTransactions = computed(() => {
-  let list = [...cashflow.value].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  let list = [...pagedCashflow.value]
   
   if (activeAccountFilter.value !== 'Todas as contas') {
     list = list.filter(t => t.account === activeAccountFilter.value)
@@ -181,15 +186,7 @@ const filteredTransactions = computed(() => {
 
 // Cards Resumo
 const resumo = computed(() => {
-  let entradas = 0
-  let saidas = 0
-  
-  filteredTransactions.value.forEach(t => {
-    if (t.type === 'entrada') entradas += t.amount
-    else saidas += t.amount
-  })
-  
-  return { entradas, saidas, saldo: entradas - saidas }
+  return cashflowSummary.value
 })
 
 const saldoPorConta = computed(() => {
@@ -199,13 +196,23 @@ const saldoPorConta = computed(() => {
     saldos[acc.nome] = acc.saldo_inicial
   })
 
-  cashflow.value.forEach(t => {
+  pagedCashflow.value.forEach(t => {
     if (saldos[t.account] !== undefined) {
       const currentBalance = saldos[t.account] ?? 0
       saldos[t.account] = t.type === 'entrada' ? currentBalance + t.amount : currentBalance - t.amount
     }
   })
   return saldos
+})
+
+watch(activeAccountFilter, async name => {
+  currentPage.value = 1
+  const id = accounts.value.find(a => a.nome === name)?.id || null
+  await fetchPagedCashflow(1, pageSize, id)
+})
+watch(currentPage, async page => {
+  const id = accounts.value.find(a => a.nome === activeAccountFilter.value)?.id || null
+  await fetchPagedCashflow(page, pageSize, id)
 })
 
 // Modais

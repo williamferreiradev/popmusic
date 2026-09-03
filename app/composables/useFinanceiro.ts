@@ -86,6 +86,9 @@ const receipts = ref<Receipt[]>([])
 const receiptsTotal = ref(0)
 const teachers = ref<Teacher[]>([])
 const cashflow = ref<CashflowEntry[]>([])
+const pagedCashflow = ref<CashflowEntry[]>([])
+const pagedCashflowTotal = ref(0)
+const cashflowSummary = ref({ entradas: 0, saidas: 0, saldo: 0 })
 const accounts = ref<FinancialAccount[]>([])
 const isLoading = ref(false)
 const financialSummary = ref<FinancialSummary | null>(null)
@@ -103,6 +106,22 @@ export const useFinanceiro = () => {
       recebido: Number(summary?.recebido) || 0,
       atrasado: Number(summary?.atrasado) || 0
     }
+  }
+
+  const fetchPagedCashflow = async (page = 1, pageSize = 10, accountId: string | null = null) => {
+    let query = supabase.from('fluxo_caixa').select(`id, tipo, descricao, valor, data, conta_id, categoria, origem, contas_financeiras (nome)`, { count: 'exact' })
+    if (accountId) query = query.eq('conta_id', accountId)
+    const from = (page - 1) * pageSize
+    const [{ data, count, error }, summaryResult] = await Promise.all([
+      query.order('data', { ascending: false }).range(from, from + pageSize - 1),
+      supabase.rpc('resumo_fluxo_caixa', { p_conta_id: accountId })
+    ])
+    if (error) throw error
+    if (summaryResult.error) throw summaryResult.error
+    pagedCashflow.value = (data || []).map((cf: any) => ({ id: cf.id, date: cf.data, description: cf.descricao, type: cf.tipo, account: cf.contas_financeiras?.nome || 'Conta', accountId: cf.conta_id, amount: Number(cf.valor) || 0, category: cf.categoria, isAuto: cf.origem !== 'manual' }))
+    pagedCashflowTotal.value = count || 0
+    const summary = summaryResult.data?.[0]
+    cashflowSummary.value = { entradas: Number(summary?.entradas) || 0, saidas: Number(summary?.saidas) || 0, saldo: Number(summary?.saldo) || 0 }
   }
 
   const fetchPagedCharges = async (options: {
@@ -773,6 +792,9 @@ export const useFinanceiro = () => {
     receiptsTotal,
     teachers,
     cashflow,
+    pagedCashflow,
+    pagedCashflowTotal,
+    cashflowSummary,
     accounts,
     isLoading,
     financialSummary,
@@ -782,6 +804,7 @@ export const useFinanceiro = () => {
     fetchReceipts,
     fetchAccounts,
     fetchCashflow,
+    fetchPagedCashflow,
     fetchFinancialSummary,
     fetchTeachers,
     payCharge,
