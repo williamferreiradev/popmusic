@@ -21,16 +21,16 @@
 
     <template #footer>
       <button 
-        @click="$emit('close')"
         class="px-4 py-2 rounded-md font-medium text-light-text dark:text-offwhite hover:bg-light-border dark:hover:bg-dark-border transition-colors border border-transparent"
         :disabled="isLoading"
+        @click="$emit('close')"
       >
         Cancelar
       </button>
       <button 
-        @click="$emit('confirm')"
         class="px-4 py-2 rounded-md font-medium text-white bg-red-600 hover:bg-red-700 dark:bg-[#7A1F1F] dark:hover:bg-[#902626] transition-colors flex items-center gap-2 shadow-sm"
         :disabled="isLoading"
+        @click="$emit('confirm')"
       >
         <Loader2 v-if="isLoading" class="w-4 h-4 animate-spin" />
         {{ confirmText }}

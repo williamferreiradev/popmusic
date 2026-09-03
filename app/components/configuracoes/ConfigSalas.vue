@@ -5,7 +5,7 @@
         <h2 class="text-xl font-bold text-light-text dark:text-offwhite">Salas</h2>
         <p class="text-sm text-light-text/60 dark:text-offwhite/60">Espaços físicos da escola organizados para o calendário.</p>
       </div>
-      <BaseButton variant="primary" @click="openModal()" class="flex items-center gap-2">
+      <BaseButton variant="primary" class="flex items-center gap-2" @click="openModal()">
         <Plus class="w-4 h-4" /> Nova sala
       </BaseButton>
     </div>
@@ -31,9 +31,9 @@
           <tr v-else-if="!rooms || rooms.length === 0">
             <td colspan="5" class="py-8 text-center text-light-text/50 dark:text-offwhite/50">Nenhuma sala cadastrada ainda.</td>
           </tr>
-          <tr 
+          <tr
+            v-for="room in rooms"
             v-else
-            v-for="room in rooms" 
             :key="room.id"
             class="border-b border-light-border dark:border-dark-border last:border-0 hover:bg-light-border/20 dark:hover:bg-dark-border/20 transition-colors"
           >
@@ -43,10 +43,10 @@
             <td class="py-3 px-4 text-center"><BaseBadge :variant="room.active ? 'success' : 'neutral'">{{ room.active ? 'Ativa' : 'Inativa' }}</BaseBadge></td>
             <td class="py-3 px-4 text-center">
               <div class="flex items-center justify-center gap-2">
-                <button @click="openModal(room)" class="p-1.5 text-light-text/60 dark:text-offwhite/60 hover:text-primary transition-colors" title="Editar">
+                <button class="p-1.5 text-light-text/60 dark:text-offwhite/60 hover:text-primary transition-colors" title="Editar" @click="openModal(room)">
                   <Pencil class="w-4 h-4" />
                 </button>
-                <button @click="toggleActive(room)" class="p-1.5 text-light-text/60 dark:text-offwhite/60 transition-colors" :class="room.active ? 'hover:text-red-500' : 'hover:text-green-500'" :title="room.active ? 'Inativar' : 'Reativar'">
+                <button class="p-1.5 text-light-text/60 dark:text-offwhite/60 transition-colors" :class="room.active ? 'hover:text-red-500' : 'hover:text-green-500'" :title="room.active ? 'Inativar' : 'Reativar'" @click="toggleActive(room)">
                   <UserX v-if="room.active" class="w-4 h-4" /><UserCheck v-else class="w-4 h-4" />
                 </button>
               </div>
@@ -57,17 +57,17 @@
     </div>
 
     <!-- Modal Nova/Editar -->
-    <BaseModal :isOpen="isModalOpen" :title="isEditing ? 'Editar sala' : 'Nova sala'" @close="closeModal">
+    <BaseModal :is-open="isModalOpen" :title="isEditing ? 'Editar sala' : 'Nova sala'" @close="closeModal">
       <div class="p-5 flex flex-col gap-4">
         <BaseInput v-model="formData.name" label="Nome da Sala" placeholder="Ex: Sala 2 - Teclado" required />
-        
+
         <BaseSelect v-model="formData.defaultModality" label="Modalidade padrão (opcional)" :options="modalityOptions" placeholder="Selecione..." />
-        
+
         <BaseInput v-model="formData.capacity" label="Capacidade máxima padrão (alunos)" type="number" placeholder="Ex: 5" required />
-        
+
         <div class="flex items-center justify-end gap-3 pt-4 mt-2 border-t border-light-border dark:border-dark-border">
           <BaseButton variant="outline" @click="closeModal">Cancelar</BaseButton>
-          <BaseButton variant="primary" @click="save" :disabled="!isFormValid || isLoadingSave" class="flex items-center gap-2">
+          <BaseButton variant="primary" :disabled="!isFormValid || isLoadingSave" class="flex items-center gap-2" @click="save">
             <Loader2 v-if="isLoadingSave" class="w-4 h-4 animate-spin" />
             Salvar
           </BaseButton>
@@ -87,7 +87,7 @@ import BaseInput from '../BaseInput.vue'
 import BaseSelect from '../BaseSelect.vue'
 import BaseBadge from '../BaseBadge.vue'
 
-const emit = defineEmits(['unsaved-changes'])
+defineEmits(['unsaved-changes'])
 const supabase = useSupabaseClient()
 
 // Buscar modalidades para o dropdown
@@ -162,10 +162,10 @@ const closeModal = () => {
 const save = async () => {
   if (!isFormValid.value) return
   isLoadingSave.value = true
-  
+
   const capacity = parseInt(formData.value.capacity) || 0
   const modalidade_padrao_id = formData.value.defaultModality ? formData.value.defaultModality : null
-  
+
   try {
     const { error } = await (supabase as any).rpc('salvar_sala', {
       p_id: isEditing.value ? formData.value.id : null,

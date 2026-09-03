@@ -1,6 +1,6 @@
 <template>
   <div class="flex-1 flex flex-col gap-6">
-    
+
     <!-- Cards Resumo -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div class="bg-light-surface dark:bg-dark-surface p-4 rounded-xl border border-light-border dark:border-dark-border shadow-sm flex flex-col justify-center">
@@ -12,7 +12,7 @@
         <p class="text-lg font-bold text-green-500">{{ formatCurrency(resumo.recebido) }}</p>
       </div>
       <div class="bg-light-surface dark:bg-dark-surface p-4 rounded-xl border border-red-500/30 dark:border-red-500/30 shadow-sm flex flex-col justify-center relative overflow-hidden">
-        <div class="absolute top-0 left-0 w-1 h-full bg-red-500"></div>
+        <div class="absolute top-0 left-0 w-1 h-full bg-red-500"/>
         <p class="text-xs font-medium text-light-text/60 dark:text-offwhite/60 mb-1 ml-2">Total em atraso</p>
         <p class="text-lg font-bold text-red-500 ml-2">{{ formatCurrency(resumo.atrasado) }}</p>
       </div>
@@ -56,9 +56,9 @@
           <p class="text-xs font-mono text-primary">{{ pixKeySchool }}</p>
         </div>
       </div>
-      <button 
-        @click="copySchoolPix"
+      <button
         class="px-3.5 py-1.5 bg-primary hover:bg-primary-hover text-black text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 self-end sm:self-auto cursor-pointer"
+        @click="copySchoolPix"
       >
         <Copy class="w-3.5 h-3.5" />
         {{ copiedSchoolPix ? 'Chave Copiada!' : 'Copiar Chave PIX' }}
@@ -67,16 +67,16 @@
 
     <!-- Barra de Filtros e Ações -->
     <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
-      
+
       <div class="flex flex-col sm:flex-row sm:items-center gap-4 flex-1">
         <!-- Filtros em Pills -->
         <div class="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
-          <button 
-            v-for="pill in filterPills" 
+          <button
+            v-for="pill in filterPills"
             :key="pill.value"
-            @click="activeFilter = pill.value"
             class="px-4 py-1.5 rounded-full text-sm font-bold transition-colors whitespace-nowrap border"
             :class="activeFilter === pill.value ? 'bg-primary text-white border-primary' : 'bg-transparent border-light-border dark:border-dark-border text-light-text/70 dark:text-offwhite/70 hover:bg-light-surface dark:hover:bg-dark-surface'"
+            @click="activeFilter = pill.value"
           >
             {{ pill.label }}
           </button>
@@ -85,19 +85,19 @@
         <!-- Busca -->
         <div class="relative w-full sm:max-w-xs">
           <Search class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-light-text/50 dark:text-offwhite/50" />
-          <input 
-            type="text" 
+          <input
             v-model="searchQuery"
-            placeholder="Buscar aluno..." 
+            type="text"
+            placeholder="Buscar aluno..."
             class="w-full pl-9 pr-4 py-2 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-md text-sm text-light-text dark:text-offwhite focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
           >
         </div>
       </div>
 
       <!-- Nova Cobrança -->
-      <button 
-        @click="isNewChargeOpen = true"
+      <button
         class="px-6 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-bold rounded-md transition-colors shadow-sm flex items-center justify-center gap-2 shrink-0"
+        @click="isNewChargeOpen = true"
       >
         <Plus class="w-4 h-4" />
         Nova cobrança avulsa
@@ -120,9 +120,9 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-light-border/50 dark:divide-dark-border/50">
-            
-            <tr 
-              v-for="charge in filteredCharges" 
+
+            <tr
+              v-for="charge in filteredCharges"
               :key="charge.id"
               class="group transition-colors"
               :class="getRowClass(charge.status)"
@@ -145,55 +145,55 @@
                 </span>
               </td>
               <td class="p-4 text-right">
-                
+
                 <!-- Menu de Ações -->
-                <div class="relative inline-block text-left" v-click-outside="() => activeDropdown = null">
-                  <button 
-                    @click.stop="toggleDropdown(charge.id)"
+                <div v-click-outside="() => activeDropdown = null" class="relative inline-block text-left">
+                  <button
                     class="p-2 rounded-md hover:bg-light-border/50 dark:hover:bg-dark-border/50 transition-colors text-light-text/60 dark:text-offwhite/60"
+                    @click.stop="toggleDropdown(charge.id)"
                   >
                     <MoreVertical class="w-4 h-4" />
                   </button>
-                  
+
                   <!-- Dropdown Interno -->
-                  <div 
+                  <div
                     v-if="activeDropdown === charge.id"
-                    @click.stop
                     class="absolute right-0 mt-1 w-48 rounded-lg shadow-2xl bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border z-50 py-1.5 ring-1 ring-black/10"
+                    @click.stop
                   >
-                    <button 
+                    <button
                       v-if="charge.status !== 'cancelada'"
-                      @click="resendCharge(charge); activeDropdown = null"
                       class="flex items-center w-full px-4 py-2 text-sm text-light-text dark:text-offwhite hover:bg-light-bg dark:hover:bg-dark-bg transition-colors"
+                      @click="resendCharge(charge); activeDropdown = null"
                     >
                       Reenviar cobrança
                     </button>
-                    <button 
+                    <button
                       v-if="charge.status === 'pendente' || charge.status === 'atrasada'"
-                      @click="openPaymentModal(charge); activeDropdown = null"
                       class="flex items-center w-full px-4 py-2 text-sm text-green-500 hover:bg-light-bg dark:hover:bg-dark-bg transition-colors font-medium"
+                      @click="openPaymentModal(charge); activeDropdown = null"
                     >
                       Marcar como pago
                     </button>
                     <!-- Editar estático para o protótipo -->
-                    <button 
+                    <button
                       v-if="charge.status !== 'cancelada' && charge.status !== 'paga'"
                       class="flex items-center w-full px-4 py-2 text-sm text-light-text dark:text-offwhite hover:bg-light-bg dark:hover:bg-dark-bg transition-colors opacity-50 cursor-not-allowed"
                       title="Editar indisponível no protótipo"
                     >
                       Editar
                     </button>
-                    <button 
+                    <button
                       v-if="charge.status !== 'cancelada' && charge.status !== 'paga'"
-                      @click="openCancelModal(charge); activeDropdown = null"
                       class="flex items-center w-full px-4 py-2 text-sm text-red-500 hover:bg-light-bg dark:hover:bg-dark-bg transition-colors font-medium"
+                      @click="openCancelModal(charge); activeDropdown = null"
                     >
                       Cancelar cobrança
                     </button>
                     <button
                       v-if="charge.status === 'paga'"
-                      @click="openRefundModal(charge); activeDropdown = null"
                       class="flex w-full items-center px-4 py-2 text-sm font-medium text-red-500 transition-colors hover:bg-light-bg dark:hover:bg-dark-bg"
+                      @click="openRefundModal(charge); activeDropdown = null"
                     >
                       Estornar pagamento
                     </button>
@@ -202,17 +202,17 @@
 
               </td>
             </tr>
-            
+
             <!-- Estado Vazio -->
             <tr v-if="filteredCharges.length === 0">
               <td colspan="6" class="p-12 text-center text-light-text/50 dark:text-offwhite/50">
                 <FileX class="w-12 h-12 mx-auto mb-3 opacity-50" />
                 <p class="font-medium text-lg text-light-text dark:text-offwhite">Nenhuma cobrança encontrada</p>
                 <p class="text-sm mt-1">Tente ajustar seus filtros ou realizar uma nova busca.</p>
-                <button 
+                <button
                   v-if="activeFilter !== 'todas' || searchQuery !== '' || hasAdvancedFilters"
-                  @click="clearAllFilters"
                   class="mt-4 px-4 py-2 text-sm text-primary font-bold hover:bg-primary/10 rounded-md transition-colors"
+                  @click="clearAllFilters"
                 >
                   Limpar filtros
                 </button>
@@ -224,13 +224,13 @@
     </div>
 
     <!-- Modais -->
-    <NewChargeModal 
+    <NewChargeModal
       :is-open="isNewChargeOpen"
       @close="isNewChargeOpen = false"
       @confirm="handleNewCharge"
     />
 
-    <ManualPaymentModal 
+    <ManualPaymentModal
       :is-open="isPaymentModalOpen"
       :charge="selectedCharge"
       :accounts="accounts"
@@ -238,7 +238,7 @@
       @confirm="handlePayment"
     />
 
-    <CancelChargeModal 
+    <CancelChargeModal
       :is-open="isCancelModalOpen"
       :charge="selectedCharge"
       @close="isCancelModalOpen = false"
@@ -254,7 +254,7 @@
     />
 
     <!-- Toast flutuante -->
-    <div 
+    <div
       class="fixed bottom-6 right-6 bg-light-surface dark:bg-dark-surface border-l-4 shadow-xl rounded-r-md px-6 py-3 transition-all duration-300 z-50 flex flex-col"
       :class="[
         toastVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0 pointer-events-none',
@@ -328,7 +328,7 @@ const resumo = computed(() => {
   let aReceber = 0
   let recebido = 0
   let atrasado = 0
-  
+
   filteredCharges.value.forEach(c => {
     if (c.status === 'pendente') aReceber += c.amount
     if (c.status === 'paga' || (c.status as any) === 'pago') recebido += c.amount
@@ -337,7 +337,7 @@ const resumo = computed(() => {
       atrasado += c.amount
     }
   })
-  
+
   return { aReceber, recebido, atrasado }
 })
 
@@ -571,7 +571,7 @@ const showToast = (msg: string, type: 'success' | 'info' = 'success') => {
   toastMessage.value = msg
   toastType.value = type
   toastVisible.value = true
-  
+
   if (toastTimer) clearTimeout(toastTimer)
   toastTimer = setTimeout(() => {
     toastVisible.value = false

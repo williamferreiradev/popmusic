@@ -19,8 +19,8 @@
         
         <div class="flex items-center gap-2">
           <button 
-            @click="triggerPrint"
             class="px-3 py-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded shadow transition-colors flex items-center gap-1.5"
+            @click="triggerPrint"
           >
             <Printer class="w-3.5 h-3.5" />
             Imprimir / PDF
@@ -38,9 +38,9 @@
           <!-- Cabeçalho Timbrado -->
           <div class="border-b-2 border-black pb-4 mb-4 flex flex-col items-center text-center">
             <div class="text-center font-extrabold tracking-[0.35em] text-[10px] uppercase text-gray-700 flex items-center justify-center gap-2 w-full">
-              <span class="h-[1px] bg-gray-400 flex-1"></span>
+              <span class="h-[1px] bg-gray-400 flex-1"/>
               <span>A c a d e m i a &nbsp; d e &nbsp; M ú s i c a</span>
-              <span class="h-[1px] bg-gray-400 flex-1"></span>
+              <span class="h-[1px] bg-gray-400 flex-1"/>
             </div>
             <h1 class="text-2xl font-black italic tracking-widest text-black my-1">POP MUSIC</h1>
             <p class="text-[9px] text-gray-600">
@@ -114,17 +114,17 @@
         <!-- Reenvio Direto -->
         <div class="flex items-center gap-2 w-full sm:w-auto">
           <button 
-            @click="sendWhatsApp"
             :disabled="sending"
             class="flex-1 sm:flex-initial px-3 py-2 bg-green-500/10 hover:bg-green-500/20 text-green-600 dark:text-green-400 text-xs font-bold rounded-md transition-colors flex items-center justify-center gap-1.5 border border-green-500/20"
+            @click="sendWhatsApp"
           >
             <MessageSquare class="w-3.5 h-3.5" />
             WhatsApp
           </button>
           <button 
-            @click="sendEmail"
             :disabled="sending"
             class="flex-1 sm:flex-initial px-3 py-2 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold rounded-md transition-colors flex items-center justify-center gap-1.5 border border-primary/20"
+            @click="sendEmail"
           >
             <Mail class="w-3.5 h-3.5" />
             E-mail
@@ -132,8 +132,8 @@
         </div>
 
         <button 
-          @click="$emit('close')"
           class="w-full sm:w-auto px-6 py-2 bg-light-surface dark:bg-dark-surface hover:bg-light-bg dark:hover:bg-dark-bg text-light-text dark:text-offwhite border border-light-border dark:border-dark-border text-xs font-bold rounded-md transition-colors"
+          @click="$emit('close')"
         >
           Fechar
         </button>

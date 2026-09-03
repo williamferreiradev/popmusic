@@ -62,21 +62,21 @@
       <!-- Ações -->
       <div class="flex justify-between items-center mt-2">
         <button 
-          @click="handleClose"
           class="px-4 py-2 text-sm font-medium text-light-text/70 dark:text-offwhite/70 hover:bg-light-border/50 dark:hover:bg-dark-border/50 rounded-md transition-colors"
+          @click="handleClose"
         >
           Fechar
         </button>
         <div class="flex gap-3">
           <button 
-            @click="confirm('whatsapp')"
             class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-bold rounded-md transition-colors flex items-center gap-2"
+            @click="confirm('whatsapp')"
           >
             Enviar por WhatsApp
           </button>
           <button 
-            @click="confirm('pdf')"
             class="px-6 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-bold rounded-md transition-colors shadow-sm flex items-center gap-2"
+            @click="confirm('pdf')"
           >
             Baixar PDF
           </button>
@@ -92,7 +92,7 @@ import { computed } from 'vue'
 import BaseModal from '../BaseModal.vue'
 import type { Teacher } from '../../composables/useFinanceiro'
 
-const props = defineProps<{
+defineProps<{
   isOpen: boolean
   teacher: Teacher | null
 }>()

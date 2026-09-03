@@ -1,18 +1,18 @@
 <template>
   <div class="flex flex-col h-full relative">
     <div class="flex flex-col gap-8 pb-24">
-      
+
       <!-- Seção: Regras de Evasão e Presença -->
       <div class="flex flex-col gap-4">
         <div>
           <h2 class="text-xl font-bold text-light-text dark:text-offwhite">Regras de Frequência</h2>
           <p class="text-sm text-light-text/60 dark:text-offwhite/60">Configura limites usados pelo cálculo automático de risco de evasão e check-in.</p>
         </div>
-        
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <BaseInput v-model="form.consecutiveAbsencesRisk" label="Faltas consecutivas para sinalizar risco de evasão" type="number" />
           <BaseInput v-model="form.minAttendancePercentage" label="Percentual mínimo de frequência aceitável (%)" type="number" />
-          
+
           <div class="flex flex-col">
             <BaseInput v-model="form.qrCodeToleranceMinutes" label="Janela de tolerância do check-in por QR Code (minutos)" type="number" />
             <p class="text-xs text-light-text/60 dark:text-offwhite/60 mt-1 px-1">
@@ -22,7 +22,7 @@
         </div>
       </div>
 
-      <div class="w-full h-px bg-light-border dark:bg-dark-border"></div>
+      <div class="w-full h-px bg-light-border dark:bg-dark-border"/>
 
       <!-- Seção: Feriados -->
       <div class="flex flex-col gap-4">
@@ -30,29 +30,29 @@
           <h2 class="text-xl font-bold text-light-text dark:text-offwhite">Feriados e Reposições</h2>
           <p class="text-sm text-light-text/60 dark:text-offwhite/60">Configura a política da escola quanto a agendamento em datas comemorativas.</p>
         </div>
-        
+
         <div class="flex flex-col gap-4">
           <div class="flex items-start gap-3 px-2" title="Regra fixa de contrato.">
-            <input 
-              type="checkbox" 
-              v-model="form.blockNationalHolidays" 
-              id="blockNational" 
+            <input
+              id="blockNational"
+              v-model="form.blockNationalHolidays"
+              type="checkbox"
               disabled
-              class="w-4 h-4 mt-1 text-primary focus:ring-primary rounded border-light-border dark:border-dark-border disabled:opacity-50" 
-            />
+              class="w-4 h-4 mt-1 text-primary focus:ring-primary rounded border-light-border dark:border-dark-border disabled:opacity-50"
+            >
             <div class="flex flex-col">
               <label for="blockNational" class="text-sm font-medium text-light-text/60 dark:text-offwhite/60 cursor-not-allowed">Bloquear agendamento de reposição em feriados nacionais</label>
               <p class="text-xs text-light-text/40 dark:text-offwhite/40">Esta regra é fixa no contrato da escola e não pode ser desativada por aqui.</p>
             </div>
           </div>
-          
+
           <div class="flex items-start gap-3 px-2">
-            <input 
-              type="checkbox" 
-              v-model="form.blockMunicipalHolidays" 
-              id="blockMunicipal" 
-              class="w-4 h-4 mt-1 text-primary focus:ring-primary rounded border-light-border dark:border-dark-border" 
-            />
+            <input
+              id="blockMunicipal"
+              v-model="form.blockMunicipalHolidays"
+              type="checkbox"
+              class="w-4 h-4 mt-1 text-primary focus:ring-primary rounded border-light-border dark:border-dark-border"
+            >
             <div class="flex flex-col">
               <label for="blockMunicipal" class="text-sm font-medium text-light-text dark:text-offwhite cursor-pointer">Bloquear também em feriados municipais (Novo Gama-GO)</label>
             </div>
@@ -64,7 +64,7 @@
 
     <!-- Sticky Footer para Salvar -->
     <div class="fixed md:absolute bottom-0 left-0 w-full bg-light-surface dark:bg-dark-surface border-t border-light-border dark:border-dark-border p-4 flex justify-end z-10">
-      <BaseButton variant="primary" @click="handleSave" :disabled="!hasChanges || isLoadingSave" class="px-8 flex items-center gap-2">
+      <BaseButton variant="primary" :disabled="!hasChanges || isLoadingSave" class="px-8 flex items-center gap-2" @click="handleSave">
         <Loader2 v-if="isLoadingSave" class="w-4 h-4 animate-spin" />
         Salvar alterações
       </BaseButton>
@@ -94,9 +94,9 @@ const form = ref<any>({
 const originalForm = ref<any>({ ...form.value })
 const isLoadingSave = ref(false)
 
-const { pending } = await useAsyncData('config_frequencia', async () => {
+await useAsyncData('config_frequencia', async () => {
   const { data: configs } = await supabase.from('configuracoes').select('*').eq('chave', 'frequencia').single()
-  
+
   if (configs && configs.valor) {
     const config = asConfigRecord(configs.valor)
     form.value.consecutiveAbsencesRisk = config.faltas_consecutivas_risco ?? 3
@@ -106,7 +106,7 @@ const { pending } = await useAsyncData('config_frequencia', async () => {
     form.value.blockNationalHolidays = true
     form.value.blockMunicipalHolidays = config.bloquear_reposicao_feriado_municipal ?? false
   }
-  
+
   originalForm.value = { ...form.value }
   return true
 })
@@ -138,16 +138,16 @@ const handleSave = async () => {
   }
 
   try {
-    const { error } = await supabase.from('configuracoes').upsert({ 
-      chave: 'frequencia', 
-      valor: frequenciaToSave 
+    const { error } = await supabase.from('configuracoes').upsert({
+      chave: 'frequencia',
+      valor: frequenciaToSave
     })
-    
+
     if (error) throw error
-    
+
     originalForm.value = { ...parsedForm }
     form.value = { ...parsedForm }
-    
+
     emit('unsaved-changes', false)
     alert('Configurações de frequência e reposição atualizadas com sucesso.')
   } catch (error: any) {

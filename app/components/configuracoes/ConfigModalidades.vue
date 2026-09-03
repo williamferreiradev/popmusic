@@ -5,7 +5,7 @@
         <h2 class="text-xl font-bold text-light-text dark:text-offwhite">Modalidades</h2>
         <p class="text-sm text-light-text/60 dark:text-offwhite/60">Cursos oferecidos pela escola, usados em matrículas e no calendário.</p>
       </div>
-      <BaseButton variant="primary" @click="openModal()" class="flex items-center gap-2">
+      <BaseButton variant="primary" class="flex items-center gap-2" @click="openModal()">
         <Plus class="w-4 h-4" /> Nova modalidade
       </BaseButton>
     </div>
@@ -32,9 +32,9 @@
           <tr v-else-if="!modalities || modalities.length === 0">
             <td colspan="6" class="py-8 text-center text-light-text/50 dark:text-offwhite/50">Nenhuma modalidade cadastrada ainda.</td>
           </tr>
-          <tr 
+          <tr
+            v-for="mod in modalities"
             v-else
-            v-for="mod in modalities" 
             :key="mod.id"
             class="border-b border-light-border dark:border-dark-border last:border-0 hover:bg-light-border/20 dark:hover:bg-dark-border/20 transition-colors"
           >
@@ -42,7 +42,7 @@
             <td class="py-3 px-4 text-light-text dark:text-offwhite">R$ {{ mod.price.toFixed(2) }}</td>
             <td class="py-3 px-4">
               <div class="flex items-center gap-2 text-light-text dark:text-offwhite">
-                <span class="w-4 h-4 rounded-full border border-light-border/50" :style="{ backgroundColor: mod.color }"></span>
+                <span class="w-4 h-4 rounded-full border border-light-border/50" :style="{ backgroundColor: mod.color }"/>
                 {{ mod.color }}
               </div>
             </td>
@@ -50,10 +50,10 @@
             <td class="py-3 px-4 text-center"><BaseBadge :variant="mod.active ? 'success' : 'neutral'">{{ mod.active ? 'Ativa' : 'Inativa' }}</BaseBadge></td>
             <td class="py-3 px-4 text-center">
               <div class="flex items-center justify-center gap-2">
-                <button @click="openModal(mod)" class="p-1.5 text-light-text/60 dark:text-offwhite/60 hover:text-primary transition-colors" title="Editar">
+                <button class="p-1.5 text-light-text/60 dark:text-offwhite/60 hover:text-primary transition-colors" title="Editar" @click="openModal(mod)">
                   <Pencil class="w-4 h-4" />
                 </button>
-                <button @click="toggleActive(mod)" class="p-1.5 text-light-text/60 dark:text-offwhite/60 transition-colors" :class="mod.active ? 'hover:text-red-500' : 'hover:text-green-500'" :title="mod.active ? 'Inativar' : 'Reativar'">
+                <button class="p-1.5 text-light-text/60 dark:text-offwhite/60 transition-colors" :class="mod.active ? 'hover:text-red-500' : 'hover:text-green-500'" :title="mod.active ? 'Inativar' : 'Reativar'" @click="toggleActive(mod)">
                   <UserX v-if="mod.active" class="w-4 h-4" /><UserCheck v-else class="w-4 h-4" />
                 </button>
               </div>
@@ -64,29 +64,29 @@
     </div>
 
     <!-- Modal Nova/Editar -->
-    <BaseModal :isOpen="isModalOpen" :title="isEditing ? 'Editar modalidade' : 'Nova modalidade'" @close="closeModal">
+    <BaseModal :is-open="isModalOpen" :title="isEditing ? 'Editar modalidade' : 'Nova modalidade'" @close="closeModal">
       <div class="p-5 flex flex-col gap-4">
         <BaseInput v-model="formData.name" label="Nome da Modalidade" placeholder="Ex: Violão" required />
-        
+
         <BaseInput v-model="formData.price" label="Valor padrão de mensalidade (R$)" type="number" placeholder="Ex: 150" required />
-        
+
         <div class="flex flex-col gap-1.5">
           <label class="text-sm font-medium text-light-text dark:text-offwhite">Cor no Calendário</label>
           <div class="flex items-center gap-3 flex-wrap">
-            <button 
-              v-for="color in availableColors" 
+            <button
+              v-for="color in availableColors"
               :key="color"
-              @click="formData.color = color"
               class="w-8 h-8 rounded-full border-2 transition-all focus:outline-none"
               :class="formData.color === color ? 'border-light-text dark:border-offwhite scale-110' : 'border-transparent hover:scale-105'"
               :style="{ backgroundColor: color }"
-            ></button>
+              @click="formData.color = color"
+            />
           </div>
         </div>
 
         <div class="flex items-center justify-end gap-3 pt-4 mt-2 border-t border-light-border dark:border-dark-border">
           <BaseButton variant="outline" @click="closeModal">Cancelar</BaseButton>
-          <BaseButton variant="primary" @click="save" :disabled="!isFormValid || isLoadingSave" class="flex items-center gap-2">
+          <BaseButton variant="primary" :disabled="!isFormValid || isLoadingSave" class="flex items-center gap-2" @click="save">
             <Loader2 v-if="isLoadingSave" class="w-4 h-4 animate-spin" />
             Salvar
           </BaseButton>
@@ -105,7 +105,7 @@ import BaseModal from '../BaseModal.vue'
 import BaseInput from '../BaseInput.vue'
 import BaseBadge from '../BaseBadge.vue'
 
-const emit = defineEmits(['unsaved-changes'])
+defineEmits(['unsaved-changes'])
 const supabase = useSupabaseClient()
 
 const { data: modalities, pending, refresh } = await useAsyncData('config_modalidades', async () => {
@@ -175,9 +175,9 @@ const closeModal = () => {
 const save = async () => {
   if (!isFormValid.value) return
   isLoadingSave.value = true
-  
+
   const price = parseFloat(formData.value.price)
-  
+
   try {
     const { error } = await (supabase as any).rpc('salvar_modalidade', {
       p_id: isEditing.value ? formData.value.id : null,

@@ -18,7 +18,7 @@
 
       <!-- Em atraso -->
       <div class="bg-light-surface dark:bg-dark-surface p-4 rounded-xl border border-red-500/30 dark:border-red-500/30 shadow-sm flex flex-col justify-center relative overflow-hidden">
-        <div class="absolute top-0 left-0 w-1 h-full bg-red-500"></div>
+        <div class="absolute top-0 left-0 w-1 h-full bg-red-500"/>
         <p class="text-xs font-medium text-light-text/60 dark:text-offwhite/60 mb-1 ml-2">Em atraso</p>
         <p class="text-lg font-bold text-red-500 ml-2">{{ formatCurrency(emAtraso) }}</p>
       </div>
@@ -31,7 +31,7 @@
 
       <!-- Saldo em caixa -->
       <div class="bg-light-surface dark:bg-dark-surface p-4 rounded-xl border border-light-border dark:border-dark-border shadow-sm flex flex-col justify-center relative overflow-hidden">
-        <div class="absolute top-0 left-0 w-1 h-full bg-gold"></div>
+        <div class="absolute top-0 left-0 w-1 h-full bg-gold"/>
         <p class="text-xs font-medium text-light-text/60 dark:text-offwhite/60 mb-1 ml-2">Saldo em caixa</p>
         <p class="text-lg font-bold text-light-text dark:text-offwhite ml-2">{{ formatCurrency(saldoCaixa) }}</p>
       </div>
@@ -53,13 +53,13 @@
               class="w-1/3 max-w-[20px] bg-green-500 rounded-t-sm transition-all duration-300" 
               :style="{ height: `${Math.max(month.entrada > 0 ? 10 : 2, (month.entrada / maxChartValue) * 100)}%` }"
               :title="`Entrada: ${formatCurrency(month.entrada)}`"
-            ></div>
+            />
             <!-- Barra Vermelha (Saída) -->
             <div 
               class="w-1/3 max-w-[20px] bg-red-500 rounded-t-sm transition-all duration-300" 
               :style="{ height: `${Math.max(month.saida > 0 ? 10 : 2, (month.saida / maxChartValue) * 100)}%` }"
               :title="`Saída: ${formatCurrency(month.saida)}`"
-            ></div>
+            />
           </div>
           <span class="text-xs text-light-text/50 dark:text-offwhite/50">{{ month.label }}</span>
         </div>

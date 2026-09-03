@@ -4,11 +4,11 @@
     <div class="relative">
       <select
         :value="modelValue"
-        @change="$emit('update:modelValue', ($event.target as HTMLSelectElement).value)"
         class="w-full bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-md px-3 py-2 pr-8 text-light-text dark:text-offwhite focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors appearance-none cursor-pointer"
         :class="{'text-light-text/40 dark:text-offwhite/40': !modelValue}"
+        @change="$emit('update:modelValue', ($event.target as HTMLSelectElement).value)"
       >
-        <option value="" disabled selected v-if="placeholder">{{ placeholder }}</option>
+        <option v-if="placeholder" value="" disabled selected>{{ placeholder }}</option>
         <option v-for="option in options" :key="option.value" :value="option.value" class="text-light-text dark:text-offwhite bg-light-surface dark:bg-dark-surface">
           {{ option.label }}
         </option>

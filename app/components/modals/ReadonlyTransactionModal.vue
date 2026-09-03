@@ -39,8 +39,8 @@
 
       <div class="flex justify-end mt-2">
         <button 
-          @click="handleClose"
           class="px-6 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-bold rounded-md transition-colors shadow-sm"
+          @click="handleClose"
         >
           Entendi
         </button>
@@ -55,7 +55,7 @@ import { Info } from '@lucide/vue'
 import BaseModal from '../BaseModal.vue'
 import type { CashflowEntry } from '../../composables/useFinanceiro'
 
-const props = defineProps<{
+defineProps<{
   isOpen: boolean
   transaction: CashflowEntry | null
 }>()

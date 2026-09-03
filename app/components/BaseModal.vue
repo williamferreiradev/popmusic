@@ -11,7 +11,7 @@
           <div 
             class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity print:hidden"
             @click="closeOnOutsideClick && $emit('close')"
-          ></div>
+          />
 
           <!-- Modal Content -->
           <div 
@@ -26,8 +26,8 @@
                 {{ title }}
               </h3>
               <button 
-                @click="$emit('close')"
                 class="text-light-text/50 hover:text-light-text dark:text-offwhite/50 dark:hover:text-offwhite transition-colors p-1 rounded-md hover:bg-light-border dark:hover:bg-dark-border"
+                @click="$emit('close')"
               >
                 <X class="w-5 h-5" />
               </button>
@@ -35,12 +35,12 @@
 
             <!-- Body -->
             <div class="p-6 overflow-y-auto max-h-[85vh]">
-              <slot></slot>
+              <slot/>
             </div>
 
             <!-- Footer -->
             <div v-if="$slots.footer" class="px-6 py-4 border-t border-light-border dark:border-dark-border bg-light-bg/50 dark:bg-dark-bg/50 flex items-center justify-end gap-3">
-              <slot name="footer"></slot>
+              <slot name="footer"/>
             </div>
           </div>
         </div>

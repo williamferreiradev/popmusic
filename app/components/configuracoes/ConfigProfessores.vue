@@ -7,7 +7,7 @@
           Cadastre professores, modalidades e o valor de repasse por aluno.
         </p>
       </div>
-      <BaseButton variant="primary" @click="openModal()" class="flex items-center gap-2">
+      <BaseButton variant="primary" class="flex items-center gap-2" @click="openModal()">
         <Plus class="w-4 h-4" /> Novo professor
       </BaseButton>
     </div>
@@ -70,16 +70,16 @@
                 <button
                   v-if="!teacher.userId"
                   :disabled="isInvitingId === teacher.id || !teacher.email || !teacher.active"
-                  @click="inviteTeacher(teacher)"
                   class="p-1.5 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
                   :title="teacher.email ? 'Enviar convite de acesso' : 'Informe o e-mail para convidar'"
+                  @click="inviteTeacher(teacher)"
                 >
                   <Loader2 v-if="isInvitingId === teacher.id" class="w-4 h-4 animate-spin" />
                   <MailPlus v-else class="w-4 h-4" />
                 </button>
-                <button v-else :disabled="isInvitingId === teacher.id || !teacher.active" @click="resendTeacherAccess(teacher)" class="text-[10px] font-bold text-green-600 dark:text-green-400 hover:underline disabled:opacity-40" title="Reenviar acesso/recuperação">REENVIAR ACESSO</button>
-                <button @click="openModal(teacher)" class="p-1.5 hover:text-primary" title="Editar"><Pencil class="w-4 h-4" /></button>
-                <button @click="toggleActive(teacher)" class="p-1.5" :class="teacher.active ? 'hover:text-red-500' : 'hover:text-green-500'" :title="teacher.active ? 'Desativar' : 'Ativar'">
+                <button v-else :disabled="isInvitingId === teacher.id || !teacher.active" class="text-[10px] font-bold text-green-600 dark:text-green-400 hover:underline disabled:opacity-40" title="Reenviar acesso/recuperação" @click="resendTeacherAccess(teacher)">REENVIAR ACESSO</button>
+                <button class="p-1.5 hover:text-primary" title="Editar" @click="openModal(teacher)"><Pencil class="w-4 h-4" /></button>
+                <button class="p-1.5" :class="teacher.active ? 'hover:text-red-500' : 'hover:text-green-500'" :title="teacher.active ? 'Desativar' : 'Ativar'" @click="toggleActive(teacher)">
                   <UserX v-if="teacher.active" class="w-4 h-4" />
                   <UserCheck v-else class="w-4 h-4" />
                 </button>
@@ -90,7 +90,7 @@
       </table>
     </div>
 
-    <BaseModal :isOpen="isModalOpen" :title="isEditing ? 'Editar professor' : 'Novo professor'" max-width="xl" @close="closeModal">
+    <BaseModal :is-open="isModalOpen" :title="isEditing ? 'Editar professor' : 'Novo professor'" max-width="xl" @close="closeModal">
       <form class="p-5 flex flex-col gap-4" @submit.prevent="save">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <BaseInput v-model="form.name" label="Nome completo" placeholder="Ex: João da Silva" required />
@@ -115,7 +115,7 @@
           <label class="text-sm font-medium text-light-text dark:text-offwhite">Modalidades que o professor ensina</label>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 rounded-lg border border-light-border dark:border-dark-border p-3 max-h-52 overflow-y-auto">
             <label v-for="modality in modalities" :key="modality.id" class="flex items-center gap-3 p-2 rounded-md hover:bg-light-bg dark:hover:bg-dark-bg cursor-pointer text-light-text dark:text-offwhite">
-              <input v-model="form.modalityIds" type="checkbox" :value="modality.id" class="w-4 h-4 accent-primary shrink-0" />
+              <input v-model="form.modalityIds" type="checkbox" :value="modality.id" class="w-4 h-4 accent-primary shrink-0" >
               <span class="text-sm font-medium">{{ modality.name }}</span>
             </label>
             <p v-if="!modalities.length" class="text-sm text-light-text/50 dark:text-offwhite/50">Cadastre uma modalidade primeiro.</p>

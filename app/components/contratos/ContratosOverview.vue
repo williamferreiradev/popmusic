@@ -69,7 +69,7 @@
             <h3 class="font-bold text-light-text dark:text-offwhite flex items-center gap-2">
               <Clock class="w-4 h-4 text-amber-500" /> Aguardando assinatura
             </h3>
-            <button @click="goToHistory('aguardando')" class="text-xs font-bold text-primary hover:underline">Ver todos</button>
+            <button class="text-xs font-bold text-primary hover:underline" @click="goToHistory('aguardando')">Ver todos</button>
           </div>
           
           <div class="p-4 flex-1 overflow-y-auto">
@@ -83,8 +83,8 @@
                   <p class="text-xs text-light-text/60 dark:text-offwhite/60">Enviado em {{ formatDate(c.sentAt) }}</p>
                 </div>
                 <button 
-                  @click="selectedContractId = c.id; isResendModalOpen = true"
                   class="shrink-0 px-3 py-1.5 text-xs font-bold text-primary bg-primary/10 hover:bg-primary hover:text-white rounded transition-colors"
+                  @click="selectedContractId = c.id; isResendModalOpen = true"
                 >
                   Reenviar link
                 </button>
@@ -99,7 +99,7 @@
             <h3 class="font-bold text-light-text dark:text-offwhite flex items-center gap-2">
               <AlertCircle class="w-4 h-4 text-gold" /> Renovações próximas
             </h3>
-            <button @click="goToHistory('vencendo')" class="text-xs font-bold text-gold hover:underline">Ver todos</button>
+            <button class="text-xs font-bold text-gold hover:underline" @click="goToHistory('vencendo')">Ver todos</button>
           </div>
           
           <div class="p-4 flex-1 overflow-y-auto">
@@ -113,8 +113,8 @@
                   <p class="text-xs text-light-text/60 dark:text-offwhite/60">Vence em {{ formatExpiryDate(c.acceptedAt!) }}</p>
                 </div>
                 <button 
-                  @click="openRenewModal(c)"
                   class="shrink-0 px-3 py-1.5 text-xs font-bold text-gold bg-gold/10 hover:bg-gold hover:text-black rounded transition-colors"
+                  @click="openRenewModal(c)"
                 >
                   Iniciar renovação
                 </button>

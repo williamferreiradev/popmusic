@@ -12,8 +12,8 @@
           </tr>
         </thead>
         <tbody v-if="!pending && paginatedStudents.length > 0">
-          <tr 
-            v-for="(aluno, index) in paginatedStudents" 
+          <tr
+            v-for="aluno in paginatedStudents"
             :key="aluno.id"
             class="border-b border-light-border dark:border-dark-border last:border-0 hover:bg-light-bg/40 dark:hover:bg-dark-bg/40 transition-colors group"
           >
@@ -21,7 +21,7 @@
               <div class="flex items-center gap-3">
                 <div class="w-8 h-8 rounded-full bg-light-border dark:bg-dark-border flex items-center justify-center overflow-hidden shrink-0">
                   <span v-if="!aluno.avatar" class="text-xs font-bold">{{ aluno.initials }}</span>
-                  <img v-else :src="aluno.avatar" alt="Avatar" class="w-full h-full object-cover" />
+                  <img v-else :src="aluno.avatar" alt="Avatar" class="w-full h-full object-cover" >
                 </div>
                 <div>
                   <div class="font-medium">{{ aluno.name }}</div>
@@ -37,30 +37,30 @@
               </BaseBadge>
             </td>
             <td class="px-5 py-4 text-right relative">
-              <button 
-                @click.stop="toggleMenu(aluno.id)"
+              <button
                 class="p-2 rounded-md text-light-text/50 dark:text-offwhite/50 hover:bg-light-bg dark:hover:bg-dark-bg hover:text-light-text dark:hover:text-offwhite transition-colors focus:outline-none focus:ring-2 focus:ring-gold"
                 :class="openMenuId === aluno.id ? 'bg-light-bg dark:bg-dark-bg text-light-text dark:text-offwhite' : ''"
+                @click.stop="toggleMenu(aluno.id)"
               >
                 <MoreHorizontal class="w-4 h-4" />
               </button>
-              
+
               <!-- Dropdown Menu -->
-              <div 
+              <div
                 v-if="openMenuId === aluno.id"
-                @click.stop
                 class="absolute right-5 top-full mt-1 w-44 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-lg shadow-2xl overflow-hidden z-50 py-1.5 ring-1 ring-black/10"
+                @click.stop
               >
-                <button @click="openProfile(aluno)" class="w-full text-left px-4 py-2.5 text-sm hover:bg-light-bg dark:hover:bg-dark-bg text-light-text dark:text-offwhite transition-colors flex items-center gap-2.5 font-medium">
+                <button class="w-full text-left px-4 py-2.5 text-sm hover:bg-light-bg dark:hover:bg-dark-bg text-light-text dark:text-offwhite transition-colors flex items-center gap-2.5 font-medium" @click="openProfile(aluno)">
                   <Eye class="w-4 h-4 text-primary" /> Ver Perfil
                 </button>
-                <button @click="openContract(aluno)" class="w-full text-left px-4 py-2.5 text-sm hover:bg-light-bg dark:hover:bg-dark-bg text-light-text dark:text-offwhite transition-colors flex items-center gap-2.5 font-medium">
+                <button class="w-full text-left px-4 py-2.5 text-sm hover:bg-light-bg dark:hover:bg-dark-bg text-light-text dark:text-offwhite transition-colors flex items-center gap-2.5 font-medium" @click="openContract(aluno)">
                   <FileText class="w-4 h-4 text-gold" /> Ver Contrato
                 </button>
-                <button @click="openEdit(aluno)" class="w-full text-left px-4 py-2.5 text-sm hover:bg-light-bg dark:hover:bg-dark-bg text-light-text dark:text-offwhite transition-colors flex items-center gap-2.5 font-medium">
+                <button class="w-full text-left px-4 py-2.5 text-sm hover:bg-light-bg dark:hover:bg-dark-bg text-light-text dark:text-offwhite transition-colors flex items-center gap-2.5 font-medium" @click="openEdit(aluno)">
                   <Edit2 class="w-4 h-4 text-blue-500" /> Editar
                 </button>
-                <button @click="openDelete(aluno)" class="w-full text-left px-4 py-2.5 text-sm hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-[#ff8a8a] transition-colors flex items-center gap-2.5 font-medium">
+                <button class="w-full text-left px-4 py-2.5 text-sm hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-[#ff8a8a] transition-colors flex items-center gap-2.5 font-medium" @click="openDelete(aluno)">
                   <Trash2 class="w-4 h-4" /> Cancelar matrícula
                 </button>
               </div>
@@ -80,29 +80,29 @@
           <tr>
             <td colspan="5" class="px-5 py-12 text-center">
               <div class="flex justify-center items-center">
-                <div class="animate-spin w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full"></div>
+                <div class="animate-spin w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full"/>
               </div>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-    
+
     <!-- Footer com Paginação Simples -->
     <div class="p-4 border-t border-light-border dark:border-dark-border bg-light-surface dark:bg-dark-surface flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-light-text/70 dark:text-offwhite/70 rounded-b-lg">
       <span>Mostrando {{ Math.min((currentPage - 1) * itemsPerPage + 1, props.students?.length || 0) }} a {{ Math.min(currentPage * itemsPerPage, props.students?.length || 0) }} de {{ props.students?.length || 0 }} alunos</span>
       <div class="flex gap-2">
-        <button 
-          @click="prevPage"
+        <button
           :disabled="currentPage === 1"
           class="px-4 py-1.5 rounded-md border border-light-border dark:border-dark-border hover:bg-light-bg dark:hover:bg-dark-bg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          @click="prevPage"
         >
           Anterior
         </button>
-        <button 
-          @click="nextPage"
+        <button
           :disabled="currentPage === totalPages"
           class="px-4 py-1.5 rounded-md border border-light-border dark:border-dark-border hover:bg-light-bg dark:hover:bg-dark-bg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          @click="nextPage"
         >
           Próximo
         </button>
@@ -110,7 +110,7 @@
     </div>
 
     <!-- Modal de Perfil do Aluno -->
-    <StudentProfileModal 
+    <StudentProfileModal
       :is-open="isProfileModalOpen"
       :student="selectedStudent"
       @close="isProfileModalOpen = false"
@@ -120,7 +120,7 @@
     />
 
     <!-- Modal de Edição -->
-    <StudentEditModal 
+    <StudentEditModal
       :is-open="isEditModalOpen"
       :student="selectedStudent"
       @close="isEditModalOpen = false"
@@ -239,8 +239,8 @@ const openContract = async (aluno: any) => {
           selectedSignedInfo.value = {
             signerName: raw.responsavel_nome || raw.nome || aluno.name,
             signerCpf: raw.responsavel_cpf || raw.cpf || '',
-            acceptedAt: contract.data_aceite 
-              ? new Date(contract.data_aceite).toLocaleString('pt-BR') 
+            acceptedAt: contract.data_aceite
+              ? new Date(contract.data_aceite).toLocaleString('pt-BR')
               : new Date(contract.criado_em || Date.now()).toLocaleString('pt-BR'),
             token: contract.token || contract.aceite_hash || 'AUTH-DIGITAL',
             ip: typeof contract.aceite_ip === 'string' ? contract.aceite_ip : 'Não informado',
@@ -325,7 +325,7 @@ const handleStudentUnlocked = async (data: { id: string }) => {
   emit('refresh')
 }
 
-const handleStudentUpdated = (data: any) => {
+const handleStudentUpdated = (_data: any) => {
   isEditModalOpen.value = false
   emit('refresh')
 }

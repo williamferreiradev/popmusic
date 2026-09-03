@@ -195,7 +195,7 @@ Dados oficiais da contratada disponíveis no cadastro da escola.`
     let aguardando = 0
     let aceitosMes = 0
     let vencendo = 0
-    let totalEnviados = contractsList.value.length
+    const totalEnviados = contractsList.value.length
     let totalAceitos = 0
 
     const now = new Date()

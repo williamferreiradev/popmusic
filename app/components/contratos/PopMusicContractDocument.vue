@@ -5,8 +5,8 @@
     <div v-if="showPrintButton" class="print:hidden mb-4 flex justify-end gap-2">
       <button 
         type="button" 
-        @click="triggerPrint"
         class="px-4 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded shadow flex items-center gap-2 transition-colors cursor-pointer"
+        @click="triggerPrint"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -24,16 +24,16 @@
           <!-- Logo Estilizado Pop Music -->
           <div class="flex flex-col items-center justify-center w-full">
             <div class="text-center font-extrabold tracking-[0.35em] text-xs uppercase text-gray-800 flex items-center justify-center gap-2 w-full">
-              <span class="h-[1px] bg-gray-400 flex-1"></span>
+              <span class="h-[1px] bg-gray-400 flex-1"/>
               <span>A c a d e m i a &nbsp; d e &nbsp; M ú s i c a</span>
-              <span class="h-[1px] bg-gray-400 flex-1"></span>
+              <span class="h-[1px] bg-gray-400 flex-1"/>
             </div>
             <div class="flex items-center justify-center gap-4 py-1">
               <span class="text-2xl sm:text-3xl font-black italic tracking-widest text-black font-sans">POP MUSIC</span>
             </div>
             <!-- Simulação de Teclado no banner -->
             <div class="flex h-1.5 w-full bg-gray-200 border-t border-b border-black overflow-hidden">
-              <div v-for="i in 36" :key="i" class="flex-1 border-r border-gray-400 last:border-0" :class="{'bg-black w-1': i % 3 === 0}"></div>
+              <div v-for="i in 36" :key="i" class="flex-1 border-r border-gray-400 last:border-0" :class="{'bg-black w-1': i % 3 === 0}"/>
             </div>
           </div>
         </div>
@@ -234,7 +234,7 @@
         <!-- Foto Facial de Comprovação -->
         <div v-if="signedInfo.signerPhoto" class="shrink-0 flex flex-col items-center">
           <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-md border-2 border-green-600 overflow-hidden shadow-sm bg-white">
-            <img :src="signedInfo.signerPhoto" alt="Foto facial do signatário" class="w-full h-full object-cover" />
+            <img :src="signedInfo.signerPhoto" alt="Foto facial do signatário" class="w-full h-full object-cover" >
           </div>
           <span class="text-[7.5px] text-green-800 font-bold mt-0.5 uppercase tracking-tighter">Foto do signatário</span>
         </div>

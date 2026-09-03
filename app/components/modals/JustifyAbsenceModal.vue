@@ -1,7 +1,7 @@
 <template>
-  <BaseModal 
-    :is-open="isOpen" 
-    title="Registrar falta justificada" 
+  <BaseModal
+    :is-open="isOpen"
+    title="Registrar falta justificada"
     max-width="md"
     @close="handleClose"
   >
@@ -13,8 +13,8 @@
       <!-- Motivo -->
       <div>
         <label class="text-sm font-medium text-light-text dark:text-offwhite mb-1.5 block">Motivo</label>
-        <BaseSelect 
-          v-model="reason" 
+        <BaseSelect
+          v-model="reason"
           :options="[
             { label: 'Atestado médico', value: 'atestado' },
             { label: 'Falta do professor', value: 'falta_professor' },
@@ -26,8 +26,8 @@
       <!-- Observação -->
       <div>
         <label class="text-sm font-medium text-light-text dark:text-offwhite mb-1.5 block">Observação <span class="text-xs text-light-text/50">(opcional)</span></label>
-        <BaseInput 
-          v-model="observation" 
+        <BaseInput
+          v-model="observation"
           type="text"
           placeholder="Detalhe o motivo, se necessário."
         />
@@ -36,9 +36,9 @@
       <!-- Agendar Reposição -->
       <div v-if="allowReplacement" class="mt-2 border border-light-border dark:border-dark-border rounded-lg p-4 bg-light-surface/50 dark:bg-dark-surface/50">
         <label class="flex items-center gap-3 cursor-pointer">
-          <input 
-            type="checkbox" 
+          <input
             v-model="scheduleReplacement"
+            type="checkbox"
             class="w-4 h-4 rounded border-light-border dark:border-dark-border text-primary focus:ring-primary dark:focus:ring-primary bg-light-bg dark:bg-dark-bg"
           >
           <span class="text-sm font-bold text-light-text dark:text-offwhite">Agendar reposição agora</span>
@@ -49,8 +49,8 @@
           <div class="flex flex-col sm:flex-row gap-4">
             <div class="flex-1">
               <label class="text-xs font-medium text-light-text/80 dark:text-offwhite/80 mb-1.5 block">Nova data</label>
-              <BaseInput 
-                v-model="replacementDate" 
+              <BaseInput
+                v-model="replacementDate"
                 type="date"
                 :class="{'border-red-500': isHoliday}"
               />
@@ -58,25 +58,25 @@
             </div>
             <div class="w-full sm:w-1/3">
               <label class="text-xs font-medium text-light-text/80 dark:text-offwhite/80 mb-1.5 block">Novo horário</label>
-              <BaseInput 
-                v-model="replacementTime" 
+              <BaseInput
+                v-model="replacementTime"
                 type="time"
               />
             </div>
           </div>
-          
+
           <div class="flex flex-col sm:flex-row gap-4">
             <div class="flex-1">
               <label class="text-xs font-medium text-light-text/80 dark:text-offwhite/80 mb-1.5 block">Professor</label>
-              <BaseSelect 
-                v-model="replacementTeacher" 
+              <BaseSelect
+                v-model="replacementTeacher"
                 :options="teacherOptions"
               />
             </div>
             <div class="flex-1">
               <label class="text-xs font-medium text-light-text/80 dark:text-offwhite/80 mb-1.5 block">Sala</label>
-              <BaseSelect 
-                v-model="replacementRoom" 
+              <BaseSelect
+                v-model="replacementRoom"
                 :options="roomOptions"
               />
             </div>
@@ -86,16 +86,16 @@
 
       <!-- Footer / Actions -->
       <div class="flex justify-end gap-3 mt-4">
-        <button 
-          @click="handleClose"
+        <button
           class="px-4 py-2 text-sm font-medium text-light-text/70 dark:text-offwhite/70 hover:bg-light-border/50 dark:hover:bg-dark-border/50 rounded-md transition-colors"
+          @click="handleClose"
         >
           Cancelar
         </button>
-        <button 
-          @click="confirm"
+        <button
           class="px-6 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-bold rounded-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           :disabled="!isValid"
+          @click="confirm"
         >
           Confirmar falta justificada
         </button>

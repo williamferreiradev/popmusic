@@ -54,14 +54,14 @@
       <!-- Footer / Actions -->
       <div class="flex justify-end gap-3 mt-4">
         <button 
-          @click="handleClose"
           class="px-4 py-2 text-sm font-medium text-light-text/70 dark:text-offwhite/70 hover:bg-light-border/50 dark:hover:bg-dark-border/50 rounded-md transition-colors"
+          @click="handleClose"
         >
           Cancelar
         </button>
         <button 
-          @click="confirm"
           class="px-6 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-bold rounded-md transition-colors shadow-sm"
+          @click="confirm"
         >
           Confirmar pagamento
         </button>
@@ -92,13 +92,6 @@ const paymentOptions = [
   { label: 'Cartão de Crédito/Débito', value: 'cartao' },
   { label: 'Transferência Bancária', value: 'transferencia' },
   { label: 'Boleto', value: 'boleto' }
-]
-
-const defaultAccounts = [
-  { label: 'Conta Principal / Nubank', value: 'Nubank' },
-  { label: 'Itaú', value: 'Itaú' },
-  { label: 'Caixa Econômica', value: 'Caixa' },
-  { label: 'PagBank', value: 'PagBank' }
 ]
 
 const accountOptions = computed(() => {
@@ -140,8 +133,6 @@ const handleClose = () => {
 }
 
 const confirm = () => {
-  const needsAccount = formData.value.paymentMethod && formData.value.paymentMethod !== 'dinheiro'
-  
   validationErrors.value = {
     paymentMethod: !formData.value.paymentMethod,
     paidAt: !formData.value.paidAt,
@@ -149,9 +140,6 @@ const confirm = () => {
   }
 
   if (Object.values(validationErrors.value).some(v => v)) return
-
-  // Se for dinheiro, conta é Dinheiro
-  const finalAccount = formData.value.paymentMethod === 'dinheiro' ? 'Dinheiro' : formData.value.account
 
   emit('confirm', {
     paymentMethod: formData.value.paymentMethod,

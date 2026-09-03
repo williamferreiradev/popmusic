@@ -316,6 +316,7 @@
 - [x] Adicionar script de typecheck e dependências necessárias.
 - [x] Executar o typecheck completo sem erros (`npm run typecheck`).
 - [x] Adicionar ESLint e comandos de lint/formatação automática ao projeto.
+- [x] Executar o lint completo sem erros; usos legados de `any` permanecem registrados como avisos para correção gradual.
 - [ ] Criar testes unitários para maioridade, valores, vencimentos e repasses.
 - [ ] Criar testes de integração para matrícula, contrato, cobrança e presença.
 - [ ] Criar testes de RLS para cada papel.

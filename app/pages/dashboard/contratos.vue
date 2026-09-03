@@ -13,9 +13,9 @@
         <button 
           v-for="tab in tabs" 
           :key="tab.id"
-          @click="activeTab = tab.id"
           class="px-6 py-4 text-sm font-medium transition-all relative whitespace-nowrap outline-none"
           :class="activeTab === tab.id ? 'text-gold' : 'text-light-text/60 dark:text-offwhite/60 hover:text-light-text dark:hover:text-offwhite'"
+          @click="activeTab = tab.id"
         >
           {{ tab.label }}
           
@@ -23,7 +23,7 @@
           <div 
             v-if="activeTab === tab.id"
             class="absolute bottom-0 left-0 w-full h-0.5 bg-gold"
-          ></div>
+          />
         </button>
       </div>
     </div>
@@ -43,12 +43,12 @@
             <!-- Skeleton genérico de carregamento para as abas -->
             <div class="flex-1 w-full animate-pulse flex flex-col gap-6">
               <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="h-28 bg-light-surface dark:bg-dark-surface rounded-xl border border-light-border dark:border-dark-border"></div>
-                <div class="h-28 bg-light-surface dark:bg-dark-surface rounded-xl border border-light-border dark:border-dark-border"></div>
-                <div class="h-28 bg-light-surface dark:bg-dark-surface rounded-xl border border-light-border dark:border-dark-border"></div>
-                <div class="h-28 bg-light-surface dark:bg-dark-surface rounded-xl border border-light-border dark:border-dark-border"></div>
+                <div class="h-28 bg-light-surface dark:bg-dark-surface rounded-xl border border-light-border dark:border-dark-border"/>
+                <div class="h-28 bg-light-surface dark:bg-dark-surface rounded-xl border border-light-border dark:border-dark-border"/>
+                <div class="h-28 bg-light-surface dark:bg-dark-surface rounded-xl border border-light-border dark:border-dark-border"/>
+                <div class="h-28 bg-light-surface dark:bg-dark-surface rounded-xl border border-light-border dark:border-dark-border"/>
               </div>
-              <div class="h-[400px] bg-light-surface dark:bg-dark-surface rounded-xl border border-light-border dark:border-dark-border"></div>
+              <div class="h-[400px] bg-light-surface dark:bg-dark-surface rounded-xl border border-light-border dark:border-dark-border"/>
             </div>
           </template>
           

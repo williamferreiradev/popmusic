@@ -5,7 +5,7 @@
         <h2 class="text-xl font-bold text-light-text dark:text-offwhite">Equipe</h2>
         <p class="text-sm text-light-text/60 dark:text-offwhite/60">Controle o acesso administrativo ao painel.</p>
       </div>
-      <BaseButton variant="primary" @click="openModal()" class="flex items-center gap-2">
+      <BaseButton variant="primary" class="flex items-center gap-2" @click="openModal()">
         <UserPlus class="w-4 h-4" /> Convidar usuário
       </BaseButton>
     </div>
@@ -31,9 +31,9 @@
           <tr v-else-if="!team || team.length === 0">
             <td colspan="5" class="py-8 text-center text-light-text/50 dark:text-offwhite/50">Nenhum membro na equipe.</td>
           </tr>
-          <tr 
+          <tr
+            v-for="member in team"
             v-else
-            v-for="member in team" 
             :key="member.id"
             class="border-b border-light-border dark:border-dark-border last:border-0 hover:bg-light-border/20 dark:hover:bg-dark-border/20 transition-colors"
             :class="{'opacity-50': member.status === 'Inativo'}"
@@ -48,10 +48,10 @@
             </td>
             <td class="py-3 px-4 text-center">
               <div class="flex items-center justify-center gap-2">
-                <button @click="openModal(member)" class="p-1.5 text-light-text/60 dark:text-offwhite/60 hover:text-primary transition-colors" title="Editar" :disabled="member.status === 'Inativo'">
+                <button class="p-1.5 text-light-text/60 dark:text-offwhite/60 hover:text-primary transition-colors" title="Editar" :disabled="member.status === 'Inativo'" @click="openModal(member)">
                   <Pencil class="w-4 h-4" />
                 </button>
-                <button v-if="member.status === 'Ativo'" @click="confirmDeactivate(member)" class="p-1.5 text-light-text/60 dark:text-offwhite/60 hover:text-red-500 transition-colors" title="Desativar">
+                <button v-if="member.status === 'Ativo'" class="p-1.5 text-light-text/60 dark:text-offwhite/60 hover:text-red-500 transition-colors" title="Desativar" @click="confirmDeactivate(member)">
                   <UserMinus class="w-4 h-4" />
                 </button>
               </div>
@@ -62,11 +62,11 @@
     </div>
 
     <!-- Modal Nova/Editar -->
-    <BaseModal :isOpen="isModalOpen" :title="isEditing ? 'Editar usuário' : 'Convidar novo usuário'" @close="closeModal">
+    <BaseModal :is-open="isModalOpen" :title="isEditing ? 'Editar usuário' : 'Convidar novo usuário'" @close="closeModal">
       <div class="p-5 flex flex-col gap-4">
         <BaseInput v-model="formData.name" label="Nome Completo" placeholder="Ex: João da Silva" required />
         <BaseInput v-model="formData.email" label="E-mail de acesso" type="email" placeholder="Ex: joao@escola.com" required :disabled="isEditing" />
-        
+
         <div class="flex flex-col gap-2">
           <label class="text-sm font-medium text-light-text dark:text-offwhite">Papel</label>
           <div class="p-3 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-md">
@@ -77,7 +77,7 @@
 
         <div class="flex items-center justify-end gap-3 pt-4 mt-2 border-t border-light-border dark:border-dark-border">
           <BaseButton variant="outline" @click="closeModal">Cancelar</BaseButton>
-          <BaseButton variant="primary" @click="save" :disabled="!isFormValid || isLoadingSave" class="flex items-center gap-2">
+          <BaseButton variant="primary" :disabled="!isFormValid || isLoadingSave" class="flex items-center gap-2" @click="save">
             <Loader2 v-if="isLoadingSave" class="w-4 h-4 animate-spin" />
             {{ isEditing ? 'Salvar' : 'Enviar convite' }}
           </BaseButton>
@@ -86,14 +86,14 @@
     </BaseModal>
 
     <!-- Modal Desativar -->
-    <BaseModal :isOpen="isDeactivateModalOpen" :title="`Desativar acesso de ${userToDeactivate?.name}?`" @close="isDeactivateModalOpen = false">
+    <BaseModal :is-open="isDeactivateModalOpen" :title="`Desativar acesso de ${userToDeactivate?.name}?`" @close="isDeactivateModalOpen = false">
       <div class="p-5 flex flex-col gap-4">
         <p class="text-sm text-light-text/80 dark:text-offwhite/80">
           A pessoa não conseguirá mais acessar o sistema, mas seu histórico de ações permanece registrado.
         </p>
         <div class="flex items-center justify-end gap-3 pt-4 border-t border-light-border dark:border-dark-border">
           <BaseButton variant="outline" @click="isDeactivateModalOpen = false">Cancelar</BaseButton>
-          <button @click="executeDeactivate" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md font-medium transition-colors text-sm">
+          <button class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md font-medium transition-colors text-sm" @click="executeDeactivate">
             Desativar
           </button>
         </div>
@@ -105,13 +105,13 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Plus, Pencil, UserMinus, UserPlus, Loader2 } from '@lucide/vue'
+import { Pencil, UserMinus, UserPlus, Loader2 } from '@lucide/vue'
 import BaseButton from '../BaseButton.vue'
 import BaseModal from '../BaseModal.vue'
 import BaseInput from '../BaseInput.vue'
 import BaseBadge from '../BaseBadge.vue'
 
-const emit = defineEmits(['unsaved-changes'])
+defineEmits(['unsaved-changes'])
 const supabase = useSupabaseClient()
 
 const { data: team, pending, refresh } = await useFetch<any[]>('/api/admin/team', { key: 'config_equipe' })
@@ -147,7 +147,7 @@ const closeModal = () => {
 const save = async () => {
   if (!isFormValid.value) return
   isLoadingSave.value = true
-  
+
   try {
     if (isEditing.value) {
       const { error } = await (supabase as any).rpc('alterar_acesso_gestao', {
@@ -155,7 +155,7 @@ const save = async () => {
         p_nome: formData.value.name,
         p_ativo: true
       })
-        
+
       if (error) throw error
     } else {
       await $fetch('/api/admin/invite-user', {
@@ -166,10 +166,10 @@ const save = async () => {
           papel: 'gestao'
         }
       })
-      
+
       alert(`Convite enviado para ${formData.value.email}.`)
     }
-    
+
     await refresh()
     closeModal()
   } catch (error: any) {
@@ -193,7 +193,7 @@ const executeDeactivate = async () => {
         p_nome: userToDeactivate.value.name,
         p_ativo: false
       })
-        
+
       if (error) throw error
       await refresh()
     } catch (error: any) {

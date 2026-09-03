@@ -5,7 +5,7 @@
         <h2 class="text-xl font-bold text-light-text dark:text-offwhite">Contas Financeiras</h2>
         <p class="text-sm text-light-text/60 dark:text-offwhite/60">Bancos e carteiras onde o dinheiro da escola entra e sai.</p>
       </div>
-      <BaseButton variant="primary" @click="openModal()" class="flex items-center gap-2">
+      <BaseButton variant="primary" class="flex items-center gap-2" @click="openModal()">
         <Plus class="w-4 h-4" /> Nova conta
       </BaseButton>
     </div>
@@ -30,9 +30,9 @@
           <tr v-else-if="!financialAccounts || financialAccounts.length === 0">
             <td colspan="4" class="py-8 text-center text-light-text/50 dark:text-offwhite/50">Nenhuma conta cadastrada.</td>
           </tr>
-          <tr 
+          <tr
+            v-for="account in financialAccounts"
             v-else
-            v-for="account in financialAccounts" 
             :key="account.id"
             class="border-b border-light-border dark:border-dark-border last:border-0 hover:bg-light-border/20 dark:hover:bg-dark-border/20 transition-colors"
           >
@@ -41,10 +41,10 @@
             <td class="py-3 px-4 text-right text-light-text dark:text-offwhite">R$ {{ account.initialBalance.toFixed(2) }}</td>
             <td class="py-3 px-4 text-center">
               <div class="flex items-center justify-center gap-2">
-                <button @click="openModal(account)" class="p-1.5 text-light-text/60 dark:text-offwhite/60 hover:text-primary transition-colors" title="Editar">
+                <button class="p-1.5 text-light-text/60 dark:text-offwhite/60 hover:text-primary transition-colors" title="Editar" @click="openModal(account)">
                   <Pencil class="w-4 h-4" />
                 </button>
-                <button @click="confirmDelete(account)" class="p-1.5 text-light-text/60 dark:text-offwhite/60 hover:text-red-500 transition-colors" title="Excluir">
+                <button class="p-1.5 text-light-text/60 dark:text-offwhite/60 hover:text-red-500 transition-colors" title="Excluir" @click="confirmDelete(account)">
                   <Trash2 class="w-4 h-4" />
                 </button>
               </div>
@@ -55,18 +55,18 @@
     </div>
 
     <!-- Modal Nova/Editar -->
-    <BaseModal :isOpen="isModalOpen" :title="isEditing ? 'Editar conta' : 'Nova conta'" @close="closeModal">
+    <BaseModal :is-open="isModalOpen" :title="isEditing ? 'Editar conta' : 'Nova conta'" @close="closeModal">
       <div class="p-5 flex flex-col gap-4">
         <BaseInput v-model="formData.name" label="Nome da conta" placeholder="Ex: Nubank, Caixa, Dinheiro Físico" required />
-        
+
         <BaseSelect v-model="formData.type" label="Tipo" :options="[{label: 'Banco', value: 'banco'}, {label: 'Carteira digital', value: 'carteira_digital'}, {label: 'Dinheiro físico', value: 'dinheiro_fisico'}]" />
-        
+
         <BaseInput v-model="formData.initialBalance" label="Saldo inicial (R$)" type="number" placeholder="0.00" required :disabled="isEditing" />
         <p v-if="!isEditing" class="text-xs text-light-text/60 dark:text-offwhite/60 -mt-2">O saldo inicial é usado como ponto de partida pro cálculo automático do Fluxo de Caixa.</p>
-        
+
         <div class="flex items-center justify-end gap-3 pt-4 mt-2 border-t border-light-border dark:border-dark-border">
           <BaseButton variant="outline" @click="closeModal">Cancelar</BaseButton>
-          <BaseButton variant="primary" @click="save" :disabled="!isFormValid || isLoadingSave" class="flex items-center gap-2">
+          <BaseButton variant="primary" :disabled="!isFormValid || isLoadingSave" class="flex items-center gap-2" @click="save">
             <Loader2 v-if="isLoadingSave" class="w-4 h-4 animate-spin" />
             Salvar
           </BaseButton>
@@ -75,7 +75,7 @@
     </BaseModal>
 
     <!-- Modal Arquivar / Bloqueio Exclusão -->
-    <BaseModal :isOpen="isBlockModalOpen" title="Não é possível excluir" @close="isBlockModalOpen = false">
+    <BaseModal :is-open="isBlockModalOpen" title="Não é possível excluir" @close="isBlockModalOpen = false">
       <div class="p-5 flex flex-col gap-4">
         <p class="text-sm text-light-text/80 dark:text-offwhite/80">
           Esta conta possui lançamentos registrados no Fluxo de Caixa e não pode ser excluída para não quebrar o histórico financeiro.
@@ -101,7 +101,7 @@ import BaseModal from '../BaseModal.vue'
 import BaseInput from '../BaseInput.vue'
 import BaseSelect from '../BaseSelect.vue'
 
-const emit = defineEmits(['unsaved-changes'])
+defineEmits(['unsaved-changes'])
 const supabase = useSupabaseClient()
 
 const { data: financialAccounts, pending, refresh } = await useAsyncData('config_contas', async () => {
@@ -156,9 +156,9 @@ const closeModal = () => {
 const save = async () => {
   if (!isFormValid.value) return
   isLoadingSave.value = true
-  
+
   const balance = parseFloat(formData.value.initialBalance) || 0
-  
+
   try {
     if (isEditing.value) {
       const { error } = await supabase
@@ -168,7 +168,7 @@ const save = async () => {
           tipo: formData.value.type
         })
         .eq('id', formData.value.id)
-        
+
       if (error) throw error
     } else {
       const { error } = await supabase
@@ -178,7 +178,7 @@ const save = async () => {
           tipo: formData.value.type,
           saldo_inicial: balance
         })
-        
+
       if (error) throw error
     }
     await refresh()
@@ -198,7 +198,7 @@ const confirmDelete = async (account: any) => {
         .from('contas_financeiras')
         .delete()
         .eq('id', account.id)
-        
+
       if (error) {
         // Se houver erro de FK (23503) ou outro erro de restrição
         if (error.code === '23503') {
@@ -223,7 +223,7 @@ const archiveAccount = async () => {
         .from('contas_financeiras')
         .update({ ativo: false })
         .eq('id', accountToArchive.value.id)
-        
+
       if (error) throw error
       await refresh()
       alert(`Conta ${accountToArchive.value.name} arquivada com sucesso.`)

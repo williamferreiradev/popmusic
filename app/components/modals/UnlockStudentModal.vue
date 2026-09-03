@@ -9,7 +9,7 @@
       <div class="flex items-center gap-4 mb-2">
         <div class="w-12 h-12 rounded-full bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border flex items-center justify-center shrink-0">
           <span v-if="!student.avatar" class="font-bold text-light-text dark:text-offwhite">{{ student.initials }}</span>
-          <img v-else :src="student.avatar" alt="Avatar" class="w-full h-full object-cover rounded-full" />
+          <img v-else :src="student.avatar" alt="Avatar" class="w-full h-full object-cover rounded-full" >
         </div>
         <div>
           <h3 class="font-bold text-light-text dark:text-offwhite">{{ student.name }}</h3>

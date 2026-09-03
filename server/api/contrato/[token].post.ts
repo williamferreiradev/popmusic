@@ -83,8 +83,7 @@ export default defineEventHandler(async (event) => {
     let finalPhotoUrl = ''
 
     // 2. Upload da foto para o bucket fotos_alunos se for base64
-    try {
-      if (photo.startsWith('data:image/jpeg;base64,') || photo.startsWith('data:image/png;base64,')) {
+    if (photo.startsWith('data:image/jpeg;base64,') || photo.startsWith('data:image/png;base64,')) {
         if (photo.length > 8_000_000) throw createError({ statusCode: 413, statusMessage: 'A foto ultrapassa o limite permitido.' })
         const base64Data = photo.replace(/^data:image\/(?:jpeg|png);base64,/, '')
         if (!base64Data || base64Data.length % 4 !== 0 || !/^[A-Za-z0-9+/]+={0,2}$/.test(base64Data)) {
@@ -109,11 +108,8 @@ export default defineEventHandler(async (event) => {
           finalPhotoUrl = uploadData.path
         }
         if (uploadErr) throw uploadErr
-      } else {
-        throw createError({ statusCode: 400, statusMessage: 'Formato da foto inválido.' })
-      }
-    } catch (storageErr) {
-      throw storageErr
+    } else {
+      throw createError({ statusCode: 400, statusMessage: 'Formato da foto inválido.' })
     }
 
     // Aceite e mensalidades são confirmados atomicamente no banco.

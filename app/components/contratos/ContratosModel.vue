@@ -10,21 +10,21 @@
           <!-- Botoes Mock de Formatação -->
           <button class="p-1.5 rounded hover:bg-light-border dark:hover:bg-dark-border text-light-text/70 dark:text-offwhite/70 transition-colors font-bold" title="Negrito">B</button>
           <button class="p-1.5 rounded hover:bg-light-border dark:hover:bg-dark-border text-light-text/70 dark:text-offwhite/70 transition-colors italic font-serif" title="Itálico">I</button>
-          <div class="w-px h-5 bg-light-border dark:bg-dark-border mx-1"></div>
+          <div class="w-px h-5 bg-light-border dark:bg-dark-border mx-1"/>
           <button class="p-1.5 rounded hover:bg-light-border dark:hover:bg-dark-border text-light-text/70 dark:text-offwhite/70 transition-colors" title="Alinhar à esquerda"><AlignLeft class="w-4 h-4" /></button>
           <button class="p-1.5 rounded hover:bg-light-border dark:hover:bg-dark-border text-light-text/70 dark:text-offwhite/70 transition-colors" title="Centralizar"><AlignCenter class="w-4 h-4" /></button>
         </div>
         <div class="flex items-center gap-2">
           <button 
-            @click="isPreviewModalOpen = true"
             class="px-3 py-1.5 text-xs font-bold text-light-text dark:text-offwhite hover:bg-light-border dark:hover:bg-dark-border rounded border border-light-border dark:border-dark-border transition-colors flex items-center gap-2"
+            @click="isPreviewModalOpen = true"
           >
             <Eye class="w-3.5 h-3.5" />
             Pré-visualizar
           </button>
           <button 
-            @click="confirmSave"
             class="px-3 py-1.5 text-xs font-bold text-white bg-primary hover:bg-primary-hover rounded transition-colors shadow-sm flex items-center gap-2"
+            @click="confirmSave"
           >
             <Save class="w-3.5 h-3.5" />
             Salvar modelo
@@ -38,7 +38,7 @@
         v-model="contractModel"
         class="flex-1 w-full p-6 resize-none outline-none bg-transparent text-sm text-light-text dark:text-offwhite leading-relaxed font-sans"
         placeholder="Escreva o texto do contrato aqui..."
-      ></textarea>
+      />
       
     </div>
 
@@ -60,8 +60,8 @@
             <button 
               v-for="v in group.vars" 
               :key="v"
-              @click="insertVariable(v)"
               class="text-left px-2 py-1.5 rounded bg-light-bg/50 dark:bg-dark-bg/50 hover:bg-gold/10 hover:text-gold text-xs font-mono text-light-text/80 dark:text-offwhite/80 transition-colors border border-transparent hover:border-gold/30"
+              @click="insertVariable(v)"
             >
               {{ v }}
             </button>

@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 
 export type ChargeStatus = 'pendente' | 'paga' | 'atrasada' | 'cancelada'
 export type CashflowType = 'entrada' | 'saida'
@@ -272,7 +272,7 @@ export const useFinanceiro = () => {
   }
 
   // 5. Buscar Professores e Calcular Comissões / Repasses
-  const fetchTeachersLegacy = async () => {
+  const _fetchTeachersLegacy = async () => {
     try {
       // 1. Buscar professores
       const { data: profs, error: profError } = await supabase
@@ -467,7 +467,7 @@ export const useFinanceiro = () => {
   }
 
   // Ao marcar uma cobrança como paga: atualiza cobrança e lança entrada no fluxo de caixa
-  const payChargeLegacy = async (
+  const _payChargeLegacy = async (
     chargeId: string, 
     paymentMethod: string, 
     accountName: string, 
@@ -577,7 +577,7 @@ export const useFinanceiro = () => {
   }
 
   // Ao pagar um professor: grava repasse e gera saída no fluxo de caixa
-  const payTeacherLegacy = async (
+  const _payTeacherLegacy = async (
     teacherId: string, 
     amount: number, 
     accountName: string, 

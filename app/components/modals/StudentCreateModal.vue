@@ -31,8 +31,8 @@
         </span>
         <button 
           type="button" 
-          @click="copyLink"
           class="px-3 py-1.5 bg-light-surface dark:bg-dark-surface hover:bg-light-border dark:hover:bg-dark-border border border-light-border dark:border-dark-border rounded text-xs font-bold text-light-text dark:text-offwhite flex items-center gap-1.5 transition-colors shrink-0 cursor-pointer"
+          @click="copyLink"
         >
           <Copy class="w-3.5 h-3.5" />
           {{ copied ? 'Copiado!' : 'Copiar' }}
@@ -62,15 +62,15 @@
 
       <button 
         type="button" 
-        @click="handleClose"
         class="w-full py-2.5 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border hover:bg-light-bg dark:hover:bg-dark-bg text-light-text dark:text-offwhite text-sm font-medium rounded-lg transition-colors cursor-pointer"
+        @click="handleClose"
       >
         Fechar e Ver Lista de Alunos
       </button>
     </div>
 
     <!-- Formulário de Matrícula -->
-    <form v-else @submit.prevent="handleSubmit" class="flex flex-col gap-4">
+    <form v-else class="flex flex-col gap-4" @submit.prevent="handleSubmit">
       
       <BaseInput 
         v-model="formData.name" 
@@ -141,9 +141,9 @@
               :key="opt.value"
               type="button"
               :disabled="opt.isFull && !formData.instruments.includes(opt.value)"
-              @click="toggleInstrument(opt.value)"
               class="w-full p-3 rounded-lg text-left transition-all border flex items-center justify-between gap-3 disabled:cursor-not-allowed disabled:opacity-60"
               :class="formData.instruments.includes(opt.value) ? 'bg-primary/10 text-primary dark:text-offwhite border-primary ring-1 ring-primary' : 'bg-light-surface dark:bg-dark-surface text-light-text dark:text-offwhite border-light-border dark:border-dark-border hover:border-primary/60'"
+              @click="toggleInstrument(opt.value)"
             >
               <span>
                 <span class="block text-sm font-bold">{{ opt.modNome }}</span>
@@ -167,14 +167,14 @@
       </div>
 
       <!-- Espaçamento extra pro footer -->
-      <div class="mt-2"></div>
+      <div class="mt-2"/>
       
       <div class="flex justify-end gap-3 mt-4 pt-4 border-t border-light-border dark:border-dark-border">
         <button 
           type="button" 
-          @click="handleClose"
           class="px-4 py-2 rounded-md font-medium text-light-text dark:text-offwhite hover:bg-light-border dark:hover:bg-dark-border transition-colors border border-transparent"
           :disabled="isLoading"
+          @click="handleClose"
         >
           Cancelar
         </button>
@@ -197,6 +197,9 @@ import { Loader2, User, CheckCircle2, Copy, MessageCircle, Mail, ExternalLink, C
 import BaseModal from '../BaseModal.vue'
 import BaseInput from '../BaseInput.vue'
 import BaseSelect from '../BaseSelect.vue'
+
+import { buildPopMusicContractData } from '~/utils/contractFormatter'
+import { useContratos } from '~/composables/useContratos'
 
 const props = defineProps({
   isOpen: {
@@ -380,9 +383,6 @@ const toggleInstrument = (val: string) => {
     formData.instruments.splice(index, 1)
   }
 }
-
-import { buildPopMusicContractData } from '~/utils/contractFormatter'
-import { useContratos } from '~/composables/useContratos'
 
 const { contractModel, fetchModel } = useContratos()
 

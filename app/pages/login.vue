@@ -7,7 +7,7 @@
         <p class="text-light-text/70 dark:text-offwhite/70">Acesse o sistema</p>
       </div>
 
-      <form @submit.prevent="signInWithPassword" class="space-y-6">
+      <form class="space-y-6" @submit.prevent="signInWithPassword">
         <div>
           <label for="email" class="block text-sm font-medium text-light-text dark:text-offwhite mb-2">
             E-mail
@@ -19,7 +19,7 @@
             required
             placeholder="Digite seu e-mail"
             class="w-full px-4 py-3 rounded-lg bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border text-light-text dark:text-offwhite focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
-          />
+          >
         </div>
 
         <div>
@@ -34,11 +34,11 @@
               required
               placeholder="Digite sua senha"
               class="w-full px-4 py-3 rounded-lg bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border text-light-text dark:text-offwhite focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors pr-12"
-            />
+            >
             <button
               type="button"
-              @click="showPassword = !showPassword"
               class="absolute right-3 top-1/2 -translate-y-1/2 text-light-text/50 dark:text-offwhite/50 hover:text-primary dark:hover:text-primary transition-colors"
+              @click="showPassword = !showPassword"
             >
               <Eye v-if="!showPassword" class="w-5 h-5" />
               <EyeOff v-else class="w-5 h-5" />
@@ -51,7 +51,7 @@
           :disabled="loading"
           class="w-full py-3 bg-primary hover:bg-primary-hover text-white font-medium rounded-lg transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <span v-if="loading" class="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full mr-2"></span>
+          <span v-if="loading" class="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full mr-2"/>
           {{ loading ? 'Entrando...' : 'Entrar' }}
         </button>
 

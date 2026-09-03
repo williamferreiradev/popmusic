@@ -1,9 +1,9 @@
 <template>
   <div class="flex flex-col md:flex-row gap-6 items-start">
-    
+
     <!-- Painel de Filtros (Esquerda) -->
     <div class="w-full md:w-80 flex-shrink-0 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-xl p-5 flex flex-col gap-5">
-      
+
       <div>
         <h3 class="font-bold text-lg text-light-text dark:text-offwhite mb-1 flex items-center gap-2">
           <Filter class="w-5 h-5 text-primary" />
@@ -17,24 +17,24 @@
         <label class="text-sm font-semibold text-light-text dark:text-offwhite">Origem dos dados <span class="text-primary">*</span></label>
         <div class="flex flex-col gap-2">
           <label v-for="origin in origins" :key="origin.id" class="flex items-center gap-3 p-2 rounded-md hover:bg-light-border/20 dark:hover:bg-dark-border/20 cursor-pointer transition-colors" :class="{ 'bg-primary/10 dark:bg-primary/20': selectedOrigin === origin.id }">
-            <input 
-              type="radio" 
-              name="origin" 
-              :value="origin.id" 
+            <input
               v-model="selectedOrigin"
+              type="radio"
+              name="origin"
+              :value="origin.id"
               class="text-primary focus:ring-primary h-4 w-4"
               @change="clearFilters"
-            />
+            >
             <span class="text-sm font-medium text-light-text dark:text-offwhite">{{ origin.label }}</span>
           </label>
         </div>
       </div>
 
-      <div class="h-px w-full bg-light-border dark:bg-dark-border"></div>
+      <div class="h-px w-full bg-light-border dark:bg-dark-border"/>
 
       <!-- Passo 2: Filtros Condicionais -->
-      <div class="flex flex-col gap-4 min-h-[250px]" v-if="selectedOrigin">
-        
+      <div v-if="selectedOrigin" class="flex flex-col gap-4 min-h-[250px]">
+
         <!-- Filtros de Alunos -->
         <template v-if="selectedOrigin === 'alunos'">
           <BaseSelect v-model="filters.status" label="Status" :options="[ {label: 'Ativo', value: 'ativo'}, {label: 'Pendente', value: 'pendente'}, {label: 'Inadimplente', value: 'inadimplente'}, {label: 'Cancelado', value: 'cancelado'} ]" />
@@ -67,14 +67,14 @@
         </template>
 
       </div>
-      
+
       <div v-else class="min-h-[250px] flex items-center justify-center text-center text-sm text-light-text/40 dark:text-offwhite/40 px-4">
         Selecione uma origem de dados para ver os filtros disponíveis.
       </div>
 
       <!-- Ações -->
       <div class="mt-auto pt-4 flex flex-col gap-2">
-        <BaseButton variant="primary" class="w-full" @click="generateReport" :disabled="!selectedOrigin">
+        <BaseButton variant="primary" class="w-full" :disabled="!selectedOrigin" @click="generateReport">
           Gerar relatório
         </BaseButton>
         <BaseButton variant="outline" class="w-full border-transparent" @click="clearFilters">
@@ -86,7 +86,7 @@
 
     <!-- Área de Resultados (Direita) -->
     <div class="flex-1 w-full flex flex-col min-h-[400px]">
-      
+
       <!-- Estado Inicial -->
       <div v-if="!hasGenerated" class="flex-1 bg-light-surface/50 dark:bg-dark-surface/50 border border-dashed border-light-border dark:border-dark-border rounded-xl flex items-center justify-center p-8 transition-colors">
         <div class="flex flex-col items-center gap-4 text-light-text/40 dark:text-offwhite/40 text-center max-w-sm">
@@ -98,12 +98,12 @@
 
       <!-- Painel de Resultado -->
       <div v-else class="animate-in fade-in slide-in-from-right-4 duration-500 w-full flex flex-col gap-4">
-        
+
         <div v-if="isLoading" class="w-full flex flex-col gap-4 animate-pulse">
-          <div class="h-8 w-64 bg-light-border dark:bg-dark-border rounded"></div>
-          <div class="h-10 w-full bg-light-border dark:bg-dark-border rounded-md"></div>
-          <div class="h-10 w-full bg-light-border dark:bg-dark-border rounded-md"></div>
-          <div class="h-10 w-full bg-light-border dark:bg-dark-border rounded-md"></div>
+          <div class="h-8 w-64 bg-light-border dark:bg-dark-border rounded"/>
+          <div class="h-10 w-full bg-light-border dark:bg-dark-border rounded-md"/>
+          <div class="h-10 w-full bg-light-border dark:bg-dark-border rounded-md"/>
+          <div class="h-10 w-full bg-light-border dark:bg-dark-border rounded-md"/>
         </div>
 
         <template v-else>
@@ -117,12 +117,12 @@
                 <p class="text-xs text-light-text/60 dark:text-offwhite/60">Ele aparecerá na aba "Relatórios Prontos" para fácil acesso futuro.</p>
               </div>
             </div>
-            <BaseButton variant="outline" size="sm" @click="showSaveModal = true" class="whitespace-nowrap">
+            <BaseButton variant="outline" size="sm" class="whitespace-nowrap" @click="showSaveModal = true">
               Salvar Filtro
             </BaseButton>
           </div>
 
-          <RelatoriosResultTable 
+          <RelatoriosResultTable
             :title="`Relatório Personalizado (${originLabel})`"
             :columns="tableColumns"
             :data="tableData"
@@ -134,13 +134,13 @@
     </div>
 
     <!-- Modal Salvar Filtro -->
-    <BaseModal :isOpen="showSaveModal" title="Salvar Relatório Rápido" @close="showSaveModal = false">
+    <BaseModal :is-open="showSaveModal" title="Salvar Relatório Rápido" @close="showSaveModal = false">
       <div class="p-5 flex flex-col gap-6">
         <p class="text-sm text-light-text/70 dark:text-offwhite/70">Dê um nome a este relatório para encontrá-lo facilmente depois.</p>
         <BaseInput v-model="newReportName" label="Nome do Relatório" placeholder="Ex: Inadimplentes Violão Manhã" />
         <div class="flex items-center justify-end gap-3 pt-4">
           <BaseButton variant="outline" @click="showSaveModal = false">Cancelar</BaseButton>
-          <BaseButton variant="primary" @click="saveFilter" :disabled="!newReportName">Salvar</BaseButton>
+          <BaseButton variant="primary" :disabled="!newReportName" @click="saveFilter">Salvar</BaseButton>
         </div>
       </div>
     </BaseModal>
@@ -224,7 +224,7 @@ const tableData = ref<any[]>([])
 
 const generateReport = () => {
   if (!selectedOrigin.value) return
-  
+
   hasGenerated.value = true
   isLoading.value = true
   tableColumns.value = columnsMap[selectedOrigin.value] || []

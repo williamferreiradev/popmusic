@@ -23,7 +23,7 @@
             <td class="px-5 py-4 font-medium">{{ turma.time }}</td>
             <td class="px-5 py-4">
               <span class="inline-flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full shadow-sm" :style="{ backgroundColor: turma.colorClass }"></span>
+                <span class="w-2 h-2 rounded-full shadow-sm" :style="{ backgroundColor: turma.colorClass }"/>
                 {{ turma.name }}
               </span>
             </td>
@@ -43,7 +43,7 @@
 
       <!-- Loading State -->
       <div v-else class="absolute inset-0 flex items-center justify-center bg-light-surface/50 dark:bg-dark-surface/50">
-        <div class="animate-spin w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full"></div>
+        <div class="animate-spin w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full"/>
       </div>
     </div>
 

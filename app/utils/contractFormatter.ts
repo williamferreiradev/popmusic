@@ -1,4 +1,4 @@
-import type { PopMusicContractData, SignedContractInfo } from '~/components/contratos/PopMusicContractDocument.vue'
+import type { PopMusicContractData } from '~/components/contratos/PopMusicContractDocument.vue'
 
 const UNIDADES = ['', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove']
 const DEZ_A_DEZENOVE = ['dez', 'onze', 'doze', 'treze', 'quatorze', 'quinze', 'dezesseis', 'dezessete', 'dezoito', 'dezenove']
@@ -15,7 +15,7 @@ export function numeroIntPorExtenso(n: number): string {
   if (n === 100) return 'cem'
   if (n < 0) return 'menos ' + numeroIntPorExtenso(Math.abs(n))
 
-  let partes: string[] = []
+  const partes: string[] = []
 
   // Milhares
   if (n >= 1000) {

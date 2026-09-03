@@ -37,7 +37,7 @@
     <!-- 1. Estado: Foto já capturada, verificada e confirmada -->
     <div v-if="capturedPhoto" class="flex flex-col sm:flex-row items-center gap-4 bg-light-bg/50 dark:bg-dark-bg/50 p-4 rounded-xl border border-light-border dark:border-dark-border">
       <div class="relative w-28 h-28 rounded-xl overflow-hidden border-2 border-green-500 shadow-md shrink-0 bg-black">
-        <img :src="capturedPhoto" alt="Rosto Capturado" class="w-full h-full object-cover" />
+        <img :src="capturedPhoto" alt="Rosto Capturado" class="w-full h-full object-cover" >
         <div class="absolute bottom-1 right-1 bg-green-600 text-white rounded-full p-0.5 shadow">
           <Check class="w-3.5 h-3.5" />
         </div>
@@ -53,8 +53,8 @@
         </p>
         <button 
           type="button" 
-          @click="resetCapture"
           class="px-3.5 py-1.5 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border hover:bg-light-border dark:hover:bg-dark-border text-light-text dark:text-offwhite text-xs font-bold rounded-lg transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+          @click="resetCapture"
         >
           <RotateCcw class="w-3.5 h-3.5" />
           Tirar Outra Foto
@@ -73,7 +73,7 @@
           playsinline 
           muted
           class="w-full h-full object-cover -scale-x-100"
-        ></video>
+        />
 
         <!-- Guia Oval para enquadrar o rosto -->
         <div class="absolute inset-0 pointer-events-none flex items-center justify-center">
@@ -103,18 +103,18 @@
       <div class="flex items-center gap-3 mt-1">
         <button 
           type="button"
-          @click="takeSnapshot"
           :disabled="isValidating"
           class="px-6 py-2.5 bg-primary hover:bg-primary-hover text-white text-sm font-bold rounded-full shadow-lg transition-transform active:scale-95 flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          @click="takeSnapshot"
         >
           <Camera class="w-4 h-4" />
           Capturar Foto do Rosto
         </button>
         <button 
           type="button"
-          @click="stopCamera()"
           :disabled="isValidating"
           class="px-4 py-2.5 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-offwhite text-xs font-semibold rounded-full hover:bg-light-bg dark:hover:bg-dark-bg transition-colors cursor-pointer"
+          @click="stopCamera()"
         >
           Cancelar
         </button>
@@ -124,7 +124,7 @@
     <!-- 3. Estado: Foto capturada em revisão (Validada com Sucesso) -->
     <div v-else-if="tempPhoto" class="flex flex-col items-center gap-3">
       <div class="relative w-full max-w-xs aspect-square bg-black rounded-2xl overflow-hidden shadow-md border-2 border-green-500 flex items-center justify-center">
-        <img :src="tempPhoto" alt="Prévia da Foto" class="w-full h-full object-cover" />
+        <img :src="tempPhoto" alt="Prévia da Foto" class="w-full h-full object-cover" >
         <div class="absolute top-2 right-2 bg-green-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow flex items-center gap-1">
           <Check class="w-3 h-3" /> Rosto Validado
         </div>
@@ -137,16 +137,16 @@
       <div class="flex items-center gap-3">
         <button 
           type="button"
-          @click="confirmPhoto"
           class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-lg shadow transition-colors flex items-center gap-1.5 cursor-pointer"
+          @click="confirmPhoto"
         >
           <Check class="w-4 h-4" />
           Confirmar Esta Foto
         </button>
         <button 
           type="button"
-          @click="retakePhoto"
           class="px-4 py-2 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-offwhite text-xs font-semibold rounded-lg hover:bg-light-bg dark:hover:bg-dark-bg transition-colors flex items-center gap-1.5 cursor-pointer"
+          @click="retakePhoto"
         >
           <RotateCcw class="w-3.5 h-3.5" />
           Tirar Novamente
@@ -162,8 +162,8 @@
 
       <button 
         type="button"
-        @click="startCamera"
         class="px-7 py-3.5 bg-primary hover:bg-primary-hover text-white text-sm font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2.5 cursor-pointer active:scale-95"
+        @click="startCamera"
       >
         <Camera class="w-5 h-5" />
         Abrir Câmera e Tirar Foto do Rosto
@@ -176,7 +176,7 @@
     </p>
 
     <!-- Canvas invisível para validação visual da foto -->
-    <canvas ref="canvasRef" class="hidden"></canvas>
+    <canvas ref="canvasRef" class="hidden"/>
 
   </div>
 </template>

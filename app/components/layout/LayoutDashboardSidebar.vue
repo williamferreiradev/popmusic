@@ -4,7 +4,7 @@
     <div class="h-16 flex items-center border-b border-light-border dark:border-dark-border" :class="sidebarCollapsed ? 'justify-center px-2' : 'justify-between px-4'">
       <h1 v-if="!sidebarCollapsed" class="hidden md:block text-lg font-bold text-light-text dark:text-offwhite">Pop Music</h1>
       <span class="font-black text-primary" :class="sidebarCollapsed ? '' : 'md:hidden'">PM</span>
-      <button @click="sidebarCollapsed = !sidebarCollapsed" class="hidden md:block p-2 rounded-md text-light-text/60 dark:text-offwhite/60 hover:bg-light-bg dark:hover:bg-dark-bg" :title="sidebarCollapsed ? 'Expandir menu' : 'Recolher menu'">
+      <button class="hidden md:block p-2 rounded-md text-light-text/60 dark:text-offwhite/60 hover:bg-light-bg dark:hover:bg-dark-bg" :title="sidebarCollapsed ? 'Expandir menu' : 'Recolher menu'" @click="sidebarCollapsed = !sidebarCollapsed">
         <PanelLeftOpen v-if="sidebarCollapsed" class="w-4 h-4" />
         <PanelLeftClose v-else class="w-4 h-4" />
       </button>
@@ -12,16 +12,16 @@
 
     <!-- Navegação -->
     <nav class="flex-1 overflow-y-auto py-4 px-3 flex flex-col gap-1">
-      <NuxtLink 
-        v-for="item in menuItems" 
+      <NuxtLink
+        v-for="item in menuItems"
         :key="item.path"
         :to="item.path"
         class="flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors"
         :title="sidebarCollapsed ? item.label : undefined"
         :class="[
           sidebarCollapsed ? 'justify-center' : 'justify-center md:justify-start md:gap-3',
-          route.path === item.path 
-            ? 'bg-primary text-white' 
+          route.path === item.path
+            ? 'bg-primary text-white'
             : 'text-light-text/70 dark:text-offwhite/70 hover:bg-light-bg dark:hover:bg-dark-bg hover:text-light-text dark:hover:text-offwhite'
         ]"
       >
@@ -32,23 +32,23 @@
 
     <!-- Rodapé: Usuário e Ações -->
     <div class="p-2 md:p-4 border-t border-light-border dark:border-dark-border flex flex-col gap-4">
-      
+
       <!-- Ações rápidas -->
       <div class="flex flex-col md:flex-row items-center gap-2">
-        <button 
-          @click="toggleTheme" 
+        <button
           class="flex-1 flex items-center justify-center gap-2 p-2 rounded-md bg-light-bg dark:bg-dark-bg hover:bg-gray-200 dark:hover:bg-[#2A2422] transition-colors text-xs font-medium text-light-text dark:text-offwhite border border-light-border dark:border-dark-border"
           title="Alternar Tema"
+          @click="toggleTheme"
         >
           <Sun v-if="colorMode.value === 'dark'" class="w-4 h-4" />
           <Moon v-else class="w-4 h-4" />
           <span v-if="!sidebarCollapsed" class="hidden md:inline">Tema</span>
         </button>
-        
-        <button 
-          @click="handleLogout"
+
+        <button
           class="flex-1 flex items-center justify-center gap-2 p-2 rounded-md bg-light-bg dark:bg-dark-bg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-[#ff8a8a] transition-colors text-xs font-medium border border-light-border dark:border-dark-border"
           title="Sair da conta"
+          @click="handleLogout"
         >
           <LogOut class="w-4 h-4" />
           <span v-if="!sidebarCollapsed" class="hidden md:inline">Sair</span>
@@ -73,14 +73,14 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
 import { useColorMode } from '#imports'
-import { 
-  LayoutDashboard, 
-  Users, 
-  CalendarDays, 
-  CheckSquare, 
-  Wallet, 
-  FileText, 
-  BarChart3, 
+import {
+  LayoutDashboard,
+  Users,
+  CalendarDays,
+  CheckSquare,
+  Wallet,
+  FileText,
+  BarChart3,
   Settings,
   GraduationCap,
   Music2,

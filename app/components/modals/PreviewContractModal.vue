@@ -13,8 +13,8 @@
           Você está visualizando o <strong>modelo oficial A4</strong> da Pop Music com dados de exemplo formatados.
         </p>
         <button 
-          @click="triggerPrint"
           class="px-3 py-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded shadow transition-colors flex items-center gap-1.5 shrink-0"
+          @click="triggerPrint"
         >
           <Printer class="w-3.5 h-3.5" />
           Imprimir / PDF
@@ -31,8 +31,8 @@
 
       <div class="flex justify-end gap-3 pt-2 border-t border-light-border dark:border-dark-border">
         <button 
-          @click="$emit('close')"
           class="px-6 py-2 bg-light-surface dark:bg-dark-surface hover:bg-light-bg dark:hover:bg-dark-bg text-light-text dark:text-offwhite border border-light-border dark:border-dark-border text-sm font-bold rounded-md transition-colors"
+          @click="$emit('close')"
         >
           Fechar
         </button>

@@ -11,7 +11,7 @@
       <div class="flex items-start sm:items-center gap-4 border-b border-light-border dark:border-dark-border pb-6">
         <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-light-border dark:bg-dark-border flex items-center justify-center overflow-hidden shrink-0 border-2 border-primary">
           <span v-if="!studentAvatar" class="text-2xl font-bold text-light-text/50 dark:text-offwhite/50">{{ student.initials }}</span>
-          <img v-else :src="studentAvatar" alt="Avatar" class="w-full h-full object-cover" />
+          <img v-else :src="studentAvatar" alt="Avatar" class="w-full h-full object-cover" >
         </div>
         
         <div class="flex-1 flex flex-col gap-1">
@@ -143,8 +143,8 @@
             <div class="mt-4 pt-3 border-t border-light-border dark:border-dark-border flex items-center justify-between">
               <button 
                 type="button"
-                @click="openContractModal"
                 class="px-3.5 py-1.5 bg-primary/10 hover:bg-primary hover:text-white text-primary text-xs font-bold rounded-md transition-colors flex items-center gap-1.5 cursor-pointer"
+                @click="openContractModal"
               >
                 <Printer class="w-3.5 h-3.5" />
                 Visualizar / Imprimir Contrato
@@ -169,16 +169,16 @@
         <div class="flex items-center gap-2">
           <button 
             v-if="student?.statusLabel === 'Trancado'"
-            @click="$emit('unlock', student.id)"
             class="px-4 py-2 rounded-md font-medium text-light-text dark:text-offwhite hover:bg-light-border dark:hover:bg-dark-border transition-colors border border-transparent flex items-center gap-2"
+            @click="$emit('unlock', student.id)"
           >
             <Unlock class="w-4 h-4" />
             Destrancar Matrícula
           </button>
           <button 
             v-else-if="student?.statusLabel === 'Ativo'"
-            @click="$emit('lock', student.id)"
             class="px-4 py-2 rounded-md font-medium text-light-text dark:text-offwhite hover:bg-light-border dark:hover:bg-dark-border transition-colors border border-transparent flex items-center gap-2"
+            @click="$emit('lock', student.id)"
           >
             <Lock class="w-4 h-4" />
             Trancar Matrícula
@@ -187,15 +187,15 @@
 
         <div class="flex items-center gap-2">
           <button 
-            @click="$emit('edit', student.id)"
             class="px-4 py-2 rounded-md font-medium text-light-text dark:text-offwhite hover:bg-light-border dark:hover:bg-dark-border transition-colors border border-transparent flex items-center gap-2"
+            @click="$emit('edit', student.id)"
           >
             <Edit2 class="w-4 h-4" />
             Editar Cadastro
           </button>
           <button 
-            @click="$emit('close')"
             class="px-4 py-2 rounded-md font-medium text-white bg-primary hover:bg-primary-hover transition-colors shadow-sm"
+            @click="$emit('close')"
           >
             Fechar
           </button>

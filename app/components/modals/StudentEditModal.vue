@@ -5,7 +5,7 @@
     max-width="md"
     @close="handleClose"
   >
-    <form @submit.prevent="handleSubmit" class="flex flex-col gap-4">
+    <form class="flex flex-col gap-4" @submit.prevent="handleSubmit">
       
       <BaseInput 
         v-model="formData.name" 
@@ -67,9 +67,9 @@
             v-for="opt in classOptions" 
             :key="opt.value"
             type="button"
-            @click="toggleInstrument(opt.value)"
             class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors border"
             :class="formData.instruments.includes(opt.value) ? 'bg-primary text-white border-primary' : 'bg-light-surface dark:bg-dark-surface text-light-text dark:text-offwhite border-light-border dark:border-dark-border hover:bg-light-bg dark:hover:bg-dark-bg'"
+            @click="toggleInstrument(opt.value)"
           >
             {{ opt.label }}
           </button>
@@ -78,14 +78,14 @@
       </div>
 
       <!-- Espaçamento extra pro footer -->
-      <div class="mt-2"></div>
+      <div class="mt-2"/>
       
       <div class="flex justify-end gap-3 mt-4 pt-4 border-t border-light-border dark:border-dark-border">
         <button 
           type="button"
-          @click="handleClose"
           class="px-4 py-2 rounded-md font-medium text-light-text dark:text-offwhite hover:bg-light-border dark:hover:bg-dark-border transition-colors border border-transparent"
           :disabled="isLoading"
+          @click="handleClose"
         >
           Cancelar
         </button>

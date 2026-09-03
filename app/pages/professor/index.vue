@@ -23,8 +23,8 @@
       <div 
         v-for="turma in agenda" 
         :key="turma.turma_id || `${turma.modalidade}-${turma.horario_inicio}`"
-        @click="turma.turma_id && goToChamada(turma.turma_id)"
         class="bg-light-surface dark:bg-dark-surface p-5 rounded-xl border border-light-border dark:border-dark-border shadow-sm hover:border-primary/50 cursor-pointer transition-colors"
+        @click="turma.turma_id && goToChamada(turma.turma_id)"
       >
         <div class="flex justify-between items-start mb-3">
           <h3 class="font-bold text-light-text dark:text-offwhite">{{ turma.modalidade || 'Modalidade não informada' }}</h3>

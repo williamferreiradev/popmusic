@@ -1,9 +1,9 @@
 <template>
   <div class="flex-1 flex flex-col gap-6">
-    
+
     <!-- Barra de Filtros e Ações -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-      
+
       <!-- Mês / Período Atual -->
       <div class="flex items-center gap-2">
         <div class="bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border px-4 py-2 rounded-md font-bold text-sm text-light-text dark:text-offwhite flex items-center gap-2">
@@ -18,10 +18,10 @@
       <!-- Busca -->
       <div class="relative w-full sm:max-w-xs">
         <Search class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-light-text/50 dark:text-offwhite/50" />
-        <input 
-          type="text" 
+        <input
           v-model="searchQuery"
-          placeholder="Buscar aluno ou recibo..." 
+          type="text"
+          placeholder="Buscar aluno ou recibo..."
           class="w-full pl-9 pr-4 py-2 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-md text-sm text-light-text dark:text-offwhite focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
         >
       </div>
@@ -43,9 +43,9 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-light-border/50 dark:divide-dark-border/50">
-            
-            <tr 
-              v-for="receipt in filteredReceipts" 
+
+            <tr
+              v-for="receipt in filteredReceipts"
               :key="receipt.id"
               class="hover:bg-light-bg/50 dark:hover:bg-dark-bg/50 transition-colors group"
             >
@@ -69,27 +69,27 @@
               </td>
               <td class="p-4 text-right">
                 <div class="flex items-center justify-end gap-2">
-                  <button 
-                    @click="openViewReceiptModal(receipt)"
+                  <button
                     class="px-3 py-1.5 bg-primary/10 hover:bg-primary text-primary hover:text-white rounded-md transition-colors text-xs font-bold flex items-center gap-1.5"
                     title="Visualizar e Imprimir Recibo Oficial"
+                    @click="openViewReceiptModal(receipt)"
                   >
                     <Printer class="w-3.5 h-3.5" />
                     <span>Ver / Imprimir</span>
                   </button>
-                  <button 
-                    @click="openResendModal(receipt)"
+                  <button
                     :disabled="receipt.refunded"
                     class="p-2 text-primary hover:bg-primary/10 rounded-md transition-colors"
                     :class="receipt.refunded && 'cursor-not-allowed opacity-40'"
                     :title="receipt.refunded ? 'Recibo estornado: reenvio bloqueado' : 'Reenviar Recibo'"
+                    @click="openResendModal(receipt)"
                   >
                     <Send class="w-4 h-4" />
                   </button>
                 </div>
               </td>
             </tr>
-            
+
             <!-- Estado Vazio -->
             <tr v-if="filteredReceipts.length === 0">
               <td colspan="6" class="p-12 text-center text-light-text/50 dark:text-offwhite/50">
@@ -104,7 +104,7 @@
     </div>
 
     <!-- Modais -->
-    <ViewReceiptModal 
+    <ViewReceiptModal
       :is-open="isViewModalOpen"
       :receipt="selectedReceipt"
       :sending="isSendingReceipt"
@@ -112,7 +112,7 @@
       @sent="handleSent"
     />
 
-    <ResendReceiptModal 
+    <ResendReceiptModal
       :is-open="isResendModalOpen"
       :receipt="selectedReceipt"
       :sending="isSendingReceipt"
@@ -121,7 +121,7 @@
     />
 
     <!-- Toast flutuante -->
-    <div 
+    <div
       class="fixed bottom-6 right-6 bg-light-surface dark:bg-dark-surface border-l-4 border-green-500 shadow-xl rounded-r-md px-6 py-3 transition-all duration-300 z-50 flex flex-col"
       :class="toastVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0 pointer-events-none'"
     >
@@ -165,7 +165,7 @@ const formatDateBR = (isoStr: string) => {
 const filteredReceipts = computed(() => {
   if (!searchQuery.value) return receipts.value
   const q = searchQuery.value.toLowerCase()
-  return receipts.value.filter(r => 
+  return receipts.value.filter(r =>
     r.studentName.toLowerCase().includes(q) ||
     r.id.toLowerCase().includes(q) ||
     (r.paymentMethod && r.paymentMethod.toLowerCase().includes(q))

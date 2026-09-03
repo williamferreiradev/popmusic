@@ -8,14 +8,14 @@
 
     <!-- Navegação -->
     <nav class="flex-1 overflow-y-auto py-4 px-3 flex flex-col gap-1">
-      <NuxtLink 
-        v-for="item in menuItems" 
+      <NuxtLink
+        v-for="item in menuItems"
         :key="item.path"
         :to="item.path"
         class="flex items-center justify-center md:justify-start md:gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors"
         :class="[
-          route.path === item.path 
-            ? 'bg-primary text-white' 
+          route.path === item.path
+            ? 'bg-primary text-white'
             : 'text-light-text/70 dark:text-offwhite/70 hover:bg-light-bg dark:hover:bg-dark-bg hover:text-light-text dark:hover:text-offwhite'
         ]"
       >
@@ -26,23 +26,23 @@
 
     <!-- Rodapé: Usuário e Ações -->
     <div class="p-2 md:p-4 border-t border-light-border dark:border-dark-border flex flex-col gap-4">
-      
+
       <!-- Ações rápidas -->
       <div class="flex flex-col md:flex-row items-center gap-2">
-        <button 
-          @click="toggleTheme" 
+        <button
           class="flex-1 flex items-center justify-center gap-2 p-2 rounded-md bg-light-bg dark:bg-dark-bg hover:bg-gray-200 dark:hover:bg-[#2A2422] transition-colors text-xs font-medium text-light-text dark:text-offwhite border border-light-border dark:border-dark-border"
           title="Alternar Tema"
+          @click="toggleTheme"
         >
           <Sun v-if="colorMode.value === 'dark'" class="w-4 h-4" />
           <Moon v-else class="w-4 h-4" />
           <span class="hidden md:inline">Tema</span>
         </button>
-        
-        <button 
-          @click="handleLogout"
+
+        <button
           class="flex-1 flex items-center justify-center gap-2 p-2 rounded-md bg-light-bg dark:bg-dark-bg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-[#ff8a8a] transition-colors text-xs font-medium border border-light-border dark:border-dark-border"
           title="Sair da conta"
+          @click="handleLogout"
         >
           <LogOut class="w-4 h-4" />
           <span class="hidden md:inline">Sair</span>
@@ -66,10 +66,10 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
 import { useColorMode } from '#imports'
-import { 
-  Home, 
-  CalendarDays, 
-  CheckSquare, 
+import {
+  Home,
+  CalendarDays,
+  CheckSquare,
   CreditCard,
   FileText,
   Sun,

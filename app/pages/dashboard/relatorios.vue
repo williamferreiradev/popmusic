@@ -27,15 +27,15 @@
           :key="tab.id"
           role="tab"
           :aria-selected="activeTab === tab.id"
-          @click="switchTab(tab.id)"
           class="pb-2 text-sm transition-all whitespace-nowrap relative focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-t-md"
           :class="activeTab === tab.id ? 'text-primary dark:text-primary-hover font-bold' : 'text-light-text/60 dark:text-offwhite/60 font-medium hover:text-light-text dark:hover:text-offwhite'"
+          @click="switchTab(tab.id)"
         >
           {{ tab.label }}
           <span 
             class="absolute bottom-0 left-0 w-full h-[2px] bg-gold rounded-t-sm transition-transform duration-300 origin-left"
             :class="activeTab === tab.id ? 'scale-x-100' : 'scale-x-0'"
-          ></span>
+          />
         </button>
       </div>
     </div>
@@ -44,12 +44,12 @@
     <div class="flex-1 flex flex-col relative">
       <Transition name="fade" mode="out-in">
         <div v-if="isLoadingTab" class="w-full flex flex-col gap-4 animate-pulse">
-          <div class="h-10 w-full bg-light-border dark:bg-dark-border rounded-md"></div>
+          <div class="h-10 w-full bg-light-border dark:bg-dark-border rounded-md"/>
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-             <div class="h-28 w-full bg-light-border dark:bg-dark-border rounded-xl"></div>
-             <div class="h-28 w-full bg-light-border dark:bg-dark-border rounded-xl"></div>
-             <div class="h-28 w-full bg-light-border dark:bg-dark-border rounded-xl"></div>
-             <div class="h-28 w-full bg-light-border dark:bg-dark-border rounded-xl"></div>
+             <div class="h-28 w-full bg-light-border dark:bg-dark-border rounded-xl"/>
+             <div class="h-28 w-full bg-light-border dark:bg-dark-border rounded-xl"/>
+             <div class="h-28 w-full bg-light-border dark:bg-dark-border rounded-xl"/>
+             <div class="h-28 w-full bg-light-border dark:bg-dark-border rounded-xl"/>
           </div>
         </div>
         <KeepAlive v-else>

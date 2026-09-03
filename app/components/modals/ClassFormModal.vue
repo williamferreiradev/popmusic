@@ -13,7 +13,7 @@
       <div v-if="conflictMessage" class="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-500">{{ conflictMessage }}</div>
       <div class="flex flex-col-reverse sm:flex-row sm:justify-between gap-3 pt-4 border-t border-light-border dark:border-dark-border">
         <button v-if="classData" type="button" :disabled="saving" class="px-4 py-2 rounded-md text-sm font-medium text-red-500 hover:bg-red-500/10 disabled:opacity-50" @click="deactivate">Desativar turma</button>
-        <span v-else></span>
+        <span v-else/>
         <div class="flex justify-end gap-3">
           <BaseButton type="button" variant="outline" @click="close">Cancelar</BaseButton>
           <BaseButton type="submit" variant="primary" :disabled="!isValid || saving"><Loader2 v-if="saving" class="w-4 h-4 animate-spin" /> Salvar turma</BaseButton>

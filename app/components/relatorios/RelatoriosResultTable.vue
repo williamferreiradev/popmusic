@@ -4,13 +4,13 @@
     <div class="flex items-center justify-between">
       <h3 class="text-lg font-bold text-light-text dark:text-offwhite">{{ title }} <span class="text-sm font-normal opacity-70">— {{ data.length }} resultados</span></h3>
       <div class="flex items-center gap-2">
-        <BaseButton variant="outline" size="sm" @click="exportCSV" class="flex items-center gap-2">
+        <BaseButton variant="outline" size="sm" class="flex items-center gap-2" @click="exportCSV">
           <Download class="w-4 h-4" /> CSV
         </BaseButton>
-        <BaseButton variant="outline" size="sm" @click="exportPDF" class="flex items-center gap-2">
+        <BaseButton variant="outline" size="sm" class="flex items-center gap-2" @click="exportPDF">
           <FileText class="w-4 h-4" /> PDF
         </BaseButton>
-        <button @click="$emit('close')" class="ml-2 p-1.5 text-light-text/60 dark:text-offwhite/60 hover:text-primary dark:hover:text-primary-hover rounded-md transition-colors" title="Fechar resultado">
+        <button class="ml-2 p-1.5 text-light-text/60 dark:text-offwhite/60 hover:text-primary dark:hover:text-primary-hover rounded-md transition-colors" title="Fechar resultado" @click="$emit('close')">
           <X class="w-5 h-5" />
         </button>
       </div>
@@ -22,7 +22,7 @@
         <thead>
           <tr class="bg-light-border/30 dark:bg-dark-border/30 border-b border-light-border dark:border-dark-border text-sm font-medium text-light-text/70 dark:text-offwhite/70">
             <th v-for="col in columns" :key="col.key" class="py-3 px-4">{{ col.label }}</th>
-            <th v-if="hasActions" class="py-3 px-4 w-12 text-center"></th>
+            <th v-if="hasActions" class="py-3 px-4 w-12 text-center"/>
           </tr>
         </thead>
         <tbody class="text-sm">
@@ -49,8 +49,8 @@
             </td>
             <!-- Ações rápidas -->
             <td v-if="hasActions" class="py-3 px-4 text-center">
-              <button @click="$emit('action', { action: actionType, row })" class="p-1.5 text-light-text/60 dark:text-offwhite/60 hover:text-primary dark:hover:text-primary transition-colors" :title="actionTooltip">
-                <component :is="actionIcon" class="w-4 h-4" v-if="actionIcon" />
+              <button class="p-1.5 text-light-text/60 dark:text-offwhite/60 hover:text-primary dark:hover:text-primary transition-colors" :title="actionTooltip" @click="$emit('action', { action: actionType, row })">
+                <component :is="actionIcon" v-if="actionIcon" class="w-4 h-4" />
                 <Settings v-else class="w-4 h-4" />
               </button>
             </td>
@@ -62,7 +62,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import { Download, FileText, X, Settings, Filter } from '@lucide/vue'
 import BaseButton from '../BaseButton.vue'
 import BaseBadge from '../BaseBadge.vue'
@@ -104,7 +103,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['close', 'action'])
+defineEmits(['close', 'action'])
 
 const getBadgeVariant = (value: string) => {
   const val = value?.toLowerCase() || ''

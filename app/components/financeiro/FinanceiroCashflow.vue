@@ -12,7 +12,7 @@
         <p class="text-lg font-bold text-red-500">{{ formatCurrency(resumo.saidas) }}</p>
       </div>
       <div class="bg-light-surface dark:bg-dark-surface p-4 rounded-xl border shadow-sm flex flex-col justify-center relative overflow-hidden" :class="resumo.saldo >= 0 ? 'border-green-500/30 dark:border-green-500/30' : 'border-red-500/30 dark:border-red-500/30'">
-        <div class="absolute top-0 left-0 w-1 h-full" :class="resumo.saldo >= 0 ? 'bg-green-500' : 'bg-red-500'"></div>
+        <div class="absolute top-0 left-0 w-1 h-full" :class="resumo.saldo >= 0 ? 'bg-green-500' : 'bg-red-500'"/>
         <p class="text-xs font-medium text-light-text/60 dark:text-offwhite/60 mb-1 ml-2">Saldo do Mês</p>
         <p class="text-lg font-bold ml-2" :class="resumo.saldo >= 0 ? 'text-green-500' : 'text-red-500'">
           {{ formatCurrency(resumo.saldo) }}
@@ -35,9 +35,9 @@
         <button 
           v-for="pill in accountFilters" 
           :key="pill"
-          @click="activeAccountFilter = pill"
           class="px-4 py-1.5 rounded-full text-sm font-bold transition-colors whitespace-nowrap border"
           :class="activeAccountFilter === pill ? 'bg-primary text-white border-primary' : 'bg-transparent border-light-border dark:border-dark-border text-light-text/70 dark:text-offwhite/70 hover:bg-light-surface dark:hover:bg-dark-surface'"
+          @click="activeAccountFilter = pill"
         >
           {{ pill }}
         </button>
@@ -51,8 +51,8 @@
 
         <!-- Novo Lançamento -->
         <button 
-          @click="isNewEntryModalOpen = true"
           class="px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-bold rounded-md transition-colors shadow-sm flex items-center justify-center gap-2"
+          @click="isNewEntryModalOpen = true"
         >
           <Plus class="w-4 h-4" />
           <span class="hidden sm:inline">Novo lançamento</span>

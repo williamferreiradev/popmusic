@@ -9,8 +9,8 @@
       </div>
       
       <button 
-        @click="isCreateModalOpen = true"
         class="bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-md font-medium flex items-center gap-2 transition-colors cursor-pointer"
+        @click="isCreateModalOpen = true"
       >
         <Plus class="w-4 h-4" />
         Nova matrícula
@@ -24,7 +24,7 @@
         :value="alunosAtivosCount?.toString() || '0'" 
         to="/dashboard/alunos"
         variant="neutral"
-        :chartData="[120, 125, 130, 138, 136, 140, 142]"
+        :chart-data="[120, 125, 130, 138, 136, 140, 142]"
       >
         <template #icon><Users class="w-4 h-4 text-light-text/50 dark:text-offwhite/50" /></template>
       </DashboardMetricCard>
@@ -34,7 +34,7 @@
         :value="turmasHojeCount?.toString() || '0'" 
         to="/dashboard/agenda"
         variant="neutral"
-        :chartData="[8, 10, 12, 12, 10, 11, 12]"
+        :chart-data="[8, 10, 12, 12, 10, 11, 12]"
       >
         <template #icon><CalendarDays class="w-4 h-4 text-light-text/50 dark:text-offwhite/50" /></template>
       </DashboardMetricCard>
@@ -45,7 +45,7 @@
         description="cobranças em atraso"
         to="/dashboard/financeiro"
         variant="alert-red"
-        :chartData="[2, 3, 5, 4, 7, 6, 8]"
+        :chart-data="[2, 3, 5, 4, 7, 6, 8]"
       >
         <template #icon><AlertCircle class="w-4 h-4 text-[#ff8a8a]" /></template>
       </DashboardMetricCard>
@@ -56,7 +56,7 @@
         description="alunos sinalizados"
         to="/dashboard/frequencia"
         variant="alert-gold"
-        :chartData="[0, 0, 0, 0, 0, 0, 0]"
+        :chart-data="[0, 0, 0, 0, 0, 0, 0]"
       >
         <template #icon><AlertTriangle class="w-4 h-4 text-gold" /></template>
       </DashboardMetricCard>

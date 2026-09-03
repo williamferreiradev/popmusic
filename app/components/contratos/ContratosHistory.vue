@@ -1,17 +1,17 @@
 <template>
   <div class="flex-1 flex flex-col gap-6">
-    
+
     <!-- Barra de Filtros e Busca -->
     <div class="flex flex-col md:flex-row justify-between gap-4 items-start md:items-center">
-      
+
       <!-- Pills de Status -->
       <div class="flex gap-2 overflow-x-auto pb-2 sm:pb-0 hide-scrollbar mask-edges w-full md:w-auto">
-        <button 
-          v-for="pill in statusFilters" 
+        <button
+          v-for="pill in statusFilters"
           :key="pill.value"
-          @click="activeStatus = pill.value"
           class="px-4 py-1.5 rounded-full text-sm font-bold transition-colors whitespace-nowrap border"
           :class="activeStatus === pill.value ? 'bg-primary text-white border-primary' : 'bg-transparent border-light-border dark:border-dark-border text-light-text/70 dark:text-offwhite/70 hover:bg-light-surface dark:hover:bg-dark-surface'"
+          @click="activeStatus = pill.value"
         >
           {{ pill.label }}
         </button>
@@ -19,9 +19,9 @@
 
       <!-- Busca -->
       <div class="w-full md:w-64 shrink-0">
-        <BaseInput 
-          v-model="searchQuery" 
-          placeholder="Buscar aluno..." 
+        <BaseInput
+          v-model="searchQuery"
+          placeholder="Buscar aluno..."
           type="text"
         >
           <template #icon>
@@ -45,9 +45,9 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-light-border/50 dark:divide-dark-border/50">
-            
-            <tr 
-              v-for="(item, index) in filteredContracts" 
+
+            <tr
+              v-for="item in filteredContracts"
               :key="item.id"
               class="hover:bg-light-bg/50 dark:hover:bg-dark-bg/50 transition-colors group relative"
             >
@@ -59,7 +59,7 @@
                 {{ formatDateTime(item.sentAt) }}
               </td>
               <td class="p-4">
-                <span 
+                <span
                   class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold"
                   :class="getStatusBadgeClass(item.status)"
                 >
@@ -82,40 +82,40 @@
                 </template>
               </td>
               <td class="p-4 text-right">
-                
-                <button 
-                  @click.stop="toggleMenu(item.id)"
+
+                <button
                   class="p-2 rounded-md text-light-text/50 dark:text-offwhite/50 hover:bg-light-bg dark:hover:bg-dark-bg hover:text-light-text dark:hover:text-offwhite transition-colors focus:outline-none"
                   :class="openMenuId === item.id ? 'bg-light-bg dark:bg-dark-bg text-light-text dark:text-offwhite' : ''"
+                  @click.stop="toggleMenu(item.id)"
                 >
                   <MoreHorizontal class="w-4 h-4" />
                 </button>
-                
+
                 <!-- Dropdown Menu -->
-                <div 
+                <div
                   v-if="openMenuId === item.id"
-                  @click.stop
                   class="absolute right-8 top-full mt-1 w-56 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-lg shadow-2xl overflow-hidden z-50 py-1.5 ring-1 ring-black/10"
+                  @click.stop
                 >
-                  <button @click="openViewContract(item)" class="w-full text-left px-4 py-2.5 text-sm hover:bg-light-bg dark:hover:bg-dark-bg text-light-text dark:text-offwhite transition-colors flex items-center gap-2.5 font-medium">
+                  <button class="w-full text-left px-4 py-2.5 text-sm hover:bg-light-bg dark:hover:bg-dark-bg text-light-text dark:text-offwhite transition-colors flex items-center gap-2.5 font-medium" @click="openViewContract(item)">
                     <FileText class="w-4 h-4 text-primary" /> Ver contrato
                   </button>
-                  
-                  <button v-if="item.status === 'aguardando' || item.status === 'expirado'" @click="openResendLink(item)" class="w-full text-left px-4 py-2.5 text-sm hover:bg-light-bg dark:hover:bg-dark-bg text-light-text dark:text-offwhite transition-colors flex items-center gap-2.5 font-medium">
+
+                  <button v-if="item.status === 'aguardando' || item.status === 'expirado'" class="w-full text-left px-4 py-2.5 text-sm hover:bg-light-bg dark:hover:bg-dark-bg text-light-text dark:text-offwhite transition-colors flex items-center gap-2.5 font-medium" @click="openResendLink(item)">
                     <Send class="w-4 h-4 text-gold" /> Reenviar link
                   </button>
-                  
-                  <button v-if="item.status === 'aceito' || item.status === 'vencendo' || item.status === 'vencido'" @click="downloadReceipt(item)" class="w-full text-left px-4 py-2.5 text-sm hover:bg-light-bg dark:hover:bg-dark-bg text-light-text dark:text-offwhite transition-colors flex items-center gap-2.5 font-medium">
+
+                  <button v-if="item.status === 'aceito' || item.status === 'vencendo' || item.status === 'vencido'" class="w-full text-left px-4 py-2.5 text-sm hover:bg-light-bg dark:hover:bg-dark-bg text-light-text dark:text-offwhite transition-colors flex items-center gap-2.5 font-medium" @click="downloadReceipt(item)">
                     <Download class="w-4 h-4 text-green-500" /> Baixar comprovante
                   </button>
-                  
-                  <button v-if="item.status === 'vencendo' || item.status === 'vencido'" @click="openRenewContract(item)" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gold/10 dark:hover:bg-gold/20 text-gold transition-colors flex items-center gap-2.5 font-medium">
+
+                  <button v-if="item.status === 'vencendo' || item.status === 'vencido'" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gold/10 dark:hover:bg-gold/20 text-gold transition-colors flex items-center gap-2.5 font-medium" @click="openRenewContract(item)">
                     <RefreshCw class="w-4 h-4" /> Iniciar renovação
                   </button>
                 </div>
               </td>
             </tr>
-            
+
             <!-- Estado Vazio -->
             <tr v-if="filteredContracts.length === 0">
               <td colspan="5" class="p-12 text-center text-light-text/50 dark:text-offwhite/50">
@@ -130,7 +130,7 @@
       </div>
     </div>
 
-    <ResendContractModal 
+    <ResendContractModal
       :is-open="isResendModalOpen"
       :contract-id="selectedContractId"
       @close="isResendModalOpen = false; selectedContractId = null"

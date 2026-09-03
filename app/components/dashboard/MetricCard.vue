@@ -11,21 +11,24 @@
     ]"
   >
     <div class="flex items-center justify-between relative z-10">
-      <span class="text-sm font-medium" :class="[
+      <span
+class="text-sm font-medium" :class="[
         variant === 'neutral' ? 'text-light-text/70 dark:text-offwhite/70' : '',
         variant === 'alert-red' ? 'text-red-700 dark:text-[#ff8a8a]' : '', 
         variant === 'alert-gold' ? 'text-yellow-700 dark:text-gold' : ''
       ]">{{ title }}</span>
-      <slot name="icon"></slot>
+      <slot name="icon"/>
     </div>
     
-    <div class="text-3xl font-bold relative z-10" :class="[
+    <div
+class="text-3xl font-bold relative z-10" :class="[
         variant === 'neutral' ? 'text-light-text dark:text-offwhite' : '',
         variant === 'alert-red' ? 'text-red-700 dark:text-[#ff8a8a]' : '',
         variant === 'alert-gold' ? 'text-yellow-700 dark:text-gold' : ''
     ]">{{ value }}</div>
     
-    <div v-if="description" class="text-xs mt-1 relative z-10" :class="[
+    <div
+v-if="description" class="text-xs mt-1 relative z-10" :class="[
         variant === 'neutral' ? 'text-light-text/50 dark:text-offwhite/50' : '',
         variant === 'alert-red' ? 'text-red-700/70 dark:text-[#ff8a8a]/70' : '',
         variant === 'alert-gold' ? 'text-yellow-700/70 dark:text-gold/70' : ''

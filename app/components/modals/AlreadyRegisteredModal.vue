@@ -18,14 +18,14 @@
       <!-- Footer / Actions -->
       <div class="flex flex-col sm:flex-row justify-end gap-3 mt-2">
         <button 
-          @click="handleClose"
           class="px-4 py-2 text-sm font-medium text-light-text/70 dark:text-offwhite/70 hover:bg-light-border/50 dark:hover:bg-dark-border/50 rounded-md transition-colors w-full sm:w-auto"
+          @click="handleClose"
         >
           Cancelar
         </button>
         <button 
-          @click="confirm"
           class="px-6 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-bold rounded-md transition-colors shadow-sm w-full sm:w-auto"
+          @click="confirm"
         >
           Ver e editar chamada
         </button>
@@ -38,7 +38,7 @@
 import { AlertTriangle } from '@lucide/vue'
 import BaseModal from '../BaseModal.vue'
 
-const props = defineProps<{
+defineProps<{
   isOpen: boolean
   className: string
   date: string

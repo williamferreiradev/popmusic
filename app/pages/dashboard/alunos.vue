@@ -8,8 +8,8 @@
         <p class="text-sm text-light-text/70 dark:text-offwhite/70">Gerencie as matrículas e o perfil dos seus alunos.</p>
       </div>
       <button 
-        @click="isCreateModalOpen = true"
         class="bg-primary hover:bg-primary-hover text-offwhite px-4 py-2 rounded-md font-medium transition-colors flex items-center gap-2 self-start sm:self-auto shadow-sm"
+        @click="isCreateModalOpen = true"
       >
         <Plus class="w-5 h-5" />
         Nova matrícula

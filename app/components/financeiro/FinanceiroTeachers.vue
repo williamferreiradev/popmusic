@@ -21,7 +21,7 @@
         <div 
           v-if="teacher.totalToReceive > 0" 
           class="absolute top-0 left-0 w-1.5 h-full bg-gold"
-        ></div>
+        />
 
         <div class="ml-2">
           <h3 class="text-lg font-bold text-light-text dark:text-offwhite mb-3">{{ teacher.name }}</h3>
@@ -38,8 +38,8 @@
         </div>
 
         <button 
-          @click="openDrawer(teacher)"
           class="w-full mt-2 py-2 border border-primary text-primary hover:bg-primary hover:text-white font-bold rounded-lg transition-colors text-sm"
+          @click="openDrawer(teacher)"
         >
           Ver detalhes
         </button>
@@ -57,7 +57,7 @@
       class="fixed inset-0 bg-black/50 z-40 transition-opacity"
       :class="isDrawerOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'"
       @click="closeDrawer"
-    ></div>
+    />
 
     <div 
       class="fixed top-0 right-0 h-full w-full max-w-xl bg-light-bg dark:bg-dark-bg shadow-2xl z-50 transform transition-transform duration-300 ease-in-out border-l border-light-border dark:border-dark-border flex flex-col"
@@ -71,8 +71,8 @@
           <p class="text-sm text-light-text/60 dark:text-offwhite/60 mt-1">Repasse pendente: <span class="text-primary font-bold">{{ formatCurrency(activeTeacher?.totalToReceive || 0) }}</span></p>
         </div>
         <button 
-          @click="closeDrawer"
           class="p-2 text-light-text/50 hover:bg-light-border/50 dark:text-offwhite/50 dark:hover:bg-dark-border/50 rounded-full transition-colors"
+          @click="closeDrawer"
         >
           <X class="w-6 h-6" />
         </button>
@@ -106,10 +106,11 @@
               <td class="py-3 px-2 text-sm text-right text-light-text/80 dark:text-offwhite/80 group">
                 <div class="flex items-center justify-end gap-2">
                   <span>{{ formatCurrency(student.amountPerClass) }}</span>
-                  <button v-if="false"
-                    @click="openAdjustModal(student)"
+                  <button
+v-if="false"
                     class="opacity-0 group-hover:opacity-100 p-1 text-primary hover:bg-primary/10 rounded transition-all"
                     title="Ajustar Comissão"
+                    @click="openAdjustModal(student)"
                   >
                     <Edit2 class="w-3.5 h-3.5" />
                   </button>
@@ -132,16 +133,16 @@
       <!-- Drawer Footer (Ações) -->
       <div class="p-6 border-t border-light-border dark:border-dark-border bg-light-surface dark:bg-dark-surface flex flex-col sm:flex-row gap-3 justify-end">
         <button 
-          @click="openStatementModal"
           class="px-4 py-2 border border-primary text-primary hover:bg-primary/10 font-bold rounded-md transition-colors text-sm flex justify-center items-center gap-2"
+          @click="openStatementModal"
         >
           <FileText class="w-4 h-4" />
           Gerar demonstrativo
         </button>
         <button 
           v-if="(activeTeacher?.totalToReceive || 0) > 0"
-          @click="openPayModal"
           class="px-6 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-bold rounded-md transition-colors shadow-sm flex justify-center items-center gap-2"
+          @click="openPayModal"
         >
           <CheckCircle class="w-4 h-4" />
           Marcar tudo como pago

@@ -12,8 +12,8 @@
       
       <button 
         v-if="contract"
-        @click="triggerPrint"
         class="px-3.5 py-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-lg shadow-sm transition-colors flex items-center gap-2"
+        @click="triggerPrint"
       >
         <Printer class="w-4 h-4" />
         Imprimir / Salvar PDF
@@ -55,8 +55,8 @@
 
           <div class="flex items-center gap-2">
             <button 
-              @click="triggerPrint"
               class="px-4 py-2 bg-light-surface dark:bg-dark-surface hover:bg-light-bg dark:hover:bg-dark-bg border border-light-border dark:border-dark-border text-light-text dark:text-offwhite text-xs font-bold rounded-lg shadow-sm transition-colors flex items-center gap-1.5 shrink-0"
+              @click="triggerPrint"
             >
               <Download class="w-3.5 h-3.5" />
               Baixar Cópia em PDF
@@ -85,7 +85,7 @@
           <div class="flex flex-col gap-4 pt-2 border-t border-light-border dark:border-dark-border">
             <label class="flex items-start gap-3 cursor-pointer group">
               <div class="mt-0.5">
-                <input type="checkbox" v-model="hasAccepted" class="hidden" />
+                <input v-model="hasAccepted" type="checkbox" class="hidden" >
                 <div class="w-5 h-5 rounded border-2 border-light-border dark:border-dark-border flex items-center justify-center transition-colors group-hover:border-primary" :class="hasAccepted ? 'bg-primary border-primary' : 'bg-transparent'">
                   <Check v-if="hasAccepted" class="w-3.5 h-3.5 text-white" />
                 </div>
@@ -97,7 +97,7 @@
 
             <label class="flex items-start gap-3 cursor-pointer group">
               <div class="mt-0.5">
-                <input type="checkbox" v-model="hasPhotoConsent" class="hidden" />
+                <input v-model="hasPhotoConsent" type="checkbox" class="hidden" >
                 <div class="w-5 h-5 rounded border-2 border-light-border dark:border-dark-border flex items-center justify-center transition-colors group-hover:border-primary" :class="hasPhotoConsent ? 'bg-primary border-primary' : 'bg-transparent'">
                   <Check v-if="hasPhotoConsent" class="w-3.5 h-3.5 text-white" />
                 </div>
@@ -114,10 +114,10 @@
             </p>
 
             <button 
-              @click="handleAccept"
               :disabled="!hasAccepted || !hasPhotoConsent || !userFacePhoto || isSubmitting"
               class="w-full py-3.5 text-center text-white font-bold text-base sm:text-lg rounded-lg transition-all shadow-md flex items-center justify-center gap-2"
               :class="hasAccepted && hasPhotoConsent && userFacePhoto ? 'bg-green-600 hover:bg-green-700 cursor-pointer' : 'bg-light-border dark:bg-dark-border text-light-text/40 dark:text-offwhite/40 cursor-not-allowed shadow-none'"
+              @click="handleAccept"
             >
               <CheckCircle2 class="w-5 h-5" />
               {{ isSubmitting ? 'Salvando foto e registrando assinatura...' : 'Aceitar e Assinar Contrato com Foto' }}
@@ -159,8 +159,8 @@
             </span>
             <button 
               type="button" 
-              @click="copyPixKey"
               class="px-3 py-1 bg-primary hover:bg-primary-hover text-white rounded text-xs font-bold transition-colors shrink-0 flex items-center gap-1"
+              @click="copyPixKey"
             >
               <Copy class="w-3.5 h-3.5" />
               {{ copiedPix ? 'Copiado!' : 'Copiar PIX' }}
@@ -179,15 +179,15 @@
 
         <div class="flex flex-col gap-2 w-full">
           <button 
-            @click="triggerPrint"
             class="w-full py-2.5 bg-primary hover:bg-primary-hover text-white font-bold rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2 text-sm cursor-pointer"
+            @click="triggerPrint"
           >
             <Printer class="w-4 h-4" />
             Imprimir / Salvar PDF com Foto
           </button>
           <button 
-            @click="closeSuccessModal"
             class="w-full py-2.5 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-offwhite font-bold rounded-lg hover:bg-light-bg dark:hover:bg-dark-bg transition-colors text-sm cursor-pointer"
+            @click="closeSuccessModal"
           >
             Fechar
           </button>
@@ -201,11 +201,11 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { Music, CheckCircle2, Clock, AlertCircle, Download, Check, Printer, Camera, Copy, Mail } from '@lucide/vue'
+import { Music, CheckCircle2, Clock, AlertCircle, Download, Check, Printer, Copy, Mail } from '@lucide/vue'
 import BaseModal from '~/components/BaseModal.vue'
 import PopMusicContractDocument from '~/components/contratos/PopMusicContractDocument.vue'
 import FaceCaptureSection from '~/components/contratos/FaceCaptureSection.vue'
-import { buildPopMusicContractData, formatCPF, formatPhone, formatDateBR } from '~/utils/contractFormatter'
+import { buildPopMusicContractData, formatCPF } from '~/utils/contractFormatter'
 
 definePageMeta({
   layout: false

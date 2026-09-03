@@ -10,7 +10,7 @@
           type="text" 
           placeholder="Buscar um relatório ou aluno..."
           class="w-full bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-lg py-3 pl-10 pr-4 text-light-text dark:text-offwhite placeholder:text-light-text/40 dark:placeholder:text-offwhite/40 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors shadow-sm"
-        />
+        >
       </div>
       <!-- Sugestão de aluno fake -->
       <div v-if="searchQuery.length > 2 && !searchQuery.toLowerCase().includes('relató')" class="absolute top-full left-0 w-full mt-1 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-lg shadow-lg z-10 p-2">
@@ -58,7 +58,7 @@
               />
             </div>
             <div class="flex items-center gap-2">
-              <BaseButton variant="primary" class="flex-1" @click="generateReport(report)" :disabled="!reportInputValue">
+              <BaseButton variant="primary" class="flex-1" :disabled="!reportInputValue" @click="generateReport(report)">
                 Gerar
               </BaseButton>
               <BaseButton variant="outline" @click="expandedCard = null">
@@ -102,7 +102,7 @@
             </div>
           </div>
           
-          <button @click="removeSaved(saved.id)" class="absolute top-3 right-3 p-1.5 text-light-text/40 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all rounded-md" title="Remover">
+          <button class="absolute top-3 right-3 p-1.5 text-light-text/40 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all rounded-md" title="Remover" @click="removeSaved(saved.id)">
             <Trash2 class="w-4 h-4" />
           </button>
 
@@ -116,10 +116,10 @@
     <!-- Painel de Resultado -->
     <div v-if="activeReport" ref="resultPanelRef" class="mt-4 pt-4 border-t border-light-border dark:border-dark-border animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div v-if="isLoading" class="w-full flex flex-col gap-4 animate-pulse">
-        <div class="h-8 w-64 bg-light-border dark:bg-dark-border rounded"></div>
-        <div class="h-10 w-full bg-light-border dark:bg-dark-border rounded-md"></div>
-        <div class="h-10 w-full bg-light-border dark:bg-dark-border rounded-md"></div>
-        <div class="h-10 w-full bg-light-border dark:bg-dark-border rounded-md"></div>
+        <div class="h-8 w-64 bg-light-border dark:bg-dark-border rounded"/>
+        <div class="h-10 w-full bg-light-border dark:bg-dark-border rounded-md"/>
+        <div class="h-10 w-full bg-light-border dark:bg-dark-border rounded-md"/>
+        <div class="h-10 w-full bg-light-border dark:bg-dark-border rounded-md"/>
       </div>
       
       <RelatoriosResultTable 
@@ -127,10 +127,10 @@
         :title="generatedTitle"
         :columns="activeReport.columns"
         :data="activeReportData"
-        :hasActions="activeReport.hasActions"
-        :actionIcon="activeReport.actionIcon"
-        :actionType="activeReport.actionType"
-        :actionTooltip="activeReport.actionTooltip"
+        :has-actions="activeReport.hasActions"
+        :action-icon="activeReport.actionIcon"
+        :action-type="activeReport.actionType"
+        :action-tooltip="activeReport.actionTooltip"
         @close="closeResult"
         @action="handleQuickAction"
       />
@@ -140,7 +140,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, onMounted } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import { 
   Search, Users, UserCheck, AlertCircle, AlertTriangle, 
   UserMinus, Gift, FileSignature, Wallet, ArrowRight,
@@ -293,7 +293,7 @@ const activeReportData = ref<any[]>([])
 const resultPanelRef = ref<HTMLElement | null>(null)
 
 // Modalidades do banco para o seletor
-const { data: modalitiesList } = await useAsyncData('report_modalities', async () => {
+await useAsyncData('report_modalities', async () => {
   const { data } = await supabase.from('modalidades').select('id, nome').eq('ativo', true)
   return (data || []).map((m: any) => ({ label: m.nome, value: m.id }))
 })

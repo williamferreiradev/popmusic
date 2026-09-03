@@ -13,7 +13,7 @@
           class="flex-1 flex items-center justify-center gap-2 px-4 py-3 border rounded-lg cursor-pointer transition-colors"
           :class="formData.type === 'entrada' ? 'border-green-500 bg-green-500/10 text-green-600 dark:text-green-500 font-bold' : 'border-light-border dark:border-dark-border text-light-text/70 dark:text-offwhite/70 hover:bg-light-bg dark:hover:bg-dark-bg'"
         >
-          <input type="radio" v-model="formData.type" value="entrada" class="hidden">
+          <input v-model="formData.type" type="radio" value="entrada" class="hidden">
           <ArrowDownLeft class="w-4 h-4" />
           Entrada
         </label>
@@ -21,7 +21,7 @@
           class="flex-1 flex items-center justify-center gap-2 px-4 py-3 border rounded-lg cursor-pointer transition-colors"
           :class="formData.type === 'saida' ? 'border-red-500 bg-red-500/10 text-red-600 dark:text-red-500 font-bold' : 'border-light-border dark:border-dark-border text-light-text/70 dark:text-offwhite/70 hover:bg-light-bg dark:hover:bg-dark-bg'"
         >
-          <input type="radio" v-model="formData.type" value="saida" class="hidden">
+          <input v-model="formData.type" type="radio" value="saida" class="hidden">
           <ArrowUpRight class="w-4 h-4" />
           Saída
         </label>
@@ -81,14 +81,14 @@
       <!-- Footer / Actions -->
       <div class="flex justify-end gap-3 mt-4">
         <button 
-          @click="handleClose"
           class="px-4 py-2 text-sm font-medium text-light-text/70 dark:text-offwhite/70 hover:bg-light-border/50 dark:hover:bg-dark-border/50 rounded-md transition-colors"
+          @click="handleClose"
         >
           Cancelar
         </button>
         <button 
-          @click="confirm"
           class="px-6 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-bold rounded-md transition-colors shadow-sm"
+          @click="confirm"
         >
           Adicionar lançamento
         </button>

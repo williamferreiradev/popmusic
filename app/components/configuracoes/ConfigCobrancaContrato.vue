@@ -13,7 +13,7 @@
           <BaseInput v-model="form.pixKey" label="Chave PIX" />
         </div>
       </div>
-      <div class="w-full h-px bg-light-border dark:bg-dark-border"></div>
+      <div class="w-full h-px bg-light-border dark:bg-dark-border"/>
       
       <!-- Seção: Contrato -->
       <div class="flex flex-col gap-4">
@@ -29,13 +29,13 @@
           <BaseInput v-model="form.extraClassPrice" label="Valor de aula extra fora do horário (R$)" type="number" />
           <BaseInput v-model="form.linkValidityDays" label="Validade do link de assinatura (dias)" type="number" />
           <div class="flex items-center gap-3 h-[72px] px-2">
-            <input type="checkbox" v-model="form.requireImageConsent" id="requireImage" class="w-4 h-4 text-primary focus:ring-primary rounded border-light-border dark:border-dark-border" />
+            <input id="requireImage" v-model="form.requireImageConsent" type="checkbox" class="w-4 h-4 text-primary focus:ring-primary rounded border-light-border dark:border-dark-border" >
             <label for="requireImage" class="text-sm font-medium text-light-text dark:text-offwhite cursor-pointer">Exigir aceite de cessão de imagem/voz no cadastro</label>
           </div>
         </div>
       </div>
 
-      <div class="w-full h-px bg-light-border dark:bg-dark-border"></div>
+      <div class="w-full h-px bg-light-border dark:bg-dark-border"/>
 
       <!-- Seção: Cobrança -->
       <div class="flex flex-col gap-4">
@@ -70,21 +70,21 @@
 
     <!-- Sticky Footer para Salvar -->
     <div class="fixed md:absolute bottom-0 left-0 w-full bg-light-surface dark:bg-dark-surface border-t border-light-border dark:border-dark-border p-4 flex justify-end z-10">
-      <BaseButton variant="primary" @click="handleSave" :disabled="!hasChanges || isLoadingSave" class="px-8 flex items-center gap-2">
+      <BaseButton variant="primary" :disabled="!hasChanges || isLoadingSave" class="px-8 flex items-center gap-2" @click="handleSave">
         <Loader2 v-if="isLoadingSave" class="w-4 h-4 animate-spin" />
         Salvar alterações
       </BaseButton>
     </div>
 
     <!-- Modal Confirmação Regra Sensível -->
-    <BaseModal :isOpen="isConfirmModalOpen" title="Confirmar alteração de regra financeira" @close="isConfirmModalOpen = false">
+    <BaseModal :is-open="isConfirmModalOpen" title="Confirmar alteração de regra financeira" @close="isConfirmModalOpen = false">
       <div class="p-5 flex flex-col gap-4">
         <div class="bg-yellow-500/10 border border-yellow-500/20 text-yellow-700 dark:text-yellow-400 p-4 rounded-lg text-sm">
           <p>Esta mudança afeta apenas <strong>cobranças futuras</strong>. Cobranças já em atraso mantêm a regra vigente no momento em que venceram.</p>
         </div>
         <div class="flex items-center justify-end gap-3 pt-4 border-t border-light-border dark:border-dark-border">
           <BaseButton variant="outline" @click="isConfirmModalOpen = false">Cancelar</BaseButton>
-          <BaseButton variant="primary" @click="executeSave" :disabled="isLoadingSave" class="flex items-center gap-2">
+          <BaseButton variant="primary" :disabled="isLoadingSave" class="flex items-center gap-2" @click="executeSave">
             <Loader2 v-if="isLoadingSave" class="w-4 h-4 animate-spin" />
             Confirmar
           </BaseButton>
@@ -126,7 +126,7 @@ const originalForm = ref<any>({ ...form.value })
 const isConfirmModalOpen = ref(false)
 const isLoadingSave = ref(false)
 
-const { pending } = await useAsyncData('config_cobranca_contrato', async () => {
+await useAsyncData('config_cobranca_contrato', async () => {
   const { data: configs } = await supabase.from('configuracoes').select('*').in('chave', ['contrato', 'cobranca', 'escola'])
   
   if (configs) {

@@ -22,9 +22,9 @@
         <input 
           v-model="selectedDate" 
           type="date"
-          @change="handleDateChange"
           class="px-2.5 py-1 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded text-xs font-bold text-light-text dark:text-offwhite focus:outline-none focus:border-primary"
-        />
+          @change="handleDateChange"
+        >
       </div>
     </div>
 
@@ -43,11 +43,11 @@
         <button 
           v-for="pill in dayFilterPills" 
           :key="pill.value"
-          @click="activeDayPill = pill.value"
           class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap border cursor-pointer"
           :class="activeDayPill === pill.value 
             ? 'bg-primary text-white border-primary shadow-sm' 
             : 'bg-light-surface dark:bg-dark-surface text-light-text/70 dark:text-offwhite/70 border-light-border dark:border-dark-border hover:bg-light-bg dark:hover:bg-dark-bg'"
+          @click="activeDayPill = pill.value"
         >
           {{ pill.label }}
         </button>
@@ -59,11 +59,11 @@
       <div 
         v-for="t in filteredTurmasCards" 
         :key="t.id"
-        @click="selectTurmaCard(t.id)"
         class="p-4 rounded-xl border transition-all cursor-pointer flex flex-col justify-between gap-3 relative overflow-hidden group shadow-sm"
         :class="selectedClass === t.id 
           ? 'bg-primary/10 border-primary shadow-md ring-2 ring-primary/40' 
           : 'bg-light-surface dark:bg-dark-surface border-light-border dark:border-dark-border hover:border-primary/50 hover:bg-light-bg/40 dark:hover:bg-dark-bg/40'"
+        @click="selectTurmaCard(t.id)"
       >
         <div class="flex items-start justify-between gap-2">
           <div>
@@ -117,15 +117,15 @@
 
     <!-- 2. Carregando (Skeleton) -->
     <div v-if="currentState === 'loading'" class="flex-1 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-xl overflow-hidden flex flex-col p-6 gap-4">
-      <div class="h-6 w-56 bg-light-border dark:bg-dark-border rounded animate-pulse"></div>
+      <div class="h-6 w-56 bg-light-border dark:bg-dark-border rounded animate-pulse"/>
       <div v-for="i in 3" :key="i" class="p-4 flex items-center justify-between border-b border-light-border/40 dark:border-dark-border/40">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-full bg-light-border dark:bg-dark-border animate-pulse"></div>
-          <div class="h-4 w-32 bg-light-border dark:bg-dark-border rounded animate-pulse"></div>
+          <div class="w-10 h-10 rounded-full bg-light-border dark:bg-dark-border animate-pulse"/>
+          <div class="h-4 w-32 bg-light-border dark:bg-dark-border rounded animate-pulse"/>
         </div>
         <div class="flex gap-2">
-          <div class="w-10 h-8 rounded bg-light-border dark:bg-dark-border animate-pulse"></div>
-          <div class="w-10 h-8 rounded bg-light-border dark:bg-dark-border animate-pulse"></div>
+          <div class="w-10 h-8 rounded bg-light-border dark:bg-dark-border animate-pulse"/>
+          <div class="w-10 h-8 rounded bg-light-border dark:bg-dark-border animate-pulse"/>
         </div>
       </div>
     </div>
@@ -159,16 +159,16 @@
         <span v-if="isFinalized" class="px-3 py-2 rounded-md text-xs font-bold bg-green-500/10 text-green-600 border border-green-500/30">Chamada finalizada</span>
         <button
           v-if="isFinalized"
-          @click="reopenAttendance"
           :disabled="isReopening"
           class="px-4 py-2 rounded-md text-xs font-bold border border-amber-500/40 text-amber-600 hover:bg-amber-500/10 disabled:opacity-40"
+          @click="reopenAttendance"
         >
           {{ isReopening ? 'Reabrindo...' : 'Reabrir chamada' }}
         </button>
         <button 
-          @click="markAllPresent"
           :disabled="isFinalized"
           class="px-4 py-2 rounded-md text-xs font-bold bg-green-500 hover:bg-green-600 text-white shadow-sm transition-colors cursor-pointer"
+          @click="markAllPresent"
         >
           Marcar todos como presentes
         </button>
@@ -217,22 +217,22 @@
             <div class="flex bg-light-bg dark:bg-dark-bg rounded-lg p-1 border border-light-border dark:border-dark-border shrink-0">
               <!-- Presente -->
               <button 
-                @click="markAttendance(student, 'presente')"
                 :disabled="isFinalized"
                 class="px-4 py-1.5 rounded-md text-xs font-bold transition-all w-14 text-center cursor-pointer"
                 :class="student.attendance === 'presente' ? 'bg-green-500 text-white shadow-sm' : 'text-light-text/50 dark:text-offwhite/50 hover:bg-green-500/10 hover:text-green-500 border border-transparent'"
                 title="Marcar Presente"
+                @click="markAttendance(student, 'presente')"
               >
                 PRESENTE
               </button>
               
               <!-- Falta -->
               <button 
-                @click="markAttendance(student, 'falta')"
                 :disabled="isFinalized"
                 class="px-4 py-1.5 rounded-md text-xs font-bold transition-all w-14 text-center cursor-pointer"
                 :class="student.attendance === 'falta' ? 'bg-red-500 text-white shadow-sm' : 'text-light-text/50 dark:text-offwhite/50 hover:bg-red-500/10 hover:text-red-500 border border-transparent'"
                 title="Marcar Falta"
+                @click="markAttendance(student, 'falta')"
               >
                 FALTA
               </button>
@@ -240,10 +240,10 @@
 
             <!-- Justificar -->
             <button 
-              @click="openJustifyModal(student)"
               :disabled="isFinalized"
               class="px-3 py-1.5 rounded-md text-xs font-semibold border border-light-border dark:border-dark-border hover:bg-light-border/30 dark:hover:bg-dark-border/30 transition-colors shrink-0 flex items-center gap-1.5 cursor-pointer"
               :class="student.attendance === 'falta_justificada' ? 'border-amber-500 text-amber-500 bg-amber-500/10' : 'text-light-text/70 dark:text-offwhite/70'"
+              @click="openJustifyModal(student)"
             >
               <span>{{ student.attendance === 'falta_justificada' ? 'Falta Justificada' : 'Justificar' }}</span>
             </button>

@@ -9,7 +9,7 @@
       <div class="flex items-center gap-4 mb-2">
         <div class="w-12 h-12 rounded-full bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border flex items-center justify-center shrink-0">
           <span v-if="!student.avatar" class="font-bold text-light-text dark:text-offwhite">{{ student.initials }}</span>
-          <img v-else :src="student.avatar" alt="Avatar" class="w-full h-full object-cover rounded-full" />
+          <img v-else :src="student.avatar" alt="Avatar" class="w-full h-full object-cover rounded-full" >
         </div>
         <div>
           <h3 class="font-bold text-light-text dark:text-offwhite">{{ student.name }}</h3>
@@ -26,7 +26,7 @@
           <li>A vaga na turma atual será liberada.</li>
         </ul>
       </div>
-      <div><label class="text-sm font-semibold">Motivo do trancamento</label><textarea v-model="reason" rows="3" class="mt-1 w-full rounded-lg border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg p-3" placeholder="Informe o motivo (obrigatório)"></textarea></div>
+      <div><label class="text-sm font-semibold">Motivo do trancamento</label><textarea v-model="reason" rows="3" class="mt-1 w-full rounded-lg border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg p-3" placeholder="Informe o motivo (obrigatório)"/></div>
 
       <div class="flex items-center justify-end gap-3 pt-4 border-t border-light-border dark:border-dark-border mt-2">
         <BaseButton variant="outline" @click="$emit('close')">Cancelar</BaseButton>

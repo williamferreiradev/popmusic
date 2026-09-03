@@ -16,30 +16,30 @@
         </BaseButton>
         <!-- Legenda -->
         <div class="flex items-center gap-4 text-xs font-medium text-light-text dark:text-offwhite">
-          <div class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Agendado</div>
-          <div class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-green-500"></span> Concluído</div>
-          <div class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> Cancelado</div>
-          <div class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-orange-500"></span> Faltou</div>
+          <div class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-blue-500"/> Agendado</div>
+          <div class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-green-500"/> Concluído</div>
+          <div class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-red-500"/> Cancelado</div>
+          <div class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-orange-500"/> Faltou</div>
         </div>
 
         <div class="flex items-center gap-4">
           <!-- Botão Hoje -->
           <button 
-            @click="goToToday"
             class="px-4 py-1.5 rounded-md text-sm font-medium border border-light-border dark:border-dark-border text-primary hover:bg-light-border dark:hover:bg-dark-border transition-colors"
+            @click="goToToday"
           >
             Hoje
           </button>
           
           <!-- Controles Navegação -->
           <div class="flex items-center gap-2">
-            <button @click="prev" class="p-1 rounded-md text-light-text/60 dark:text-offwhite/60 hover:text-light-text dark:hover:text-offwhite hover:bg-light-border dark:hover:bg-dark-border transition-colors">
+            <button class="p-1 rounded-md text-light-text/60 dark:text-offwhite/60 hover:text-light-text dark:hover:text-offwhite hover:bg-light-border dark:hover:bg-dark-border transition-colors" @click="prev">
               <ChevronLeft class="w-5 h-5" />
             </button>
             <span class="text-sm font-medium text-light-text dark:text-offwhite min-w-[120px] text-center">
               {{ currentPeriodLabel }}
             </span>
-            <button @click="next" class="p-1 rounded-md text-light-text/60 dark:text-offwhite/60 hover:text-light-text dark:hover:text-offwhite hover:bg-light-border dark:hover:bg-dark-border transition-colors">
+            <button class="p-1 rounded-md text-light-text/60 dark:text-offwhite/60 hover:text-light-text dark:hover:text-offwhite hover:bg-light-border dark:hover:bg-dark-border transition-colors" @click="next">
               <ChevronRight class="w-5 h-5" />
             </button>
           </div>
@@ -49,9 +49,9 @@
             <button 
               v-for="v in ['Dia', 'Semana', 'Mês']" 
               :key="v"
-              @click="view = v"
               class="px-3 py-1 text-sm font-medium rounded-md transition-colors"
               :class="view === v ? 'bg-light-border dark:bg-dark-border text-light-text dark:text-offwhite' : 'text-light-text/50 dark:text-offwhite/50 hover:text-light-text dark:hover:text-offwhite'"
+              @click="view = v"
             >
               {{ v }}
             </button>
@@ -65,7 +65,7 @@
       
       <!-- Cabeçalho dos Dias (Semana) -->
       <div v-if="view === 'Semana'" class="grid grid-cols-[60px_repeat(7,1fr)] border-b border-light-border dark:border-dark-border">
-        <div class="border-r border-light-border dark:border-dark-border"></div> <!-- Célula Vazia pros Horários -->
+        <div class="border-r border-light-border dark:border-dark-border"/> <!-- Célula Vazia pros Horários -->
         <div 
           v-for="day in currentWeekDays" 
           :key="day.date" 
@@ -101,14 +101,14 @@
                 <div 
                   v-for="apt in getAppointmentsForDayIndex(i - 1)" 
                   :key="apt.id"
-                  @click="openAppointment(apt)"
                   class="absolute left-1 right-1 rounded-md p-2 text-xs border border-blue-500/30 cursor-pointer hover:brightness-110 transition-all flex flex-col gap-1 overflow-hidden"
                   :style="getStyleForAppointment(apt)"
                   :class="getBgColorClass(apt.status)"
+                  @click="openAppointment(apt)"
                 >
                   <div class="flex items-center justify-between font-bold text-blue-900 dark:text-blue-100">
                     <span class="flex items-center gap-1.5 truncate">
-                      <span class="w-1.5 h-1.5 rounded-full shrink-0" :class="getDotColorClass(apt.status)"></span>
+                      <span class="w-1.5 h-1.5 rounded-full shrink-0" :class="getDotColorClass(apt.status)"/>
                       <span class="truncate">{{ apt.className }}</span>
                     </span>
                     <span class="text-[10px] bg-black/10 dark:bg-white/10 px-1.5 py-0.5 rounded shrink-0">{{ apt.capacity === 1 ? 'Individual' : `${apt.students.length}/${apt.capacity}` }}</span>
@@ -162,7 +162,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus } from '@lucide/vue'
 import AgendaDetailModal from '~/components/modals/AgendaDetailModal.vue'
 import ClassFormModal from '~/components/modals/ClassFormModal.vue'
@@ -238,7 +238,7 @@ const appointments = computed(() => {
 
     // Ajuste dia_semana do Postgres (0 = Dom, 1 = Seg, ..., 6 = Sáb)
     // para o índice da grade (0 = Seg, 1 = Ter, ..., 5 = Sáb, 6 = Dom)
-    let dateOffset = t.dia_semana === 0 ? 6 : t.dia_semana - 1
+    const dateOffset = t.dia_semana === 0 ? 6 : t.dia_semana - 1
 
     const matriculados = (t.matriculas_turma || []).filter((m: any) => !m.data_fim).map((m: any) => ({
       id: m.alunos?.id || m.id,
