@@ -51,6 +51,14 @@ describe('detalhes reais da agenda', () => {
       assert.ok(modal.includes(value), `Detalhe ausente no popup: ${value}`)
     }
   })
+
+  it('oferece visualizações funcionais de dia, semana e mês', () => {
+    assert.ok(agenda.includes("view === 'dia'"))
+    assert.ok(agenda.includes("view === 'semana'"))
+    assert.ok(agenda.includes('dayappointments'))
+    assert.ok(agenda.includes('monthcells'))
+    assert.doesNotMatch(agenda, /em desenvolvimento/)
+  })
 })
 
 describe('resumo escalável de contratos', () => {

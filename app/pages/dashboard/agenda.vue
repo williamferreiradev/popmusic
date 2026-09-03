@@ -128,12 +128,24 @@
         </div>
       </div>
 
-      <!-- Placeholder Mês e Dia -->
-      <div v-else class="flex-1 flex items-center justify-center text-light-text/40 dark:text-offwhite/40">
-        <div class="flex flex-col items-center gap-4">
-          <CalendarIcon class="w-12 h-12" />
-          <p class="font-medium text-lg">Visão de {{ view }} em desenvolvimento.</p>
-          <p class="text-sm">Por favor, utilize a visão de Semana por enquanto.</p>
+      <div v-else-if="view === 'Dia'" class="flex-1 overflow-y-auto p-4 sm:p-6">
+        <p class="mb-1 text-lg font-bold capitalize">{{ currentDayLabel }}</p>
+        <p class="mb-4 text-sm opacity-60">{{ dayAppointments.length }} aula(s)</p>
+        <div class="grid gap-3">
+          <button v-for="apt in dayAppointments" :key="apt.id" class="rounded-lg border border-blue-500/30 bg-blue-500/10 p-4 text-left hover:brightness-110" @click="openAppointment(apt)">
+            <div class="flex justify-between gap-3"><div><p class="font-bold">{{ apt.time }} · {{ apt.className }}</p><p class="text-sm opacity-70">{{ apt.teacherName }} · {{ apt.roomName }}</p></div><span class="text-sm font-semibold text-primary">{{ apt.students.length }}/{{ apt.capacity }} alunos</span></div>
+          </button>
+          <p v-if="!dayAppointments.length" class="rounded-lg border border-dashed p-12 text-center opacity-50">Nenhuma aula programada para este dia.</p>
+        </div>
+      </div>
+      <div v-else class="flex-1 overflow-auto p-4">
+        <div class="grid min-w-[760px] grid-cols-7 border-l border-t border-light-border dark:border-dark-border">
+          <div v-for="name in ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom']" :key="name" class="border-b border-r p-2 text-center text-xs font-bold">{{ name }}</div>
+          <div v-for="cell in monthCells" :key="cell.key" class="min-h-28 border-b border-r p-2" :class="cell.inMonth ? '' : 'opacity-40'">
+            <span class="inline-flex h-7 w-7 items-center justify-center rounded-full text-sm" :class="cell.isToday ? 'bg-primary text-white font-bold' : ''">{{ cell.day }}</span>
+            <button v-for="apt in cell.appointments.slice(0,3)" :key="apt.id" class="mt-1 block w-full truncate rounded bg-blue-500/10 px-2 py-1 text-left text-xs" @click="openAppointment(apt)">{{ apt.time }} {{ apt.className }}</button>
+            <p v-if="cell.appointments.length > 3" class="text-[11px] opacity-50">+{{ cell.appointments.length - 3 }} aula(s)</p>
+          </div>
         </div>
       </div>
 
@@ -286,6 +298,19 @@ const appointmentsTodayCount = computed(() => {
   return appointments.value.filter(a => a.dateOffset === gridIndex).length
 })
 
+const gridIndexForDate = (date: Date) => date.getDay() === 0 ? 6 : date.getDay() - 1
+const dayAppointments = computed(() => appointments.value.filter(a => a.dateOffset === gridIndexForDate(currentDate.value)).sort((a, b) => a.time.localeCompare(b.time)))
+const currentDayLabel = computed(() => currentDate.value.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }))
+const monthCells = computed(() => {
+  const year = currentDate.value.getFullYear(), month = currentDate.value.getMonth()
+  const first = new Date(year, month, 1), start = new Date(first)
+  start.setDate(first.getDate() - gridIndexForDate(first))
+  return Array.from({ length: 42 }, (_, index) => {
+    const date = new Date(start); date.setDate(start.getDate() + index)
+    return { key: date.toISOString().slice(0, 10), day: date.getDate(), inMonth: date.getMonth() === month, isToday: isToday(date), appointments: appointments.value.filter(a => a.dateOffset === gridIndexForDate(date)) }
+  })
+})
+
 const getStartOfWeek = (d: Date) => {
   const date = new Date(d)
   const day = date.getDay()
@@ -313,6 +338,8 @@ const currentWeekDays = computed(() => {
 })
 
 const currentPeriodLabel = computed(() => {
+  if (view.value === 'Dia') return currentDate.value.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+  if (view.value === 'Mês') return currentDate.value.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
   const start = currentWeekDays.value[0]?.fullDate ?? new Date()
   const end = currentWeekDays.value[6]?.fullDate ?? start
   
