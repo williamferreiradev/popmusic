@@ -334,9 +334,9 @@
 ## 16. Ambiente, implantação e operação — P0
 
 - [ ] Criar ambientes separados de desenvolvimento, homologação e produção.
-- [ ] Configurar variáveis de ambiente no provedor de hospedagem.
+- [x] Configurar variáveis de ambiente no provedor de hospedagem (Vercel, confirmado durante a implantação).
 - [ ] Configurar URLs de redirecionamento do Supabase.
-- [ ] Configurar domínio e HTTPS.
+- [x] Configurar domínio e HTTPS; `https://popmusic-beige.vercel.app/` redireciona para `/login` e `/login` responde HTTP 200.
 - [ ] Aplicar migrações na ordem correta e registrar a versão implantada.
 - [ ] Implantar Edge Functions e seus segredos.
 - [ ] Configurar e validar buckets de armazenamento.
