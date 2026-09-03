@@ -25,28 +25,31 @@ import { isUserRole, roleDestination } from '~/utils/accessControl'
 
 definePageMeta({ layout: false })
 const supabase = useSupabaseClient()
-const user = useSupabaseUser()
 const checking = ref(true)
 const invalidLink = ref(false)
+const confirmedUserId = ref<string | null>(null)
 const saving = ref(false)
 const password = ref('')
 const confirmation = ref('')
 const errorMsg = ref('')
 
 onMounted(async () => {
-  // O callback pode levar alguns segundos em redes móveis; confirme a sessão diretamente.
-  for (let attempt = 0; attempt < 20 && !user.value; attempt++) {
-    const { data } = await supabase.auth.getSession()
-    if (data.session?.user) break
+  // O callback pode levar alguns segundos em redes móveis. `getUser` confirma o
+  // token no servidor e evita aceitar uma sessão expirada mantida no navegador.
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const { data, error } = await supabase.auth.getUser()
+    if (!error && data.user) {
+      confirmedUserId.value = data.user.id
+      break
+    }
     await new Promise(resolve => setTimeout(resolve, 250))
   }
-  const { data } = await supabase.auth.getSession()
-  invalidLink.value = !data.session?.user
+  invalidLink.value = !confirmedUserId.value
   checking.value = false
 })
 
-const destination = async () => {
-  const { data } = await supabase.from('usuarios').select('papel, ativo').eq('id', user.value!.id).maybeSingle()
+const destination = async (userId: string) => {
+  const { data } = await supabase.from('usuarios').select('papel, ativo').eq('id', userId).maybeSingle()
   if (!data?.ativo || !isUserRole(data.papel)) {
     await supabase.auth.signOut()
     return '/login?erro=acesso-invalido'
@@ -56,6 +59,7 @@ const destination = async () => {
 
 const savePassword = async () => {
   errorMsg.value = ''
+  if (!confirmedUserId.value) { invalidLink.value = true; return }
   if (password.value !== confirmation.value) { errorMsg.value = 'As senhas não coincidem.'; return }
   if (!isStrongPassword(password.value)) {
     errorMsg.value = 'A senha não atende aos requisitos mínimos.'; return
@@ -63,6 +67,6 @@ const savePassword = async () => {
   saving.value = true
   const { error } = await supabase.auth.updateUser({ password: password.value })
   if (error) { errorMsg.value = error.message; saving.value = false; return }
-  await navigateTo(await destination())
+  await navigateTo(await destination(confirmedUserId.value))
 }
 </script>

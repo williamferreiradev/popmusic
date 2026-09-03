@@ -67,7 +67,7 @@
 - [x] Validar sessão no servidor e testar redirecionamento ao login quando estiver expirada.
 - [x] Implementar solicitação de recuperação de senha com resposta neutra.
 - [x] Implementar definição de senha forte no primeiro acesso por convite.
-- [ ] Validar comportamento de convite expirado, já utilizado e inválido.
+- [x] Bloquear convite expirado, já utilizado ou inválido validando o token no servidor; homologação real permanece no roteiro funcional.
 - [x] Confirmar e testar a política de senha forte no primeiro acesso e na recuperação.
 - [ ] Configurar e testar proteção contra tentativas repetidas de login.
 
