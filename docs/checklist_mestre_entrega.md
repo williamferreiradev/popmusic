@@ -320,7 +320,8 @@
 - [x] Criar testes unitários para maioridade, valores, vencimentos e repasses.
 - [x] Criar testes de contrato de integração para matrícula, assinatura, cobrança e presença sem alterar a produção.
 - [ ] Criar testes de integração para matrícula, contrato, cobrança e presença.
-- [ ] Criar testes de RLS para cada papel.
+- [x] Criar testes de contrato das políticas RLS para gestão, professor, aluno e visitante anônimo.
+- [ ] Executar testes RLS com usuários reais de homologação para cada papel.
 - [ ] Criar testes end-to-end para os cinco fluxos principais.
 - [ ] Executar build limpo em ambiente sem a restrição local de `readlink`.
 - [ ] Verificar erros e avisos do console do navegador.
