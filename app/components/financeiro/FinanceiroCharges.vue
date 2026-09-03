@@ -163,6 +163,13 @@
                     >
                       Cancelar cobrança
                     </button>
+                    <button
+                      v-if="charge.status === 'paga'"
+                      @click="openRefundModal(charge); activeDropdown = null"
+                      class="flex w-full items-center px-4 py-2 text-sm font-medium text-red-500 transition-colors hover:bg-light-bg dark:hover:bg-dark-bg"
+                    >
+                      Estornar pagamento
+                    </button>
                   </div>
                 </div>
 
@@ -211,6 +218,14 @@
       @confirm="handleCancel"
     />
 
+    <RefundChargeModal
+      :is-open="isRefundModalOpen"
+      :charge="selectedCharge"
+      :accounts="accounts"
+      @close="isRefundModalOpen = false"
+      @confirm="handleRefund"
+    />
+
     <!-- Toast flutuante -->
     <div 
       class="fixed bottom-6 right-6 bg-light-surface dark:bg-dark-surface border-l-4 shadow-xl rounded-r-md px-6 py-3 transition-all duration-300 z-50 flex flex-col"
@@ -234,6 +249,7 @@ import { useFinanceiro, type Charge, type ChargeStatus } from '../../composables
 import NewChargeModal from '../modals/NewChargeModal.vue'
 import ManualPaymentModal from '../modals/ManualPaymentModal.vue'
 import CancelChargeModal from '../modals/CancelChargeModal.vue'
+import RefundChargeModal from '../modals/RefundChargeModal.vue'
 
 const { school, loadSchool } = useSchoolSettings()
 await loadSchool()
@@ -263,7 +279,7 @@ const vClickOutside = {
   }
 }
 
-const { charges, accounts, fetchCharges, fetchAccounts, createCharge, payCharge, cancelCharge } = useFinanceiro()
+const { charges, accounts, fetchCharges, fetchAccounts, createCharge, payCharge, cancelCharge, refundCharge } = useFinanceiro()
 
 onMounted(async () => {
   await Promise.all([fetchCharges(), fetchAccounts()])
@@ -432,6 +448,7 @@ const getRowClass = (status: ChargeStatus) => {
 const isNewChargeOpen = ref(false)
 const isPaymentModalOpen = ref(false)
 const isCancelModalOpen = ref(false)
+const isRefundModalOpen = ref(false)
 const selectedCharge = ref<Charge | null>(null)
 
 const openPaymentModal = (charge: Charge) => {
@@ -442,6 +459,11 @@ const openPaymentModal = (charge: Charge) => {
 const openCancelModal = (charge: Charge) => {
   selectedCharge.value = charge
   isCancelModalOpen.value = true
+}
+
+const openRefundModal = (charge: Charge) => {
+  selectedCharge.value = charge
+  isRefundModalOpen.value = true
 }
 
 // Funções de Ação
@@ -474,6 +496,18 @@ const handleCancel = async (data: any) => {
     await cancelCharge(selectedCharge.value.id, data.reason)
     isCancelModalOpen.value = false
     showToast('Cobrança cancelada com sucesso.')
+  }
+}
+
+const handleRefund = async (data: any) => {
+  if (!selectedCharge.value) return
+  try {
+    await refundCharge(selectedCharge.value.id, data.account, data.refundedAt, data.reason)
+    isRefundModalOpen.value = false
+    showToast('Pagamento estornado e saída registrada no caixa.', 'success')
+  } catch (error: any) {
+    console.error('Erro ao estornar pagamento:', error)
+    alert(`Não foi possível estornar o pagamento. ${error.message || 'Tente novamente.'}`)
   }
 }
 

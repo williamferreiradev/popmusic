@@ -51,6 +51,7 @@
             >
               <td class="p-4 text-xs font-mono font-bold text-primary">
                 {{ receipt.id }}
+                <span v-if="receipt.refunded" class="ml-2 rounded bg-red-500/15 px-2 py-0.5 text-[10px] font-bold text-red-500">ESTORNADO</span>
               </td>
               <td class="p-4 text-sm font-bold text-light-text dark:text-offwhite">
                 {{ receipt.studentName }}
@@ -78,8 +79,10 @@
                   </button>
                   <button 
                     @click="openResendModal(receipt)"
+                    :disabled="receipt.refunded"
                     class="p-2 text-primary hover:bg-primary/10 rounded-md transition-colors"
-                    title="Reenviar Recibo"
+                    :class="receipt.refunded && 'cursor-not-allowed opacity-40'"
+                    :title="receipt.refunded ? 'Recibo estornado: reenvio bloqueado' : 'Reenviar Recibo'"
                   >
                     <Send class="w-4 h-4" />
                   </button>

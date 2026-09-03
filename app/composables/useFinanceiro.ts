@@ -26,6 +26,8 @@ export interface Receipt {
   paidAt: string
   paymentMethod: string
   description?: string
+  refunded?: boolean
+  refundReason?: string
 }
 
 export interface TeacherCommission {
@@ -135,32 +137,45 @@ export const useFinanceiro = () => {
   const fetchReceipts = async () => {
     try {
       const { data, error } = await supabase
-        .from('cobrancas')
+        .from('recibos')
         .select(`
           id,
-          valor,
-          data_pagamento,
-          forma_pagamento,
-          descricao,
-          alunos (id, nome, cpf, telefone)
+          cobranca_id,
+          enviado_em,
+          cobrancas (
+            id,
+            valor,
+            data_pagamento,
+            forma_pagamento,
+            descricao,
+            status,
+            motivo_cancelamento,
+            alunos (id, nome, cpf, telefone)
+          )
         `)
-        .or('status.eq.paga,status.eq.pago')
-        .order('data_pagamento', { ascending: false })
+        .order('enviado_em', { ascending: false })
 
       if (error) throw error
 
       if (data) {
-        receipts.value = data.map((c: any) => ({
-          id: `REC-${c.id.substring(0, 8).toUpperCase()}`,
-          chargeId: c.id,
-          studentName: c.alunos?.nome || 'Aluno',
-          studentCpf: c.alunos?.cpf || '',
-          studentPhone: c.alunos?.telefone || '',
-          amount: Number(c.valor) || 0,
-          paidAt: c.data_pagamento || new Date().toISOString().split('T')[0],
-          paymentMethod: c.forma_pagamento ? (c.forma_pagamento.toUpperCase()) : 'PIX',
-          description: c.descricao || 'Mensalidade Pop Music'
-        }))
+        receipts.value = data.map((r: any) => {
+          const c = Array.isArray(r.cobrancas) ? r.cobrancas[0] : r.cobrancas
+          const aluno = Array.isArray(c?.alunos) ? c.alunos[0] : c?.alunos
+          const refunded = c?.status === 'cancelada' && String(c?.motivo_cancelamento || '').startsWith('Estorno:')
+          return {
+            id: `REC-${r.id.substring(0, 8).toUpperCase()}`,
+            chargeId: r.cobranca_id,
+            studentName: aluno?.nome || 'Aluno',
+            studentCpf: aluno?.cpf || '',
+            studentPhone: aluno?.telefone || '',
+            amount: Number(c?.valor) || 0,
+            paidAt: c?.data_pagamento || r.enviado_em?.split('T')[0] || new Date().toISOString().split('T')[0],
+            paymentMethod: c?.forma_pagamento ? c.forma_pagamento.toUpperCase() : 'PIX',
+            description: c?.descricao || 'Mensalidade Pop Music',
+            refunded,
+            refundReason: refunded ? String(c.motivo_cancelamento).replace(/^Estorno:\s*/, '') : undefined
+          }
+        })
       }
     } catch (e) {
       console.error('Erro ao buscar recibos:', e)
@@ -522,6 +537,23 @@ export const useFinanceiro = () => {
     }
   }
 
+  const refundCharge = async (
+    chargeId: string,
+    accountId: string,
+    refundedAt: string,
+    reason: string
+  ) => {
+    if (!accountId) throw new Error('Selecione a conta usada para devolver o pagamento.')
+    const { error } = await (supabase as any).rpc('estornar_pagamento_manual', {
+      p_cobranca_id: chargeId,
+      p_conta_id: accountId,
+      p_data_estorno: refundedAt,
+      p_motivo: reason
+    })
+    if (error) throw error
+    await Promise.all([fetchCharges(), fetchReceipts(), fetchCashflow()])
+  }
+
   // Ao pagar um professor: grava repasse e gera saída no fluxo de caixa
   const payTeacherLegacy = async (
     teacherId: string, 
@@ -673,6 +705,7 @@ export const useFinanceiro = () => {
     fetchTeachers,
     payCharge,
     cancelCharge,
+    refundCharge,
     payTeacher,
     addCashflowEntry,
     createCharge

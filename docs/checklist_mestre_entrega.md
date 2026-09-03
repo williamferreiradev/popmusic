@@ -187,7 +187,7 @@
 - [x] Impedir baixa manual duplicada com bloqueio de linha no banco.
 - [x] Gerar recibo somente após pagamento manual confirmado.
 - [x] Manter cobrança, recibo e fluxo de caixa na mesma transação.
-- [ ] Testar cancelamento e estorno preservando auditoria.
+- [x] Implementar cancelamento e estorno transacionais preservando recibo, caixa e auditoria; teste funcional remoto permanece no roteiro.
 - [x] Exibir pendente, paga, atrasada ou cancelada; pagamento parcial não faz parte do escopo atual.
 - [ ] Testar filtros por período, aluno, turma, status e forma de pagamento.
 - [ ] Validar totais do dashboard contra consultas diretas no banco.
