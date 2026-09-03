@@ -28,6 +28,14 @@
 
     </div>
 
+    <div class="flex items-center justify-between text-sm text-light-text/60 dark:text-offwhite/60">
+      <span>Mostrando {{ receiptsTotal ? (currentPage - 1) * pageSize + 1 : 0 }} a {{ Math.min((currentPage - 1) * pageSize + filteredReceipts.length, receiptsTotal) }} de {{ receiptsTotal }}</span>
+      <div class="flex gap-2">
+        <button class="px-4 py-2 rounded-md border border-light-border dark:border-dark-border disabled:opacity-40" :disabled="currentPage === 1" @click="currentPage--">Anterior</button>
+        <button class="px-4 py-2 rounded-md border border-light-border dark:border-dark-border disabled:opacity-40" :disabled="currentPage >= totalPages" @click="currentPage++">Próximo</button>
+      </div>
+    </div>
+
     <!-- Tabela -->
     <div class="bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-xl shadow-sm overflow-hidden flex flex-col flex-1">
       <div class="overflow-x-auto">
@@ -132,18 +140,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { Search, Printer, Send, FileText, Calendar } from '@lucide/vue'
 import { useFinanceiro, type Receipt } from '../../composables/useFinanceiro'
 import ResendReceiptModal from '../modals/ResendReceiptModal.vue'
 import ViewReceiptModal from '../modals/ViewReceiptModal.vue'
 
-const { receipts, fetchReceipts } = useFinanceiro()
+const { receipts, receiptsTotal, fetchReceipts } = useFinanceiro()
 const searchQuery = ref('')
+const currentPage = ref(1)
+const pageSize = 10
+const totalPages = computed(() => Math.max(1, Math.ceil(receiptsTotal.value / pageSize)))
 
 onMounted(async () => {
-  await fetchReceipts()
+  await fetchReceipts(currentPage.value, pageSize, searchQuery.value)
 })
+
+watch(searchQuery, async () => {
+  currentPage.value = 1
+  await fetchReceipts(1, pageSize, searchQuery.value)
+})
+watch(currentPage, page => fetchReceipts(page, pageSize, searchQuery.value))
 
 const currentMonthLabel = computed(() => {
   const d = new Date()
@@ -163,13 +180,7 @@ const formatDateBR = (isoStr: string) => {
 }
 
 const filteredReceipts = computed(() => {
-  if (!searchQuery.value) return receipts.value
-  const q = searchQuery.value.toLowerCase()
-  return receipts.value.filter(r =>
-    r.studentName.toLowerCase().includes(q) ||
-    r.id.toLowerCase().includes(q) ||
-    (r.paymentMethod && r.paymentMethod.toLowerCase().includes(q))
-  )
+  return receipts.value
 })
 
 // Modais e Toasts

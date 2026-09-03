@@ -83,6 +83,7 @@ const charges = ref<Charge[]>([])
 const pagedCharges = ref<Charge[]>([])
 const pagedChargesTotal = ref(0)
 const receipts = ref<Receipt[]>([])
+const receiptsTotal = ref(0)
 const teachers = ref<Teacher[]>([])
 const cashflow = ref<CashflowEntry[]>([])
 const accounts = ref<FinancialAccount[]>([])
@@ -188,9 +189,9 @@ export const useFinanceiro = () => {
   }
 
   // 2. Buscar Recibos (Derivados das cobranças pagas)
-  const fetchReceipts = async () => {
+  const fetchReceipts = async (page = 1, pageSize = 10, search = '') => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('recibos')
         .select(`
           id,
@@ -206,12 +207,18 @@ export const useFinanceiro = () => {
             motivo_cancelamento,
             alunos (id, nome, cpf, telefone)
           )
-        `)
+        `, { count: 'exact' })
+      const term = search.trim().replace(/[(),\\]/g, ' ')
+      if (term) query = query.ilike('cobrancas.alunos.nome', `%${term}%`)
+      const from = (page - 1) * pageSize
+      const { data, count, error } = await query
         .order('enviado_em', { ascending: false })
+        .range(from, from + pageSize - 1)
 
       if (error) throw error
 
       if (data) {
+        receiptsTotal.value = count || 0
         receipts.value = data.map((r: any) => {
           const c = Array.isArray(r.cobrancas) ? r.cobrancas[0] : r.cobrancas
           const aluno = Array.isArray(c?.alunos) ? c.alunos[0] : c?.alunos
@@ -763,6 +770,7 @@ export const useFinanceiro = () => {
     pagedChargesTotal,
     chargeSummary,
     receipts,
+    receiptsTotal,
     teachers,
     cashflow,
     accounts,
