@@ -82,6 +82,7 @@ describe('contrato de integração da presença', () => {
 
 describe('contrato de integração entre mensalidade e repasse', () => {
   const transfer = normalize(read('supabase/migrations/202609030028_repasse_por_mensalidade_paga.sql'))
+  const financeComposable = normalize(read('app/composables/useFinanceiro.ts'))
 
   it('considera somente cobranças pagas na competência do recebimento', () => {
     assert.ok(transfer.includes("c.status = 'paga'::public.status_cobranca"))
@@ -103,5 +104,16 @@ describe('contrato de integração entre mensalidade e repasse', () => {
   it('permite repasse complementar sem pagar duas vezes o mesmo item', () => {
     assert.ok(transfer.includes('not exists ( select 1 from public.repasse_itens'))
     assert.doesNotMatch(transfer, /repasse deste professor já foi pago nesta competência/i)
+  })
+
+  it('atualiza cobrança, recibo, caixa, resumo e professor após a baixa', () => {
+    assert.match(
+      financeComposable,
+      /fetchcharges\(\), fetchreceipts\(\), fetchcashflow\(\), fetchfinancialsummary\(\), fetchteachers\(\)/
+    )
+  })
+
+  it('atualiza caixa e resumo financeiro depois de pagar o professor', () => {
+    assert.match(financeComposable, /fetchteachers\(\), fetchcashflow\(\), fetchfinancialsummary\(\)/)
   })
 })

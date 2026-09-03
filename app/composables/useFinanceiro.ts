@@ -537,7 +537,7 @@ export const useFinanceiro = () => {
       p_observacao: observation || null
     })
     if (error) throw error
-    await Promise.all([fetchCharges(), fetchReceipts(), fetchCashflow(), fetchFinancialSummary()])
+    await Promise.all([fetchCharges(), fetchReceipts(), fetchCashflow(), fetchFinancialSummary(), fetchTeachers()])
   }
 
   const cancelCharge = async (chargeId: string, reason: string) => {
@@ -659,7 +659,7 @@ export const useFinanceiro = () => {
       p_data_pagamento: paidDate
     })
     if (error) throw error
-    await Promise.all([fetchTeachers(), fetchCashflow()])
+    await Promise.all([fetchTeachers(), fetchCashflow(), fetchFinancialSummary()])
   }
 
   const addCashflowEntry = async (entry: {
