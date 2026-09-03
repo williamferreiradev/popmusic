@@ -214,7 +214,13 @@ const { data: rawTurmas, refresh: refreshTurmas } = await useAsyncData('agenda_t
         id,
         aluno_id,
         data_fim,
-        alunos (id, nome, telefone)
+        alunos (
+          id,
+          nome,
+          telefone,
+          contratos (foto_assinatura_url, status, criado_em),
+          cobrancas (status, vencimento)
+        )
       )
     `)
     .eq('ativo', true)
@@ -240,13 +246,21 @@ const appointments = computed(() => {
     // para o índice da grade (0 = Seg, 1 = Ter, ..., 5 = Sáb, 6 = Dom)
     const dateOffset = t.dia_semana === 0 ? 6 : t.dia_semana - 1
 
-    const matriculados = (t.matriculas_turma || []).filter((m: any) => !m.data_fim).map((m: any) => ({
-      id: m.alunos?.id || m.id,
-      name: m.alunos?.nome || 'Aluno',
-      emoji: '',
-      photo: '',
-      status: 'agendado'
-    }))
+    const today = new Date().toISOString().slice(0, 10)
+    const matriculados = (t.matriculas_turma || []).filter((m: any) => !m.data_fim).map((m: any) => {
+      const contracts = [...(m.alunos?.contratos || [])].sort((a: any, b: any) => String(b.criado_em).localeCompare(String(a.criado_em)))
+      const pendingPayments = (m.alunos?.cobrancas || []).filter((c: any) =>
+        c.status === 'atrasada' || (c.status === 'pendente' && c.vencimento < today)
+      ).length
+      return {
+        id: m.alunos?.id || m.id,
+        name: m.alunos?.nome || 'Aluno',
+        photo: contracts.find((c: any) => c.foto_assinatura_url)?.foto_assinatura_url || '',
+        financialStatus: pendingPayments > 0 ? 'pendente' : 'em_dia',
+        pendingPayments,
+        status: 'agendado'
+      }
+    })
 
     return {
       id: t.id,

@@ -36,6 +36,23 @@ describe('paginação da lista de alunos', () => {
   })
 })
 
+describe('detalhes reais da agenda', () => {
+  const agenda = normalize(read('app/pages/dashboard/agenda.vue'))
+  const modal = normalize(read('app/components/modals/AgendaDetailModal.vue'))
+
+  it('carrega foto contratual e situação financeira dos alunos matriculados', () => {
+    assert.ok(agenda.includes('contratos (foto_assinatura_url, status, criado_em)'))
+    assert.ok(agenda.includes('cobrancas (status, vencimento)'))
+    assert.ok(agenda.includes("financialstatus: pendingpayments > 0 ? 'pendente' : 'em_dia'"))
+  })
+
+  it('exibe modalidade, professor, sala, quantidade, foto e situação no popup', () => {
+    for (const value of ['modalidade', 'teachername', 'roomname', 'student.photo', 'em dia', 'com pendência']) {
+      assert.ok(modal.includes(value), `Detalhe ausente no popup: ${value}`)
+    }
+  })
+})
+
 describe('resumo escalável de contratos', () => {
   const summary = normalize(read('supabase/migrations/202609030029_resumo_contratos.sql'))
   const composable = normalize(read('app/composables/useContratos.ts'))
