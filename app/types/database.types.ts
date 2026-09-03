@@ -947,27 +947,45 @@ export type Database = {
       repasse_itens: {
         Row: {
           aluno_id: string
+          aulas_finalizadas: number
+          cobranca_id: string | null
           criado_em: string
           id: string
-          presenca_id: string
+          presenca_id: string | null
           repasse_id: string
+          tipo_comissao: Database["public"]["Enums"]["tipo_comissao"] | null
+          turma_id: string | null
           valor: number
+          valor_base: number | null
+          valor_configurado: number | null
         }
         Insert: {
           aluno_id: string
+          aulas_finalizadas?: number
+          cobranca_id?: string | null
           criado_em?: string
           id?: string
-          presenca_id: string
+          presenca_id?: string | null
           repasse_id: string
+          tipo_comissao?: Database["public"]["Enums"]["tipo_comissao"] | null
+          turma_id?: string | null
           valor: number
+          valor_base?: number | null
+          valor_configurado?: number | null
         }
         Update: {
           aluno_id?: string
+          aulas_finalizadas?: number
+          cobranca_id?: string | null
           criado_em?: string
           id?: string
-          presenca_id?: string
+          presenca_id?: string | null
           repasse_id?: string
+          tipo_comissao?: Database["public"]["Enums"]["tipo_comissao"] | null
+          turma_id?: string | null
           valor?: number
+          valor_base?: number | null
+          valor_configurado?: number | null
         }
         Relationships: [
           {
@@ -989,6 +1007,13 @@ export type Database = {
             columns: ["aluno_id"]
             isOneToOne: false
             referencedRelation: "vw_professor_alunos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "repasse_itens_cobranca_id_fkey"
+            columns: ["cobranca_id"]
+            isOneToOne: false
+            referencedRelation: "cobrancas"
             referencedColumns: ["id"]
           },
           {
@@ -1017,6 +1042,13 @@ export type Database = {
             columns: ["repasse_id"]
             isOneToOne: false
             referencedRelation: "vw_professor_meu_repasse"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "repasse_itens_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "turmas"
             referencedColumns: ["id"]
           },
         ]
@@ -1391,12 +1423,37 @@ export type Database = {
     }
     Functions: {
       aluno_do_professor: { Args: { p_aluno_id: string }; Returns: boolean }
+      calcular_repasse_professor: {
+        Args: { p_mes: string; p_professor_id: string }
+        Returns: {
+          aluno_id: string
+          aluno_nome: string
+          aulas_finalizadas: number
+          cobranca_id: string
+          modalidade_nome: string
+          tipo_comissao: Database["public"]["Enums"]["tipo_comissao"]
+          turma_id: string
+          valor_base: number
+          valor_configurado: number
+          valor_repasse: number
+        }[]
+      }
       meu_aluno_id: { Args: never; Returns: string }
       meu_papel: {
         Args: never
         Returns: Database["public"]["Enums"]["papel_usuario"]
       }
       meu_professor_id: { Args: never; Returns: string }
+      pagar_repasse_professor: {
+        Args: {
+          p_conta_id: string
+          p_data_pagamento: string
+          p_forma_pagamento: Database["public"]["Enums"]["forma_pagamento"]
+          p_mes: string
+          p_professor_id: string
+        }
+        Returns: string
+      }
       turma_do_professor: { Args: { p_turma_id: string }; Returns: boolean }
     }
     Enums: {

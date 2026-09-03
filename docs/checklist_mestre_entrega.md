@@ -46,7 +46,7 @@
 - [x] Verificar e alinhar o uso de `vw_professor_agenda`, dados relacionais de alunos e `vw_professor_meu_repasse` com as colunas reais.
 - [ ] Garantir que as views do professor respeitem RLS ou usem `security_invoker`.
 - [ ] Criar migração versionada para qualquer view ou função que hoje exista apenas no banco remoto.
-- [ ] Atualizar os tipos TypeScript após finalizar o esquema.
+- [x] Atualizar os tipos TypeScript para refletir o esquema implantado até a migration 028.
 - [ ] Testar restauração do backup em um projeto de homologação.
 
 ## 2. Autenticação e níveis de acesso — P0
