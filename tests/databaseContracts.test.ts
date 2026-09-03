@@ -38,6 +38,8 @@ describe('paginação da lista de alunos', () => {
 
 describe('resumo escalável de contratos', () => {
   const summary = normalize(read('supabase/migrations/202609030029_resumo_contratos.sql'))
+  const composable = normalize(read('app/composables/useContratos.ts'))
+  const overview = normalize(read('app/components/contratos/ContratosOverview.vue'))
 
   it('calcula os indicadores no banco e restringe o acesso à gestão', () => {
     assert.ok(summary.includes('create or replace function public.resumo_contratos()'))
@@ -45,6 +47,12 @@ describe('resumo escalável de contratos', () => {
     assert.ok(summary.includes("count(*) filter"))
     assert.ok(summary.includes("date_trunc('month', current_date)"))
     assert.ok(summary.includes('grant execute on function public.resumo_contratos() to authenticated'))
+  })
+
+  it('alimenta os cards pelo RPC e mantém fallback durante a implantação', () => {
+    assert.ok(composable.includes("supabase.rpc('resumo_contratos')"))
+    assert.ok(composable.includes('servermetrics.value || localmetrics.value'))
+    assert.ok(overview.includes('fetchcontractmetrics()'))
   })
 })
 

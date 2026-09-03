@@ -153,10 +153,10 @@ import ResendContractModal from '../modals/ResendContractModal.vue'
 import RenewContractModal from '../modals/RenewContractModal.vue'
 
 const router = useRouter()
-const { contractsList, metrics, oldestPending, closestExpiring, fetchContracts, fetchModel, resendLink, renewContract } = useContratos()
+const { contractsList, metrics, oldestPending, closestExpiring, fetchContracts, fetchContractMetrics, fetchModel, resendLink, renewContract } = useContratos()
 
 onMounted(async () => {
-  await Promise.all([fetchContracts(), fetchModel()])
+  await Promise.all([fetchContracts(), fetchContractMetrics(), fetchModel()])
 })
 
 const goToHistory = (filter: string) => {

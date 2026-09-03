@@ -20,6 +20,12 @@ export interface Contract {
 const contractsList = ref<Contract[]>([])
 const contractModel = ref('')
 const isLoading = ref(false)
+const serverMetrics = ref<{
+  aguardando: number
+  aceitosMes: number
+  vencendo: number
+  taxaAceite: number
+} | null>(null)
 
 export const useContratos = () => {
   const supabase = useSupabaseClient()
@@ -191,7 +197,7 @@ Dados oficiais da contratada disponíveis no cadastro da escola.`
   }
 
   // Retorna estatísticas baseadas na data atual vs datas do contrato
-  const metrics = computed(() => {
+  const localMetrics = computed(() => {
     let aguardando = 0
     let aceitosMes = 0
     let vencendo = 0
@@ -225,6 +231,27 @@ Dados oficiais da contratada disponíveis no cadastro da escola.`
       taxaAceite
     }
   })
+
+  const metrics = computed(() => serverMetrics.value || localMetrics.value)
+
+  const fetchContractMetrics = async () => {
+    try {
+      const { data, error } = await supabase.rpc('resumo_contratos')
+      if (error) throw error
+      const summary = data?.[0]
+      if (!summary) return
+      serverMetrics.value = {
+        aguardando: Number(summary.aguardando) || 0,
+        aceitosMes: Number(summary.aceitos_mes) || 0,
+        vencendo: Number(summary.vencendo) || 0,
+        taxaAceite: Number(summary.taxa_aceite) || 0
+      }
+    } catch (error) {
+      // Compatibilidade temporária enquanto a migration 029 é implantada.
+      console.warn('Resumo de contratos indisponível; usando cálculo local.', error)
+      serverMetrics.value = null
+    }
+  }
 
   // Lista dos contratos aguardando há mais tempo
   const oldestPending = computed(() => {
@@ -270,11 +297,11 @@ Dados oficiais da contratada disponíveis no cadastro da escola.`
       if (error) throw error
       tokenRegenerated = true
       await sendContractNotification(data)
-      await fetchContracts()
+      await Promise.all([fetchContracts(), fetchContractMetrics()])
       return { success: true }
     } catch (e: any) {
       console.error('Erro ao reenviar link de contrato.')
-      await fetchContracts()
+      await Promise.all([fetchContracts(), fetchContractMetrics()])
       return { success: false, message: tokenRegenerated
         ? 'O link foi renovado, mas o e-mail não foi enviado. Verifique a configuração do remetente.'
         : (e?.message || 'Não foi possível renovar o link do contrato.') }
@@ -292,11 +319,11 @@ Dados oficiais da contratada disponíveis no cadastro da escola.`
       if (error) throw error
       contractCreated = true
       await sendContractNotification(data)
-      await fetchContracts()
+      await Promise.all([fetchContracts(), fetchContractMetrics()])
       return { success: true }
     } catch (e: any) {
       console.error('Erro ao renovar contrato.')
-      await fetchContracts()
+      await Promise.all([fetchContracts(), fetchContractMetrics()])
       return { success: false, message: contractCreated
         ? 'O novo contrato foi criado, mas o e-mail não foi enviado. Reenvie o link após verificar o remetente.'
         : (e?.message || 'Não foi possível renovar o contrato.') }
@@ -311,6 +338,7 @@ Dados oficiais da contratada disponíveis no cadastro da escola.`
     oldestPending,
     closestExpiring,
     fetchContracts,
+    fetchContractMetrics,
     fetchModel,
     getContractByToken,
     resendLink,
