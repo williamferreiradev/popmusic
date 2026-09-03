@@ -509,10 +509,10 @@ export const useFinanceiro = () => {
 
   const cancelCharge = async (chargeId: string, reason: string) => {
     try {
-      const { error } = await supabase.from('cobrancas').update({
-        status: 'cancelada',
-        motivo_cancelamento: reason
-      } as any).eq('id', chargeId)
+      const { error } = await (supabase as any).rpc('cancelar_cobranca_aberta', {
+        p_cobranca_id: chargeId,
+        p_motivo: reason
+      })
 
       if (error) throw error
       await fetchCharges()
