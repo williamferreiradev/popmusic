@@ -120,10 +120,10 @@
 import { computed, onMounted } from 'vue'
 import { useFinanceiro } from '../../composables/useFinanceiro'
 
-const { charges, teachers, cashflow, accounts, fetchCharges, fetchTeachers, fetchCashflow, fetchAccounts } = useFinanceiro()
+const { charges, teachers, cashflow, accounts, financialSummary, fetchCharges, fetchTeachers, fetchCashflow, fetchAccounts, fetchFinancialSummary } = useFinanceiro()
 
 onMounted(async () => {
-  await Promise.all([fetchCharges(), fetchTeachers(), fetchCashflow(), fetchAccounts()])
+  await Promise.all([fetchCharges(), fetchTeachers(), fetchCashflow(), fetchAccounts(), fetchFinancialSummary()])
 })
 
 // Utilitários de formatação
@@ -144,6 +144,7 @@ const formatDateBR = (isoStr: string) => {
 
 // 1. Cálculos dos Cards (Restritos ao mês corrente)
 const aReceberMes = computed(() => {
+  if (financialSummary.value) return financialSummary.value.aReceberMes
   const now = new Date()
   const y = now.getFullYear()
   const m = now.getMonth()
@@ -164,6 +165,7 @@ const aReceberMes = computed(() => {
 })
 
 const recebidoMes = computed(() => {
+  if (financialSummary.value) return financialSummary.value.recebidoMes
   const now = new Date()
   const y = now.getFullYear()
   const m = now.getMonth()
@@ -187,6 +189,7 @@ const recebidoMes = computed(() => {
 })
 
 const emAtraso = computed(() => {
+  if (financialSummary.value) return financialSummary.value.emAtraso
   return charges.value
     .filter(c => c.status === 'atrasada' || (c.status as any) === 'atrasado')
     .reduce((acc, curr) => acc + curr.amount, 0)
@@ -197,6 +200,7 @@ const aPagarProfs = computed(() => {
 })
 
 const saldoCaixa = computed(() => {
+  if (financialSummary.value) return financialSummary.value.saldoCaixa
   const initialBalance = accounts.value.reduce((acc, curr) => acc + (curr.saldo_inicial || 0), 0)
   const movimentacoes = cashflow.value.reduce((acc, curr) => {
     return curr.type === 'entrada' ? acc + curr.amount : acc - curr.amount

@@ -68,6 +68,14 @@ export interface FinancialAccount {
   saldoAtual?: number
 }
 
+export interface FinancialSummary {
+  aReceberMes: number
+  recebidoMes: number
+  emAtraso: number
+  saldoCaixa: number
+  referencia: string
+}
+
 // Estados Reativos Globais
 const charges = ref<Charge[]>([])
 const receipts = ref<Receipt[]>([])
@@ -75,6 +83,7 @@ const teachers = ref<Teacher[]>([])
 const cashflow = ref<CashflowEntry[]>([])
 const accounts = ref<FinancialAccount[]>([])
 const isLoading = ref(false)
+const financialSummary = ref<FinancialSummary | null>(null)
 
 export const useFinanceiro = () => {
   const supabase = useSupabaseClient()
@@ -199,12 +208,7 @@ export const useFinanceiro = () => {
           tipo: acc.tipo,
           saldo_inicial: Number(acc.saldo_inicial) || 0
         }))
-      } else {
-        // Fallback caso ainda não haja contas no banco
-        accounts.value = [
-          { id: 'default-conta-1', nome: 'Conta Principal', tipo: 'banco', saldo_inicial: 0 }
-        ]
-      }
+      } else accounts.value = []
     } catch (e) {
       console.error('Erro ao buscar contas:', e)
     }
@@ -246,6 +250,24 @@ export const useFinanceiro = () => {
       }
     } catch (e) {
       console.error('Erro ao buscar fluxo de caixa:', e)
+    }
+  }
+
+  const fetchFinancialSummary = async (reference = new Date().toISOString().split('T')[0]) => {
+    const { data, error } = await (supabase as any).rpc('obter_resumo_financeiro', {
+      p_referencia: reference
+    })
+    if (error) {
+      console.warn('Resumo financeiro do banco ainda indisponível:', error)
+      financialSummary.value = null
+      return
+    }
+    financialSummary.value = {
+      aReceberMes: Number(data?.a_receber_mes) || 0,
+      recebidoMes: Number(data?.recebido_mes) || 0,
+      emAtraso: Number(data?.em_atraso) || 0,
+      saldoCaixa: Number(data?.saldo_caixa) || 0,
+      referencia: data?.referencia || reference
     }
   }
 
@@ -519,7 +541,7 @@ export const useFinanceiro = () => {
       p_observacao: observation || null
     })
     if (error) throw error
-    await Promise.all([fetchCharges(), fetchReceipts(), fetchCashflow()])
+    await Promise.all([fetchCharges(), fetchReceipts(), fetchCashflow(), fetchFinancialSummary()])
   }
 
   const cancelCharge = async (chargeId: string, reason: string) => {
@@ -551,7 +573,7 @@ export const useFinanceiro = () => {
       p_motivo: reason
     })
     if (error) throw error
-    await Promise.all([fetchCharges(), fetchReceipts(), fetchCashflow()])
+    await Promise.all([fetchCharges(), fetchReceipts(), fetchCashflow(), fetchFinancialSummary()])
   }
 
   // Ao pagar um professor: grava repasse e gera saída no fluxo de caixa
@@ -698,10 +720,12 @@ export const useFinanceiro = () => {
     cashflow,
     accounts,
     isLoading,
+    financialSummary,
     fetchCharges,
     fetchReceipts,
     fetchAccounts,
     fetchCashflow,
+    fetchFinancialSummary,
     fetchTeachers,
     payCharge,
     cancelCharge,

@@ -190,7 +190,7 @@
 - [x] Implementar cancelamento e estorno transacionais preservando recibo, caixa e auditoria; teste funcional remoto permanece no roteiro.
 - [x] Exibir pendente, paga, atrasada ou cancelada; pagamento parcial não faz parte do escopo atual.
 - [ ] Testar filtros por período, aluno, turma, status e forma de pagamento.
-- [ ] Validar totais do dashboard contra consultas diretas no banco.
+- [x] Calcular os totais do dashboard por função SQL direta; validação funcional com dados de produção permanece no roteiro.
 - [x] Remover chave PIX fixa das telas de cobrança, assinatura e recibo.
 - [x] Carregar PIX e dados institucionais de `configuracoes.escola`.
 - [ ] Restringir acesso financeiro conforme o papel do usuário.
