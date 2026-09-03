@@ -1,6 +1,7 @@
 import { serverSupabaseServiceRole } from '#supabase/server'
 import { createHash } from 'node:crypto'
 import { safeServerError, safeServerWarning } from '../../utils/safeLog'
+import { validateEvidenceImage } from '../../utils/imageMetadata'
 
 export default defineEventHandler(async (event) => {
   const token = getRouterParam(event, 'token')
@@ -85,12 +86,17 @@ export default defineEventHandler(async (event) => {
     try {
       if (photo.startsWith('data:image/jpeg;base64,') || photo.startsWith('data:image/png;base64,')) {
         if (photo.length > 8_000_000) throw createError({ statusCode: 413, statusMessage: 'A foto ultrapassa o limite permitido.' })
-        const base64Data = photo.replace(/^data:image\/\w+;base64,/, '')
+        const base64Data = photo.replace(/^data:image\/(?:jpeg|png);base64,/, '')
+        if (!base64Data || base64Data.length % 4 !== 0 || !/^[A-Za-z0-9+/]+={0,2}$/.test(base64Data)) {
+          throw createError({ statusCode: 400, statusMessage: 'Os dados da foto estão corrompidos.' })
+        }
         const buffer = Buffer.from(base64Data, 'base64')
-        if (buffer.length < 5_000) throw createError({ statusCode: 400, statusMessage: 'A foto capturada é inválida.' })
+        if (buffer.length < 5_000 || buffer.length > 5_500_000) throw createError({ statusCode: 400, statusMessage: 'O tamanho da foto é inválido.' })
         const isJpeg = buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[buffer.length - 2] === 0xff && buffer[buffer.length - 1] === 0xd9
         const isPng = buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
         if (!isJpeg && !isPng) throw createError({ statusCode: 400, statusMessage: 'O conteúdo enviado não é uma imagem JPEG ou PNG válida.' })
+        const evidenceValidation = validateEvidenceImage(buffer)
+        if (!evidenceValidation.valid) throw createError({ statusCode: 400, statusMessage: evidenceValidation.message })
         const extension = isPng ? 'png' : 'jpg'
         const contentType = isPng ? 'image/png' : 'image/jpeg'
         const fileName = `${alunoId}/contrato_${contract.id}_${Date.now()}.${extension}`

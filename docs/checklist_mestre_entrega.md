@@ -169,7 +169,7 @@
 - [x] Validar contrato inexistente, cancelado, expirado e já assinado.
 - [x] Solicitar consentimento explícito para captura e armazenamento da foto e registrá-lo junto da assinatura transacional.
 - [x] Validar câmera recusada, indisponível, ocupada, incompatível e interrompida.
-- [ ] Validar tamanho, formato e qualidade mínima da imagem.
+- [x] Validar tamanho, formato, estrutura, dimensões e qualidade visual mínima da imagem.
 - [x] Não chamar captura de selfie de biometria se não houver verificação biométrica real.
 - [x] Guardar data, hora, IP, agente do navegador, hash criptográfico e caminho da evidência.
 - [x] Salvar a foto no bucket privado sem gerar URL pública.
