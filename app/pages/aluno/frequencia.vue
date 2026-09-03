@@ -32,8 +32,8 @@
               {{ formatarData(freq.data_aula) }}
             </td>
             <td class="py-3 px-4">
-              <span class="block text-light-text dark:text-offwhite">{{ freq.turma_nome || 'Aula' }}</span>
-              <span class="text-xs text-light-text/60 dark:text-offwhite/60">{{ freq.modalidade_nome }}</span>
+              <span class="block text-light-text dark:text-offwhite">{{ freq.modalidade || 'Aula' }}</span>
+              <span class="text-xs text-light-text/60 dark:text-offwhite/60">{{ formatarTipoAula(freq.tipo_aula) }}</span>
             </td>
             <td class="py-3 px-4">
               <span 
@@ -69,7 +69,7 @@ const { data: frequencias, pending } = await useAsyncData('aluno_frequencia', as
   return data
 })
 
-const formatarData = (val: string) => {
+const formatarData = (val: string | null) => {
   if (!val) return '-'
   try {
     const d = new Date(val + 'T12:00:00Z') // Hack timezone
@@ -80,7 +80,9 @@ const formatarData = (val: string) => {
   }
 }
 
-const getStatusClass = (status: string) => {
+const formatarTipoAula = (tipo: string | null) => tipo === 'reposicao' ? 'Reposição' : 'Aula normal'
+
+const getStatusClass = (status: string | null) => {
   if (!status) return 'bg-light-border dark:bg-dark-border text-light-text dark:text-offwhite'
   const s = status.toLowerCase()
   if (s.includes('presente')) return 'bg-green-500/10 text-green-500 border border-green-500/20'

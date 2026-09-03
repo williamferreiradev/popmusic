@@ -15,28 +15,24 @@
 
     <div v-else class="flex flex-col md:flex-row gap-6">
       <div class="flex-1 bg-light-surface dark:bg-dark-surface p-6 rounded-xl border border-light-border dark:border-dark-border shadow-sm flex flex-col gap-4">
-        <h2 class="text-lg font-bold text-light-text dark:text-offwhite border-b border-light-border dark:border-dark-border pb-3">Resumo do Plano</h2>
+        <h2 class="text-lg font-bold text-light-text dark:text-offwhite border-b border-light-border dark:border-dark-border pb-3">Resumo do Contrato</h2>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
           <div>
-            <label class="text-xs font-bold text-light-text/60 dark:text-offwhite/50 uppercase tracking-wider">Plano</label>
-            <p class="font-medium text-light-text dark:text-offwhite">{{ contrato.plano_nome || 'Mensal Padrão' }}</p>
+            <label class="text-xs font-bold text-light-text/60 dark:text-offwhite/50 uppercase tracking-wider">Contrato</label>
+            <p class="font-medium text-light-text dark:text-offwhite">{{ contrato.id }}</p>
           </div>
           <div>
-            <label class="text-xs font-bold text-light-text/60 dark:text-offwhite/50 uppercase tracking-wider">Valor Mensal</label>
-            <p class="font-medium text-light-text dark:text-offwhite">R$ {{ Number(contrato.valor_mensalidade || 0).toFixed(2).replace('.', ',') }}</p>
+            <label class="text-xs font-bold text-light-text/60 dark:text-offwhite/50 uppercase tracking-wider">Enviado em</label>
+            <p class="font-medium text-light-text dark:text-offwhite">{{ formatarData(contrato.data_envio) }}</p>
           </div>
           <div>
             <label class="text-xs font-bold text-light-text/60 dark:text-offwhite/50 uppercase tracking-wider">Data de Início</label>
-            <p class="font-medium text-light-text dark:text-offwhite">{{ formatarData(contrato.data_inicio || contrato.data_envio || contrato.data_aceite) }}</p>
+            <p class="font-medium text-light-text dark:text-offwhite">{{ formatarData(contrato.data_aceite) || 'Aguardando assinatura' }}</p>
           </div>
           <div>
             <label class="text-xs font-bold text-light-text/60 dark:text-offwhite/50 uppercase tracking-wider">Fim Previsto</label>
-            <p class="font-medium text-light-text dark:text-offwhite">{{ formatarData(contrato.data_fim || contrato.data_fim_vigencia) || '12 meses (Renovável)' }}</p>
-          </div>
-          <div>
-            <label class="text-xs font-bold text-light-text/60 dark:text-offwhite/50 uppercase tracking-wider">Dia de Vencimento</label>
-            <p class="font-medium text-light-text dark:text-offwhite">Dia {{ contrato.dia_vencimento || '10' }}</p>
+            <p class="font-medium text-light-text dark:text-offwhite">{{ formatarData(contrato.data_fim_vigencia) || 'Não informado' }}</p>
           </div>
           <div>
             <label class="text-xs font-bold text-light-text/60 dark:text-offwhite/50 uppercase tracking-wider">Status</label>
@@ -53,9 +49,10 @@
           <h3 class="font-bold text-light-text dark:text-offwhite">Termos do Contrato</h3>
           <p class="text-xs text-light-text/60 dark:text-offwhite/60 mt-1 mb-4">Para acessar o documento completo assinado, clique abaixo.</p>
         </div>
-        <button class="w-full py-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border hover:border-primary/50 text-sm font-bold text-light-text dark:text-offwhite rounded-md transition-colors shadow-sm">
+        <a v-if="contrato.pdf_url" :href="contrato.pdf_url" target="_blank" rel="noopener noreferrer" class="w-full py-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border hover:border-primary/50 text-sm font-bold text-light-text dark:text-offwhite rounded-md transition-colors shadow-sm">
           Baixar PDF
-        </button>
+        </a>
+        <p v-else class="text-xs text-light-text/50 dark:text-offwhite/50">O documento ainda não está disponível para download.</p>
       </div>
     </div>
   </div>
@@ -81,7 +78,7 @@ const { data: contrato, pending } = await useAsyncData('aluno_contrato', async (
   return data
 })
 
-const formatarData = (val: string) => {
+const formatarData = (val: string | null) => {
   if (!val) return ''
   try {
     const d = new Date(val + 'T12:00:00Z')

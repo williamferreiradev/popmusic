@@ -30,8 +30,8 @@
             class="hover:bg-light-bg/50 dark:hover:bg-dark-bg/50 transition-colors"
           >
             <td class="py-3 px-4">
-              <span class="block text-light-text dark:text-offwhite font-medium">{{ formatarData(cobranca.data_vencimento || cobranca.vencimento) }}</span>
-              <span class="text-xs text-light-text/60 dark:text-offwhite/60">{{ formatarMes(cobranca.mes_referencia || cobranca.data_vencimento || cobranca.vencimento) }}</span>
+              <span class="block text-light-text dark:text-offwhite font-medium">{{ formatarData(cobranca.vencimento) }}</span>
+              <span class="text-xs text-light-text/60 dark:text-offwhite/60">{{ formatarMes(cobranca.vencimento) }}</span>
             </td>
             <td class="py-3 px-4 text-light-text/70 dark:text-offwhite/70">
               {{ cobranca.descricao || 'Mensalidade' }}
@@ -63,7 +63,7 @@ const { data: cobrancas, pending } = await useAsyncData('aluno_financeiro', asyn
   const { data, error } = await supabase
     .from('vw_aluno_minhas_cobrancas')
     .select('*')
-    .order('data_vencimento', { ascending: true })
+    .order('vencimento', { ascending: true })
     
   if (error) {
     console.error('Erro ao buscar financeiro do aluno:', error)
@@ -73,7 +73,7 @@ const { data: cobrancas, pending } = await useAsyncData('aluno_financeiro', asyn
   return data
 })
 
-const formatarData = (val: string) => {
+const formatarData = (val: string | null) => {
   if (!val) return '-'
   try {
     const d = new Date(val + 'T12:00:00Z')
@@ -84,7 +84,7 @@ const formatarData = (val: string) => {
   }
 }
 
-const formatarMes = (val: string) => {
+const formatarMes = (val: string | null) => {
   if (!val) return '-'
   try {
     const d = new Date(val + 'T12:00:00Z')
@@ -95,7 +95,7 @@ const formatarMes = (val: string) => {
   }
 }
 
-const getStatusClass = (status: string) => {
+const getStatusClass = (status: string | null) => {
   if (!status) return 'bg-yellow-500/10 text-yellow-600 border border-yellow-500/20'
   const s = status.toLowerCase()
   if (s.includes('pag')) return 'bg-green-500/10 text-green-500 border border-green-500/20'
