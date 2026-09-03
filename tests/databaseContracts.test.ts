@@ -36,6 +36,18 @@ describe('paginação da lista de alunos', () => {
   })
 })
 
+describe('resumo escalável de contratos', () => {
+  const summary = normalize(read('supabase/migrations/202609030029_resumo_contratos.sql'))
+
+  it('calcula os indicadores no banco e restringe o acesso à gestão', () => {
+    assert.ok(summary.includes('create or replace function public.resumo_contratos()'))
+    assert.ok(summary.includes("public.meu_papel() <> 'gestao'"))
+    assert.ok(summary.includes("count(*) filter"))
+    assert.ok(summary.includes("date_trunc('month', current_date)"))
+    assert.ok(summary.includes('grant execute on function public.resumo_contratos() to authenticated'))
+  })
+})
+
 describe('contrato de integração da matrícula', () => {
   const migration = normalize(read('supabase/migrations/202608310008_matricula_transacional.sql'))
   const form = read('app/components/modals/StudentCreateModal.vue')

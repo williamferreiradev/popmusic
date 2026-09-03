@@ -1454,6 +1454,17 @@ export type Database = {
         }
         Returns: string
       }
+      resumo_contratos: {
+        Args: never
+        Returns: {
+          aceitos_mes: number
+          aguardando: number
+          taxa_aceite: number
+          total: number
+          total_aceitos: number
+          vencendo: number
+        }[]
+      }
       turma_do_professor: { Args: { p_turma_id: string }; Returns: boolean }
     }
     Enums: {
