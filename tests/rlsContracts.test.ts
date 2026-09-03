@@ -81,6 +81,30 @@ describe('views seguras do professor', () => {
   })
 })
 
+describe('views seguras do aluno', () => {
+  const views = normalize(read('supabase/migrations/202609030027_views_aluno_seguras.sql'))
+  const viewNames = [
+    'vw_aluno_meu_perfil', 'vw_aluno_minhas_turmas', 'vw_aluno_minha_frequencia',
+    'vw_aluno_minhas_cobrancas', 'vw_aluno_meu_contrato'
+  ]
+
+  it('cria todas as views usadas pelo portal com security invoker', () => {
+    for (const view of viewNames) assert.ok(views.includes(`view public.${view}`))
+    assert.equal((views.match(/with \(security_invoker = true\)/g) || []).length, viewNames.length)
+  })
+
+  it('filtra cada domínio pelo aluno autenticado', () => {
+    assert.ok((views.match(/public\.meu_aluno_id\(\)/g) || []).length >= viewNames.length)
+  })
+
+  it('bloqueia visitante anônimo e libera somente usuário autenticado', () => {
+    for (const view of viewNames) {
+      assert.ok(views.includes(`revoke all on public.${view} from public, anon`))
+      assert.ok(views.includes(`grant select on public.${view} to authenticated`))
+    }
+  })
+})
+
 describe('operações privilegiadas', () => {
   it('mantém assinatura pública somente no backend service role', () => {
     const signature = normalize(read('supabase/migrations/202609020017_contrato_imutavel.sql'))

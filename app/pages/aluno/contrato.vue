@@ -67,6 +67,7 @@ const { data: contrato, pending } = await useAsyncData('aluno_contrato', async (
   const { data, error } = await supabase
     .from('vw_aluno_meu_contrato')
     .select('*')
+    .order('data_envio', { ascending: false })
     .limit(1)
     .maybeSingle()
     
