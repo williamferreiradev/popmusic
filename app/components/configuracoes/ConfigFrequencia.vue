@@ -81,6 +81,8 @@ import BaseButton from '../BaseButton.vue'
 
 const emit = defineEmits(['unsaved-changes'])
 const supabase = useSupabaseClient()
+const asConfigRecord = (value: unknown): Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : {}
 
 const form = ref<any>({
   consecutiveAbsencesRisk: 3,
@@ -96,12 +98,13 @@ const { pending } = await useAsyncData('config_frequencia', async () => {
   const { data: configs } = await supabase.from('configuracoes').select('*').eq('chave', 'frequencia').single()
   
   if (configs && configs.valor) {
-    form.value.consecutiveAbsencesRisk = configs.valor.faltas_consecutivas_risco ?? 3
-    form.value.minAttendancePercentage = configs.valor.percentual_minimo_frequencia ?? 70
-    form.value.qrCodeToleranceMinutes = configs.valor.janela_checkin_minutos ?? 15
+    const config = asConfigRecord(configs.valor)
+    form.value.consecutiveAbsencesRisk = config.faltas_consecutivas_risco ?? 3
+    form.value.minAttendancePercentage = config.percentual_minimo_frequencia ?? 70
+    form.value.qrCodeToleranceMinutes = config.janela_checkin_minutos ?? 15
     // O valor do banco para nacional deve sempre ser sobrescrito/mantido como true na interface
     form.value.blockNationalHolidays = true
-    form.value.blockMunicipalHolidays = configs.valor.bloquear_reposicao_feriado_municipal ?? false
+    form.value.blockMunicipalHolidays = config.bloquear_reposicao_feriado_municipal ?? false
   }
   
   originalForm.value = { ...form.value }

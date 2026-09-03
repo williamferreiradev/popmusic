@@ -163,7 +163,7 @@ const openModal = (mod?: any) => {
     formData.value = { ...mod, price: mod.price.toString() }
   } else {
     isEditing.value = false
-    formData.value = { id: '', name: '', price: '', color: availableColors[0] }
+    formData.value = { id: '', name: '', price: '', color: availableColors[0] ?? '#7A1F1F' }
   }
   isModalOpen.value = true
 }

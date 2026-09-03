@@ -104,6 +104,8 @@ import BaseModal from '../BaseModal.vue'
 
 const emit = defineEmits(['unsaved-changes'])
 const supabase = useSupabaseClient()
+const asConfigRecord = (value: unknown): Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : {}
 
 const form = ref<any>({
   schoolName: '', schoolCnpj: '', schoolAddress: '', schoolPhone: '', schoolEmail: '', senderEmail: '', pixKey: '',
@@ -128,7 +130,7 @@ const { pending } = await useAsyncData('config_cobranca_contrato', async () => {
   const { data: configs } = await supabase.from('configuracoes').select('*').in('chave', ['contrato', 'cobranca', 'escola'])
   
   if (configs) {
-    const escolaDb = configs.find((c: any) => c.chave === 'escola')?.valor
+    const escolaDb = asConfigRecord(configs.find(c => c.chave === 'escola')?.valor)
     if (escolaDb) {
       form.value.schoolName = escolaDb.nome || ''
       form.value.schoolCnpj = escolaDb.cnpj || ''
@@ -138,7 +140,7 @@ const { pending } = await useAsyncData('config_cobranca_contrato', async () => {
       form.value.senderEmail = escolaDb.email_remetente || ''
       form.value.pixKey = escolaDb.pix_chave || ''
     }
-    const contratoDb = configs.find((c: any) => c.chave === 'contrato')?.valor
+    const contratoDb = asConfigRecord(configs.find(c => c.chave === 'contrato')?.valor)
     if (contratoDb) {
       form.value.courseDurationMonths = contratoDb.duracao_curso_meses ?? 12
       form.value.extensionMonths = contratoDb.prorrogacao_padrao_meses ?? 6
@@ -147,7 +149,7 @@ const { pending } = await useAsyncData('config_cobranca_contrato', async () => {
       form.value.linkValidityDays = contratoDb.validade_link_dias ?? 7
       form.value.requireImageConsent = contratoDb.exigir_cessao_imagem ?? true
     }
-    const cobrancaDb = configs.find((c: any) => c.chave === 'cobranca')?.valor
+    const cobrancaDb = asConfigRecord(configs.find(c => c.chave === 'cobranca')?.valor)
     if (cobrancaDb) {
       form.value.dueDateReminderDays = cobrancaDb.dias_lembrete_vencimento ?? 3
       form.value.lateFee = cobrancaDb.multa_atraso ?? 5

@@ -37,7 +37,7 @@
             class="border-b border-light-border dark:border-dark-border last:border-0 hover:bg-light-border/20 dark:hover:bg-dark-border/20 transition-colors"
           >
             <td class="py-3 px-4 font-medium text-light-text dark:text-offwhite">{{ account.name }}</td>
-            <td class="py-3 px-4 text-light-text dark:text-offwhite">{{ account.type }}</td>
+            <td class="py-3 px-4 text-light-text dark:text-offwhite">{{ formatAccountType(account.type) }}</td>
             <td class="py-3 px-4 text-right text-light-text dark:text-offwhite">R$ {{ account.initialBalance.toFixed(2) }}</td>
             <td class="py-3 px-4 text-center">
               <div class="flex items-center justify-center gap-2">
@@ -59,7 +59,7 @@
       <div class="p-5 flex flex-col gap-4">
         <BaseInput v-model="formData.name" label="Nome da conta" placeholder="Ex: Nubank, Caixa, Dinheiro Físico" required />
         
-        <BaseSelect v-model="formData.type" label="Tipo" :options="[{label: 'Banco', value: 'Banco'}, {label: 'Carteira digital', value: 'Carteira digital'}, {label: 'Dinheiro físico', value: 'Dinheiro físico'}]" />
+        <BaseSelect v-model="formData.type" label="Tipo" :options="[{label: 'Banco', value: 'banco'}, {label: 'Carteira digital', value: 'carteira_digital'}, {label: 'Dinheiro físico', value: 'dinheiro_fisico'}]" />
         
         <BaseInput v-model="formData.initialBalance" label="Saldo inicial (R$)" type="number" placeholder="0.00" required :disabled="isEditing" />
         <p v-if="!isEditing" class="text-xs text-light-text/60 dark:text-offwhite/60 -mt-2">O saldo inicial é usado como ponto de partida pro cálculo automático do Fluxo de Caixa.</p>
@@ -130,7 +130,9 @@ const isBlockModalOpen = ref(false)
 const isEditing = ref(false)
 const isLoadingSave = ref(false)
 const accountToArchive = ref<any>(null)
-const formData = ref<{id: string, name: string, type: 'Banco'|'Carteira digital'|'Dinheiro físico', initialBalance: string}>({ id: '', name: '', type: 'Banco', initialBalance: '' })
+type AccountType = 'banco' | 'carteira_digital' | 'dinheiro_fisico'
+const formData = ref<{id: string, name: string, type: AccountType, initialBalance: string}>({ id: '', name: '', type: 'banco', initialBalance: '' })
+const formatAccountType = (type: AccountType) => ({ banco: 'Banco', carteira_digital: 'Carteira digital', dinheiro_fisico: 'Dinheiro físico' })[type]
 
 const isFormValid = computed(() => {
   return formData.value.name.trim() !== '' && formData.value.initialBalance !== ''
@@ -142,7 +144,7 @@ const openModal = (account?: any) => {
     formData.value = { ...account, initialBalance: account.initialBalance.toString() }
   } else {
     isEditing.value = false
-    formData.value = { id: '', name: '', type: 'Banco', initialBalance: '' }
+    formData.value = { id: '', name: '', type: 'banco', initialBalance: '' }
   }
   isModalOpen.value = true
 }
