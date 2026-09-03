@@ -33,7 +33,7 @@
 ## 1. Banco de dados e migrações — P0
 
 - [ ] Fazer backup completo do banco atual antes de aplicar novas migrações.
-- [ ] Executar a auditoria de integridade e guardar o resultado.
+- [ ] Executar `docs/sql/auditoria_final_supabase.sql` e guardar o CSV do resultado (SQL somente leitura já preparado).
 - [ ] Corrigir matrículas ativas duplicadas.
 - [ ] Corrigir presenças duplicadas por aluno, turma, data e tipo.
 - [ ] Corrigir contratos assinados sem data ou hash.

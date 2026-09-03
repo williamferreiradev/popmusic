@@ -5,6 +5,21 @@ import { describe, it } from 'node:test'
 const read = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8')
 const normalize = (text: string) => text.replace(/\s+/g, ' ').toLowerCase()
 
+const finalAudit = normalize(read('docs/sql/auditoria_final_supabase.sql'))
+
+describe('auditoria final do Supabase', () => {
+  it('é somente leitura e cobre integridade, RLS, anon, views, índices e storage', () => {
+    assert.doesNotMatch(finalAudit, /\b(insert|update|delete|drop|alter|create|truncate)\b/)
+    for (const check of [
+      'matrículas ativas duplicadas', 'presenças duplicadas',
+      'contratos aceitos sem data ou hash', 'tabelas sensíveis sem rls',
+      'privilégios anon em tabelas sensíveis',
+      'views de portal ausentes ou sem security_invoker',
+      'índices obrigatórios ausentes', 'bucket fotos_alunos ausente ou público'
+    ]) assert.ok(finalAudit.includes(check), `Verificação ausente: ${check}`)
+  })
+})
+
 describe('contrato de integração da matrícula', () => {
   const migration = normalize(read('supabase/migrations/202608310008_matricula_transacional.sql'))
   const form = read('app/components/modals/StudentCreateModal.vue')
