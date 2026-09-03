@@ -18,9 +18,9 @@
 - [ ] Definir exatamente o que a secretaria pode visualizar, criar, editar, excluir e receber.
 - [ ] Definir se professor pode alterar chamada depois de finalizá-la e por quanto tempo.
 - [ ] Definir quem pode justificar ausência e agendar reposição.
-- [ ] Definir se presença ou falta altera repasse do professor.
-- [ ] Definir regras de cálculo do professor: percentual, valor fixo por aluno ou valor por aula.
-- [ ] Definir quando um repasse fica disponível e quem o confirma como pago.
+- [x] Definir que presença e falta são informativas e não liberam o repasse sem mensalidade paga.
+- [x] Definir cálculo do professor por percentual da mensalidade ou valor fixo por aluno pago.
+- [x] Disponibilizar o repasse após a baixa da mensalidade e exigir confirmação manual da gestão.
 - [ ] Definir regras de vencimento, multa, juros, desconto e tolerância.
 - [ ] Definir o que ocorre financeiramente ao trancar, cancelar ou trocar uma matrícula.
 - [ ] Definir duração, renovação e cancelamento do contrato.
@@ -200,13 +200,13 @@
 
 - [x] Implementar valor fixo por aluno e percentual da mensalidade.
 - [x] Congelar a regra, valor-base, valor configurado e itens usados em cada competência.
-- [x] Usar aluno/turma ativa com pelo menos uma chamada finalizada na competência como base operacional.
+- [x] Usar mensalidade paga e vínculo ativo do aluno com a turma como base do repasse; chamadas finalizadas permanecem informativas.
 - [ ] Tratar matrícula no meio do mês, cancelamento, trancamento e desconto.
 - [ ] Tratar falta do professor e reposição.
 - [x] Gerar detalhamento por professor, aluno, turma, modalidade e aulas finalizadas.
 - [x] Calcular o cabeçalho do repasse pela soma dos itens no banco.
 - [x] Registrar pagamento, data, conta e responsável em uma única transação.
-- [x] Impedir pagamento duplicado da mesma competência com bloqueio transacional.
+- [x] Impedir pagamento duplicado do mesmo item e permitir repasse complementar para mensalidades pagas posteriormente.
 - [x] Exibir ao professor somente os próprios valores por RLS.
 - [ ] Testar ajuste manual com motivo e log de auditoria.
 

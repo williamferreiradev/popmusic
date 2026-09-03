@@ -32,6 +32,7 @@ export interface Receipt {
 }
 
 export interface TeacherCommission {
+  referenceId?: string
   studentName: string
   classesGiven: number
   amountPerClass: number
@@ -428,6 +429,7 @@ export const useFinanceiro = () => {
           .filter((row: any) => row.professor_id === prof.id)
           .reduce((sum: number, row: any) => sum + Number(row.valor_total || 0), 0)
         const students: TeacherCommission[] = (calculation || []).map((item: any) => ({
+          referenceId: `${item.cobranca_id}-${item.turma_id}`,
           studentName: `${item.aluno_nome} — ${item.modalidade_nome}`,
           classesGiven: Number(item.aulas_finalizadas || 0),
           amountPerClass: Number(item.valor_repasse || 0),
@@ -440,7 +442,7 @@ export const useFinanceiro = () => {
         return {
           id: prof.id,
           name: prof.nome,
-          totalToReceive: paid > 0 ? 0 : calculated,
+          totalToReceive: calculated,
           totalPaid: paid,
           students
         }

@@ -79,3 +79,29 @@ describe('contrato de integração da presença', () => {
     assert.match(professorPage, /from\('presencas'\)/)
   })
 })
+
+describe('contrato de integração entre mensalidade e repasse', () => {
+  const transfer = normalize(read('supabase/migrations/202609030028_repasse_por_mensalidade_paga.sql'))
+
+  it('considera somente cobranças pagas na competência do recebimento', () => {
+    assert.ok(transfer.includes("c.status = 'paga'::public.status_cobranca"))
+    assert.ok(transfer.includes('c.data_pagamento >= pe.inicio'))
+    assert.ok(transfer.includes('c.data_pagamento < pe.fim'))
+  })
+
+  it('vincula cada item de repasse à cobrança e à turma de origem', () => {
+    assert.ok(transfer.includes('add column if not exists cobranca_id'))
+    assert.ok(transfer.includes('on public.repasse_itens (cobranca_id, turma_id)'))
+    assert.ok(transfer.includes('ri.cobranca_id = c.id and ri.turma_id = t.id'))
+  })
+
+  it('prioriza comissão específica do aluno e aceita a comissão padrão como fallback', () => {
+    assert.ok(transfer.includes('coalesce(cpa.tipo, p.comissao_padrao_tipo)'))
+    assert.ok(transfer.includes('coalesce(cpa.valor, p.comissao_padrao_valor)'))
+  })
+
+  it('permite repasse complementar sem pagar duas vezes o mesmo item', () => {
+    assert.ok(transfer.includes('not exists ( select 1 from public.repasse_itens'))
+    assert.doesNotMatch(transfer, /repasse deste professor já foi pago nesta competência/i)
+  })
+})

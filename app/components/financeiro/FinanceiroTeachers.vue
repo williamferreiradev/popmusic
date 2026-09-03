@@ -94,7 +94,7 @@
           <tbody class="divide-y divide-light-border/50 dark:divide-dark-border/50">
             <tr 
               v-for="student in activeTeacher?.students" 
-              :key="student.studentName"
+              :key="student.referenceId || student.studentName"
               class="hover:bg-light-surface dark:hover:bg-dark-surface transition-colors group"
             >
               <td class="py-3 px-2 text-sm font-medium text-light-text dark:text-offwhite">
