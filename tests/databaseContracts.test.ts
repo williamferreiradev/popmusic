@@ -74,6 +74,18 @@ describe('histórico paginado de contratos', () => {
   })
 })
 
+describe('resumo escalável de cobranças', () => {
+  const summary = normalize(read('supabase/migrations/202609030030_resumo_cobrancas.sql'))
+
+  it('calcula recebíveis, recebimentos e atrasos no banco somente para gestão', () => {
+    assert.ok(summary.includes('create or replace function public.resumo_cobrancas()'))
+    assert.ok(summary.includes("public.meu_papel() <> 'gestao'"))
+    assert.ok(summary.includes("c.vencimento < current_date"))
+    assert.ok(summary.includes("date_trunc('month', current_date)"))
+    assert.ok(summary.includes('grant execute on function public.resumo_cobrancas() to authenticated'))
+  })
+})
+
 describe('contrato de integração da matrícula', () => {
   const migration = normalize(read('supabase/migrations/202608310008_matricula_transacional.sql'))
   const form = read('app/components/modals/StudentCreateModal.vue')

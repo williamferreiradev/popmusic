@@ -1465,6 +1465,14 @@ export type Database = {
           vencendo: number
         }[]
       }
+      resumo_cobrancas: {
+        Args: never
+        Returns: {
+          a_receber: number
+          atrasado: number
+          recebido: number
+        }[]
+      }
       turma_do_professor: { Args: { p_turma_id: string }; Returns: boolean }
     }
     Enums: {
