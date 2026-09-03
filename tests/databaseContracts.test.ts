@@ -112,6 +112,17 @@ describe('resumo escalável de cobranças', () => {
   })
 })
 
+describe('resumo escalável do fluxo de caixa', () => {
+  const summary = normalize(read('supabase/migrations/202609030031_resumo_fluxo_caixa.sql'))
+
+  it('considera saldo inicial, entradas e saídas e permite filtrar uma conta', () => {
+    assert.ok(summary.includes('public.resumo_fluxo_caixa(p_conta_id uuid default null)'))
+    assert.ok(summary.includes("public.meu_papel() <> 'gestao'"))
+    assert.ok(summary.includes('i.valor + m.entradas - m.saidas'))
+    assert.ok(summary.includes('p_conta_id is null or f.conta_id = p_conta_id'))
+  })
+})
+
 describe('contrato de integração da matrícula', () => {
   const migration = normalize(read('supabase/migrations/202608310008_matricula_transacional.sql'))
   const form = read('app/components/modals/StudentCreateModal.vue')

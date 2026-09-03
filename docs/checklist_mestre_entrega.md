@@ -329,7 +329,7 @@
 - [ ] Verificar erros e avisos do console do navegador.
 - [ ] Medir tempo de carregamento das páginas mais utilizadas.
 - [ ] Testar volume maior de alunos, cobranças, turmas e presenças.
-- [ ] Aplicar paginação no servidor em todas as listagens grandes (alunos, contratos, cobranças e recibos concluídos; fluxo de caixa pendente).
+- [ ] Aplicar paginação no servidor em todas as listagens grandes (alunos, contratos, cobranças e recibos concluídos; resumo do fluxo preparado na migration 031 e paginação pendente).
 
 ## 16. Ambiente, implantação e operação — P0
 

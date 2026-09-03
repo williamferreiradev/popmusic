@@ -1473,6 +1473,14 @@ export type Database = {
           recebido: number
         }[]
       }
+      resumo_fluxo_caixa: {
+        Args: { p_conta_id?: string | null }
+        Returns: {
+          entradas: number
+          saidas: number
+          saldo: number
+        }[]
+      }
       turma_do_professor: { Args: { p_turma_id: string }; Returns: boolean }
     }
     Enums: {
