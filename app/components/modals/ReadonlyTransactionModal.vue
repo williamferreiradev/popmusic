@@ -53,11 +53,11 @@
 <script setup lang="ts">
 import { Info } from '@lucide/vue'
 import BaseModal from '../BaseModal.vue'
-import type { CashflowTransaction } from '../../composables/useFinanceiro'
+import type { CashflowEntry } from '../../composables/useFinanceiro'
 
 const props = defineProps<{
   isOpen: boolean
-  transaction: CashflowTransaction | null
+  transaction: CashflowEntry | null
 }>()
 
 const emit = defineEmits(['close'])

@@ -111,7 +111,7 @@ export const useFinanceiro = () => {
       if (error) throw error
 
       if (data) {
-        const todayStr = new Date().toISOString().split('T')[0]
+        const todayStr = new Date().toISOString().slice(0, 10)
 
         charges.value = data.map((c: any) => {
           let status: ChargeStatus = c.status || 'pendente'
@@ -178,7 +178,7 @@ export const useFinanceiro = () => {
             studentCpf: aluno?.cpf || '',
             studentPhone: aluno?.telefone || '',
             amount: Number(c?.valor) || 0,
-            paidAt: c?.data_pagamento || r.enviado_em?.split('T')[0] || new Date().toISOString().split('T')[0],
+            paidAt: c?.data_pagamento || r.enviado_em?.slice(0, 10) || new Date().toISOString().slice(0, 10),
             paymentMethod: c?.forma_pagamento ? c.forma_pagamento.toUpperCase() : 'PIX',
             description: c?.descricao || 'Mensalidade Pop Music',
             refunded,
@@ -253,7 +253,7 @@ export const useFinanceiro = () => {
     }
   }
 
-  const fetchFinancialSummary = async (reference = new Date().toISOString().split('T')[0]) => {
+  const fetchFinancialSummary = async (reference = new Date().toISOString().slice(0, 10)) => {
     const { data, error } = await (supabase as any).rpc('obter_resumo_financeiro', {
       p_referencia: reference
     })
@@ -300,7 +300,7 @@ export const useFinanceiro = () => {
         `)
 
       // 3. Buscar presenças do mês atual para calcular comissões reais por aula
-      const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]
+      const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10)
       const { data: presencas } = await supabase
         .from('presencas')
         .select(`
@@ -362,7 +362,7 @@ export const useFinanceiro = () => {
           Object.keys(presencasPorAluno).forEach(aId => {
             if (alunoMap[aId]) {
               // Se há presenças registradas no mês, usa a contagem exata
-              alunoMap[aId].count = Math.max(presencasPorAluno[aId], alunoMap[aId].count)
+              alunoMap[aId].count = Math.max(presencasPorAluno[aId] ?? 0, alunoMap[aId].count)
             }
           })
 
@@ -408,7 +408,7 @@ export const useFinanceiro = () => {
   // Helper para mapear forma de pagamento para enum do banco: ["pix", "dinheiro", "cartao", "transferencia", "boleto"]
   const fetchTeachers = async () => {
     try {
-      const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]
+      const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10)
       const { data: profs, error: profError } = await supabase
         .from('professores')
         .select('id, nome')
@@ -471,7 +471,7 @@ export const useFinanceiro = () => {
     chargeId: string, 
     paymentMethod: string, 
     accountName: string, 
-    paidDate: string = new Date().toISOString().split('T')[0]
+    paidDate: string = new Date().toISOString().slice(0, 10)
   ) => {
     const charge = charges.value.find(c => c.id === chargeId)
     if (!charge) return
@@ -494,7 +494,7 @@ export const useFinanceiro = () => {
       // 2. Busca id da conta financeira válida
       let contaId = accounts.value.find(a => a.nome === accountName || a.id === accountName)?.id
       if (!contaId && accounts.value.length > 0) {
-        contaId = accounts.value[0].id
+        contaId = accounts.value[0]?.id
       }
 
       // 3. Se houver conta registrada, lança Entrada no Fluxo de Caixa (origem: 'automatico')
@@ -529,7 +529,7 @@ export const useFinanceiro = () => {
     chargeId: string,
     paymentMethod: string,
     accountId: string,
-    paidDate: string = new Date().toISOString().split('T')[0],
+    paidDate: string = new Date().toISOString().slice(0, 10),
     observation: string = ''
   ) => {
     if (!accountId) throw new Error('Selecione a conta que recebeu o pagamento.')
@@ -582,7 +582,7 @@ export const useFinanceiro = () => {
     amount: number, 
     accountName: string, 
     paymentMethod: string, 
-    paidDate: string = new Date().toISOString().split('T')[0]
+    paidDate: string = new Date().toISOString().slice(0, 10)
   ) => {
     const teacher = teachers.value.find(t => t.id === teacherId)
     if (!teacher) return
@@ -592,10 +592,10 @@ export const useFinanceiro = () => {
     try {
       let contaId = accounts.value.find(a => a.nome === accountName || a.id === accountName)?.id
       if (!contaId && accounts.value.length > 0) {
-        contaId = accounts.value[0].id
+        contaId = accounts.value[0]?.id
       }
 
-      const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]
+      const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10)
 
       // 1. Insere Repasse
       let repasseId: string | null = null
@@ -646,7 +646,7 @@ export const useFinanceiro = () => {
     amount: number,
     accountName: string,
     paymentMethod: string,
-    paidDate: string = new Date().toISOString().split('T')[0]
+    paidDate: string = new Date().toISOString().slice(0, 10)
   ) => {
     const accountId = accounts.value.find(account => account.nome === accountName || account.id === accountName)?.id
     if (!accountId || accountId.startsWith('default-')) {
@@ -654,7 +654,7 @@ export const useFinanceiro = () => {
     }
     if (amount <= 0) throw new Error('Não há valor elegível para pagamento.')
 
-    const month = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]
+    const month = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10)
     const { error } = await (supabase as any).rpc('pagar_repasse_professor', {
       p_professor_id: teacherId,
       p_mes: month,

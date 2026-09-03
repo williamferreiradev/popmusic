@@ -124,7 +124,7 @@ const validationErrors = ref({
 const resetForm = () => {
   formData.value = {
     paymentMethod: 'pix',
-    paidAt: new Date().toISOString().split('T')[0],
+    paidAt: new Date().toISOString().slice(0, 10),
     account: accountOptions.value[0]?.value || '',
     observation: ''
   }

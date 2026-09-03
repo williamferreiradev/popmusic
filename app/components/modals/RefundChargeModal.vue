@@ -51,7 +51,7 @@ const props = defineProps<{
   accounts: Array<{ id: string, nome: string }>
 }>()
 const emit = defineEmits(['close', 'confirm'])
-const today = new Date().toISOString().split('T')[0]
+const today = new Date().toISOString().slice(0, 10)
 const accountOptions = computed(() => props.accounts.map(account => ({ label: account.nome, value: account.id })))
 const formattedAmount = computed(() => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(props.charge?.amount || 0))
 const form = reactive({ account: '', refundedAt: today, reason: '' })

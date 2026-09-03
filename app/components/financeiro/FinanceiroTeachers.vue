@@ -161,6 +161,7 @@
     <PayTeacherModal 
       :is-open="isPayModalOpen"
       :teacher="activeTeacher"
+      :accounts="accounts"
       @close="isPayModalOpen = false"
       @confirm="handlePayment"
     />
@@ -192,7 +193,7 @@ import TeacherStatementModal from '../modals/TeacherStatementModal.vue'
 import PayTeacherModal from '../modals/PayTeacherModal.vue'
 import AdjustCommissionModal from '../modals/AdjustCommissionModal.vue'
 
-const { teachers, fetchTeachers, fetchAccounts, payTeacher } = useFinanceiro()
+const { teachers, accounts, fetchTeachers, fetchAccounts, payTeacher } = useFinanceiro()
 
 onMounted(async () => {
   await Promise.all([fetchTeachers(), fetchAccounts()])

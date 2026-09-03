@@ -8,7 +8,7 @@
     <div class="flex flex-col gap-4">
       
       <p class="text-sm font-medium text-light-text/80 dark:text-offwhite/80 bg-light-bg dark:bg-dark-bg p-3 rounded-md border border-light-border dark:border-dark-border">
-        Repasse para <span class="font-bold">{{ teacher?.name }}</span> no valor de <span class="text-primary font-bold">R$ {{ teacher?.pendingAmount?.toFixed(2).replace('.', ',') }}</span>.
+        Repasse para <span class="font-bold">{{ teacher?.name }}</span> no valor de <span class="text-primary font-bold">R$ {{ teacher?.totalToReceive?.toFixed(2).replace('.', ',') }}</span>.
       </p>
 
       <div class="grid grid-cols-2 gap-4">
@@ -62,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import BaseModal from '../BaseModal.vue'
 import BaseSelect from '../BaseSelect.vue'
 import BaseInput from '../BaseInput.vue'
@@ -71,6 +71,7 @@ import type { Teacher } from '../../composables/useFinanceiro'
 const props = defineProps<{
   isOpen: boolean
   teacher: Teacher | null
+  accounts: Array<{ id: string, nome: string }>
 }>()
 
 const emit = defineEmits(['close', 'confirm'])
@@ -81,13 +82,7 @@ const paymentOptions = [
   { label: 'Transferência', value: 'Transferência' }
 ]
 
-const accountOptions = [
-  { label: 'Dinheiro', value: 'Dinheiro' },
-  { label: 'Nubank', value: 'Nubank' },
-  { label: 'Itaú', value: 'Itaú' },
-  { label: 'Caixa', value: 'Caixa' },
-  { label: 'PagBank', value: 'PagBank' }
-]
+const accountOptions = computed(() => props.accounts.map(account => ({ label: account.nome, value: account.id })))
 
 const formData = ref({
   paymentMethod: '',
@@ -104,8 +99,8 @@ const validationErrors = ref({
 const resetForm = () => {
   formData.value = {
     paymentMethod: '',
-    paidAt: new Date().toISOString().split('T')[0],
-    account: ''
+    paidAt: new Date().toISOString().slice(0, 10),
+    account: accountOptions.value[0]?.value || ''
   }
   validationErrors.value = { paymentMethod: false, paidAt: false, account: false }
 }

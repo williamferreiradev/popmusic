@@ -201,8 +201,8 @@ const saldoPorConta = computed(() => {
 
   cashflow.value.forEach(t => {
     if (saldos[t.account] !== undefined) {
-      if (t.type === 'entrada') saldos[t.account] += t.amount
-      else saldos[t.account] -= t.amount
+      const currentBalance = saldos[t.account] ?? 0
+      saldos[t.account] = t.type === 'entrada' ? currentBalance + t.amount : currentBalance - t.amount
     }
   })
   return saldos

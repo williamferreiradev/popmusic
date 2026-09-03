@@ -155,8 +155,8 @@ const aReceberMes = computed(() => {
       if (!c.dueDate) return false
       const parts = c.dueDate.split('-')
       if (parts.length >= 2) {
-        const year = parseInt(parts[0], 10)
-        const month = parseInt(parts[1], 10) - 1
+        const year = Number(parts[0])
+        const month = Number(parts[1]) - 1
         return year === y && month === m
       }
       return false
@@ -176,11 +176,11 @@ const recebidoMes = computed(() => {
       if (!isPago) return false
       const dateToCheck = c.paidAt || c.dueDate
       if (!dateToCheck) return false
-      const rawDate = dateToCheck.split('T')[0]
+      const rawDate = dateToCheck.slice(0, 10)
       const parts = rawDate.split('-')
       if (parts.length >= 2) {
-        const year = parseInt(parts[0], 10)
-        const month = parseInt(parts[1], 10) - 1
+        const year = Number(parts[0])
+        const month = Number(parts[1]) - 1
         return year === y && month === m
       }
       return false

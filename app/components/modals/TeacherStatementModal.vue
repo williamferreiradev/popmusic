@@ -35,19 +35,19 @@
           <tbody>
             <tr 
               v-for="item in teacher?.students" 
-              :key="item.id"
+              :key="item.studentName"
               class="border-b border-gray-100"
             >
-              <td class="py-2 px-1">{{ item.name }}</td>
+              <td class="py-2 px-1">{{ item.studentName }}</td>
               <td class="py-2 px-1 text-center">{{ item.classesGiven }}</td>
-              <td class="py-2 px-1 text-right">{{ formatCurrency(item.ratePerClass) }}</td>
-              <td class="py-2 px-1 text-right font-medium">{{ formatCurrency(item.classesGiven * item.ratePerClass) }}</td>
+              <td class="py-2 px-1 text-right">{{ formatCurrency(item.amountPerClass) }}</td>
+              <td class="py-2 px-1 text-right font-medium">{{ formatCurrency(item.total) }}</td>
             </tr>
           </tbody>
           <tfoot>
             <tr class="border-t-2 border-gray-300 font-bold text-lg">
               <td colspan="3" class="py-4 text-right">Total a Pagar:</td>
-              <td class="py-4 text-right">{{ formatCurrency(teacher?.pendingAmount || 0) }}</td>
+              <td class="py-4 text-right">{{ formatCurrency(teacher?.totalToReceive || 0) }}</td>
             </tr>
           </tfoot>
         </table>

@@ -157,7 +157,7 @@ const formatCurrency = (value: number) => {
 
 const formatDateBR = (isoStr: string) => {
   if (!isoStr) return '-'
-  const raw = isoStr.split('T')[0]
+  const raw = isoStr.slice(0, 10)
   const [y, m, d] = raw.split('-')
   return `${d}/${m}/${y}`
 }

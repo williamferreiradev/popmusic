@@ -147,7 +147,7 @@ const resetForm = () => {
     type: 'saida',
     description: '',
     amount: '',
-    date: new Date().toISOString().split('T')[0],
+    date: new Date().toISOString().slice(0, 10),
     account: '',
     category: 'Geral'
   }
