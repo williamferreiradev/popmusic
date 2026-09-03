@@ -7,7 +7,7 @@
     "typecheck": "nuxt typecheck",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "node --test tests/businessRules.test.ts tests/databaseContracts.test.ts tests/rlsContracts.test.ts",
+    "test": "node --test tests/accessControl.test.ts tests/businessRules.test.ts tests/databaseContracts.test.ts tests/rlsContracts.test.ts",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",

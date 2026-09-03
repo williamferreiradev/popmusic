@@ -1,17 +1,10 @@
-type UserRole = 'gestao' | 'professor' | 'aluno'
-
-const roleDestination: Record<UserRole, string> = {
-  gestao: '/dashboard',
-  professor: '/professor',
-  aluno: '/aluno'
-}
+import { canRoleAccessPath, isPublicPath, isUserRole, roleDestination } from '~/utils/accessControl'
 
 export default defineNuxtRouteMiddleware(async (to) => {
   const user = useSupabaseUser()
   const supabase = useSupabaseClient()
-  const publicRoutes = ['/login', '/confirm']
   const isSigningRoute = to.path.startsWith('/assinar/')
-  const isPublicRoute = publicRoutes.includes(to.path) || isSigningRoute
+  const isPublicRoute = isPublicPath(to.path)
   const userId = user.value?.id || (user.value as any)?.sub
 
   if (!userId) {
@@ -29,8 +22,8 @@ export default defineNuxtRouteMiddleware(async (to) => {
     .eq('id', userId)
     .maybeSingle()
 
-  const role = profile?.papel as UserRole | undefined
-  const hasValidRole = role && Object.prototype.hasOwnProperty.call(roleDestination, role)
+  const role = profile?.papel
+  const hasValidRole = isUserRole(role)
 
   // Falha fechada: consulta com erro, perfil ausente/inativo ou papel desconhecido
   // nunca recebe acesso de gestão por padrão.
@@ -44,19 +37,11 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
   const destination = roleDestination[role]
 
-  if (publicRoutes.includes(to.path) || to.path === '/') {
+  if (isPublicRoute || to.path === '/') {
     return navigateTo(destination)
   }
 
-  if (to.path.startsWith('/dashboard') && role !== 'gestao') {
-    return navigateTo(destination)
-  }
-
-  if (to.path.startsWith('/professor') && role !== 'professor') {
-    return navigateTo(destination)
-  }
-
-  if (to.path.startsWith('/aluno') && role !== 'aluno') {
+  if (!canRoleAccessPath(role, to.path)) {
     return navigateTo(destination)
   }
 })

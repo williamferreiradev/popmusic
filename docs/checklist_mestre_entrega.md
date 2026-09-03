@@ -61,6 +61,7 @@
 - [ ] Corrigir a inconsistência entre acesso da secretaria no middleware e nas políticas RLS.
 - [x] Impedir professor de abrir qualquer rota administrativa digitando a URL.
 - [x] Impedir aluno de abrir rotas de professor ou administração.
+- [x] Cobrir automaticamente os redirecionamentos e bloqueios de rota dos três papéis.
 - [ ] Impedir secretaria de abrir configurações e financeiro caso não tenha permissão.
 - [x] Garantir que esconder um botão não seja o único controle de segurança.
 - [ ] Testar expiração de sessão e redirecionamento para login.
