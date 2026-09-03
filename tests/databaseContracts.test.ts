@@ -20,6 +20,22 @@ describe('auditoria final do Supabase', () => {
   })
 })
 
+describe('paginação da lista de alunos', () => {
+  const page = normalize(read('app/pages/dashboard/alunos.vue'))
+  const table = normalize(read('app/components/students/StudentsTable.vue'))
+
+  it('consulta somente a página atual e solicita a contagem total ao Supabase', () => {
+    assert.ok(page.includes("{ count: 'exact' }"))
+    assert.ok(page.includes('.range(from, from + itemsperpage - 1)'))
+    assert.ok(page.includes('watch: [searchquery, statusfilter, classfilter, currentpage]'))
+  })
+
+  it('delega a mudança de página ao servidor sem recortar os dados localmente', () => {
+    assert.ok(table.includes("emit('page-change'"))
+    assert.doesNotMatch(table, /students\.slice\(/)
+  })
+})
+
 describe('contrato de integração da matrícula', () => {
   const migration = normalize(read('supabase/migrations/202608310008_matricula_transacional.sql'))
   const form = read('app/components/modals/StudentCreateModal.vue')

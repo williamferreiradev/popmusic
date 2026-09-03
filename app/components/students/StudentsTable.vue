@@ -11,9 +11,9 @@
             <th class="px-5 py-3 font-medium text-right">Ações</th>
           </tr>
         </thead>
-        <tbody v-if="!pending && paginatedStudents.length > 0">
+        <tbody v-if="!pending && students.length > 0">
           <tr
-            v-for="aluno in paginatedStudents"
+            v-for="aluno in students"
             :key="aluno.id"
             class="border-b border-light-border dark:border-dark-border last:border-0 hover:bg-light-bg/40 dark:hover:bg-dark-bg/40 transition-colors group"
           >
@@ -90,7 +90,7 @@
 
     <!-- Footer com Paginação Simples -->
     <div class="p-4 border-t border-light-border dark:border-dark-border bg-light-surface dark:bg-dark-surface flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-light-text/70 dark:text-offwhite/70 rounded-b-lg">
-      <span>Mostrando {{ Math.min((currentPage - 1) * itemsPerPage + 1, props.students?.length || 0) }} a {{ Math.min(currentPage * itemsPerPage, props.students?.length || 0) }} de {{ props.students?.length || 0 }} alunos</span>
+      <span>Mostrando {{ totalCount ? (currentPage - 1) * itemsPerPage + 1 : 0 }} a {{ Math.min((currentPage - 1) * itemsPerPage + students.length, totalCount) }} de {{ totalCount }} alunos</span>
       <div class="flex gap-2">
         <button
           :disabled="currentPage === 1"
@@ -184,6 +184,18 @@ const props = defineProps({
   pending: {
     type: Boolean,
     default: false
+  },
+  currentPage: {
+    type: Number,
+    default: 1
+  },
+  itemsPerPage: {
+    type: Number,
+    default: 8
+  },
+  totalCount: {
+    type: Number,
+    default: 0
   }
 })
 
@@ -301,7 +313,7 @@ const openUnlockModal = () => {
   }, 300)
 }
 
-const emit = defineEmits(['refresh'])
+const emit = defineEmits(['refresh', 'page-change'])
 
 const handleStudentLocked = async (data: { id:string, reason:string }) => {
   try {
@@ -355,24 +367,13 @@ onUnmounted(() => {
   window.removeEventListener('click', closeMenu)
 })
 
-// Paginação local
-const currentPage = ref(1)
-const itemsPerPage = 8
-
-const totalPages = computed(() => Math.ceil((props.students?.length || 0) / itemsPerPage))
-
-const paginatedStudents = computed(() => {
-  if (!props.students) return []
-  const start = (currentPage.value - 1) * itemsPerPage
-  const end = start + itemsPerPage
-  return props.students.slice(start, end)
-})
+const totalPages = computed(() => Math.max(1, Math.ceil(props.totalCount / props.itemsPerPage)))
 
 const nextPage = () => {
-  if (currentPage.value < totalPages.value) currentPage.value++
+  if (props.currentPage < totalPages.value) emit('page-change', props.currentPage + 1)
 }
 
 const prevPage = () => {
-  if (currentPage.value > 1) currentPage.value--
+  if (props.currentPage > 1) emit('page-change', props.currentPage - 1)
 }
 </script>

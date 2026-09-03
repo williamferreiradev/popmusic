@@ -54,7 +54,15 @@
 
     <!-- Tabela de Alunos -->
     <div class="flex-1 relative">
-      <StudentsTable :students="mappedStudents" :pending="pending" @refresh="refresh" />
+      <StudentsTable
+        :students="mappedStudents"
+        :pending="pending"
+        :current-page="currentPage"
+        :items-per-page="itemsPerPage"
+        :total-count="studentsResult?.count || 0"
+        @page-change="currentPage = $event"
+        @refresh="refresh"
+      />
     </div>
 
     <!-- Modais -->
@@ -89,6 +97,8 @@ const handleStudentSaved = (data: any) => {
 const searchQuery = ref('')
 const statusFilter = ref<'' | 'pendente' | 'ativo' | 'trancado' | 'cancelado'>('')
 const classFilter = ref('')
+const currentPage = ref(1)
+const itemsPerPage = 8
 
 // Buscar modalidades para o filtro (usamos useAsyncData sem depender de var reativa)
 const { data: modalidades } = await useAsyncData('modalidades', async () => {
@@ -110,52 +120,56 @@ const statusOptions = [
 ]
 
 // Buscar alunos com watch nos filtros que batem no banco
-const { data: students, pending, refresh } = await useAsyncData('students_list', async () => {
+const { data: studentsResult, pending, refresh } = await useAsyncData('students_list', async () => {
+  const enrollmentRelation = classFilter.value ? 'matriculas_turma!inner' : 'matriculas_turma'
+  const classRelation = classFilter.value ? 'turmas!inner' : 'turmas'
   let query = supabase.from('alunos').select(`
     *,
-    matriculas_turma (
+    ${enrollmentRelation} (
       turma_id,
       data_inicio,
       data_fim,
-      turmas (
+      ${classRelation} (
         modalidades (id, nome)
       )
     )
-  `)
+  `, { count: 'exact' })
   
   if (statusFilter.value) {
     query = query.eq('status', statusFilter.value)
   }
   
   if (searchQuery.value) {
-    // Busca tipo ILIKE no supabase precisa do operador % na string
-    query = query.or(`nome.ilike.%${searchQuery.value}%,cpf.ilike.%${searchQuery.value}%,email.ilike.%${searchQuery.value}%`)
+    const term = searchQuery.value.trim().replace(/[(),\\]/g, ' ')
+    query = query.or(`nome.ilike.%${term}%,cpf.ilike.%${term}%,email.ilike.%${term}%`)
   }
 
-  const { data, error } = await query.order('nome')
+  if (classFilter.value) {
+    query = query
+      .is('matriculas_turma.data_fim', null)
+      .eq('matriculas_turma.turmas.modalidade_id', classFilter.value)
+  }
+
+  const from = (currentPage.value - 1) * itemsPerPage
+  const { data, count, error } = await query
+    .order('nome')
+    .range(from, from + itemsPerPage - 1)
   
   if (error) {
     console.error('Erro ao buscar alunos:', error)
-    return []
+    return { rows: [], count: 0 }
   }
 
-  return data || []
+  return { rows: data || [], count: count || 0 }
 }, {
-  watch: [searchQuery, statusFilter]
+  watch: [searchQuery, statusFilter, classFilter, currentPage]
 })
+
+watch([searchQuery, statusFilter, classFilter], () => { currentPage.value = 1 })
 
 // Mapear dados para a tabela
 const mappedStudents = computed(() => {
-  let filtered = students.value || []
-
-  // Filtrar no cliente por turma (modalidade), pois é uma relação complexa no Supabase
-  if (classFilter.value) {
-    filtered = filtered.filter((aluno: any) => {
-      // Verifica se o aluno tem alguma matrícula na modalidade selecionada
-      if (!aluno.matriculas_turma) return false
-      return aluno.matriculas_turma.some((m: any) => !m.data_fim && m.turmas?.modalidades?.id === classFilter.value)
-    })
-  }
+  const filtered = studentsResult.value?.rows || []
 
   return filtered.map((aluno: any) => {
     // Definir variante e label baseado no status
