@@ -193,7 +193,7 @@
 - [x] Calcular os totais do dashboard por função SQL direta; validação funcional com dados de produção permanece no roteiro.
 - [x] Remover chave PIX fixa das telas de cobrança, assinatura e recibo.
 - [x] Carregar PIX e dados institucionais de `configuracoes.escola`.
-- [ ] Restringir acesso financeiro conforme o papel do usuário.
+- [x] Restringir acesso financeiro em middleware, RLS, views e funções conforme o papel ativo do usuário.
 
 ## 10. Repasse dos professores — P0
 
@@ -313,8 +313,8 @@
 
 ## 15. Testes automatizados e técnicos — P1
 
-- [ ] Adicionar script de typecheck e dependências necessárias.
-- [ ] Adicionar lint e formatação ao projeto.
+- [x] Adicionar script de typecheck e dependências necessárias.
+- [x] Adicionar ESLint e comandos de lint/formatação automática ao projeto.
 - [ ] Criar testes unitários para maioridade, valores, vencimentos e repasses.
 - [ ] Criar testes de integração para matrícula, contrato, cobrança e presença.
 - [ ] Criar testes de RLS para cada papel.
