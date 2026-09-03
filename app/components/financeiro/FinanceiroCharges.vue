@@ -18,6 +18,33 @@
       </div>
     </div>
 
+    <div class="grid grid-cols-1 gap-3 rounded-xl border border-light-border bg-light-surface p-4 dark:border-dark-border dark:bg-dark-surface sm:grid-cols-2 lg:grid-cols-4">
+      <div>
+        <label class="mb-1 block text-xs font-bold text-light-text/60 dark:text-offwhite/60">Vencimento inicial</label>
+        <input v-model="startDate" type="date" :max="endDate || undefined" class="w-full rounded-md border border-light-border bg-light-surface px-3 py-2 text-sm text-light-text outline-none focus:border-primary dark:border-dark-border dark:bg-dark-surface dark:text-offwhite">
+      </div>
+      <div>
+        <label class="mb-1 block text-xs font-bold text-light-text/60 dark:text-offwhite/60">Vencimento final</label>
+        <input v-model="endDate" type="date" :min="startDate || undefined" class="w-full rounded-md border border-light-border bg-light-surface px-3 py-2 text-sm text-light-text outline-none focus:border-primary dark:border-dark-border dark:bg-dark-surface dark:text-offwhite">
+      </div>
+      <div>
+        <label class="mb-1 block text-xs font-bold text-light-text/60 dark:text-offwhite/60">Forma de pagamento</label>
+        <select v-model="paymentMethodFilter" class="w-full rounded-md border border-light-border bg-light-surface px-3 py-2 text-sm text-light-text outline-none focus:border-primary dark:border-dark-border dark:bg-dark-surface dark:text-offwhite">
+          <option value="">Todas as formas</option>
+          <option value="pix">Pix</option>
+          <option value="dinheiro">Dinheiro</option>
+          <option value="cartao">Cartão</option>
+          <option value="transferencia">Transferência</option>
+          <option value="boleto">Boleto</option>
+        </select>
+      </div>
+      <div class="flex items-end">
+        <button :disabled="!hasAdvancedFilters" class="w-full rounded-md border border-light-border px-4 py-2 text-sm font-bold text-light-text transition-colors hover:bg-light-bg disabled:cursor-not-allowed disabled:opacity-40 dark:border-dark-border dark:text-offwhite dark:hover:bg-dark-bg" @click="clearAdvancedFilters">
+          Limpar filtros avançados
+        </button>
+      </div>
+    </div>
+
     <!-- Banner de Chave PIX Padrão da Escola -->
     <div v-if="pixKeySchool" class="bg-primary/10 border border-primary/20 rounded-xl p-3.5 flex flex-col sm:flex-row items-center justify-between gap-3">
       <div class="flex items-center gap-3">
@@ -183,8 +210,8 @@
                 <p class="font-medium text-lg text-light-text dark:text-offwhite">Nenhuma cobrança encontrada</p>
                 <p class="text-sm mt-1">Tente ajustar seus filtros ou realizar uma nova busca.</p>
                 <button 
-                  v-if="activeFilter !== 'todas' || searchQuery !== ''"
-                  @click="activeFilter = 'todas'; searchQuery = ''"
+                  v-if="activeFilter !== 'todas' || searchQuery !== '' || hasAdvancedFilters"
+                  @click="clearAllFilters"
                   class="mt-4 px-4 py-2 text-sm text-primary font-bold hover:bg-primary/10 rounded-md transition-colors"
                 >
                   Limpar filtros
@@ -302,7 +329,7 @@ const resumo = computed(() => {
   let recebido = 0
   let atrasado = 0
   
-  charges.value.forEach(c => {
+  filteredCharges.value.forEach(c => {
     if (c.status === 'pendente') aReceber += c.amount
     if (c.status === 'paga' || (c.status as any) === 'pago') recebido += c.amount
     if (c.status === 'atrasada' || (c.status as any) === 'atrasado') {
@@ -317,7 +344,22 @@ const resumo = computed(() => {
 // Filtros e Busca
 const activeFilter = ref('abertas')
 const searchQuery = ref('')
+const startDate = ref('')
+const endDate = ref('')
+const paymentMethodFilter = ref('')
 const activeDropdown = ref<string | null>(null)
+
+const hasAdvancedFilters = computed(() => Boolean(startDate.value || endDate.value || paymentMethodFilter.value))
+const clearAdvancedFilters = () => {
+  startDate.value = ''
+  endDate.value = ''
+  paymentMethodFilter.value = ''
+}
+const clearAllFilters = () => {
+  activeFilter.value = 'todas'
+  searchQuery.value = ''
+  clearAdvancedFilters()
+}
 
 const filterPills = [
   { label: 'Em Aberto / Mês Atual', value: 'abertas' },
@@ -346,6 +388,10 @@ const filteredCharges = computed(() => {
       const matchDesc = c.description.toLowerCase().includes(q)
       if (!matchStudent && !matchDesc) return false
     }
+
+    if (startDate.value && (!c.dueDate || c.dueDate < startDate.value)) return false
+    if (endDate.value && (!c.dueDate || c.dueDate > endDate.value)) return false
+    if (paymentMethodFilter.value && c.paymentMethod !== paymentMethodFilter.value) return false
 
     const isPago = c.status === 'paga' || (c.status as any) === 'pago'
     const isAtrasado = c.status === 'atrasada' || (c.status as any) === 'atrasado'

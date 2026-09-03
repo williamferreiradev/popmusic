@@ -189,7 +189,7 @@
 - [x] Manter cobrança, recibo e fluxo de caixa na mesma transação.
 - [x] Implementar cancelamento e estorno transacionais preservando recibo, caixa e auditoria; teste funcional remoto permanece no roteiro.
 - [x] Exibir pendente, paga, atrasada ou cancelada; pagamento parcial não faz parte do escopo atual.
-- [ ] Testar filtros por período, aluno, turma, status e forma de pagamento.
+- [x] Implementar filtros por período, aluno, status e forma de pagamento; turma exige vínculo próprio no modelo e o teste funcional permanece no roteiro.
 - [x] Calcular os totais do dashboard por função SQL direta; validação funcional com dados de produção permanece no roteiro.
 - [x] Remover chave PIX fixa das telas de cobrança, assinatura e recibo.
 - [x] Carregar PIX e dados institucionais de `configuracoes.escola`.
