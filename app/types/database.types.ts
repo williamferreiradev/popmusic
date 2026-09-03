@@ -354,6 +354,7 @@ export type Database = {
           data_fim_vigencia: string | null
           data_inicio_vigencia: string | null
           dia_vencimento: number
+          foto_assinatura_url: string | null
           id: string
           modelo_contrato_id: string | null
           pdf_url: string | null
@@ -375,6 +376,7 @@ export type Database = {
           data_fim_vigencia?: string | null
           data_inicio_vigencia?: string | null
           dia_vencimento: number
+          foto_assinatura_url?: string | null
           id?: string
           modelo_contrato_id?: string | null
           pdf_url?: string | null
@@ -396,6 +398,7 @@ export type Database = {
           data_fim_vigencia?: string | null
           data_inicio_vigencia?: string | null
           dia_vencimento?: number
+          foto_assinatura_url?: string | null
           id?: string
           modelo_contrato_id?: string | null
           pdf_url?: string | null

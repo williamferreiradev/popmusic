@@ -112,7 +112,7 @@
         </button>
         <button 
           type="button"
-          @click="stopCamera"
+          @click="stopCamera()"
           :disabled="isValidating"
           class="px-4 py-2.5 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-offwhite text-xs font-semibold rounded-full hover:bg-light-bg dark:hover:bg-dark-bg transition-colors cursor-pointer"
         >

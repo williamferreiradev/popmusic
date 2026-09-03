@@ -87,7 +87,7 @@ const handleStudentSaved = (data: any) => {
 
 // Estado dos filtros
 const searchQuery = ref('')
-const statusFilter = ref('')
+const statusFilter = ref<'' | 'pendente' | 'ativo' | 'trancado' | 'cancelado'>('')
 const classFilter = ref('')
 
 // Buscar modalidades para o filtro (usamos useAsyncData sem depender de var reativa)
@@ -105,7 +105,6 @@ const statusOptions = [
   { label: 'Todos os Status', value: '' },
   { label: 'Pendente', value: 'pendente' },
   { label: 'Ativo', value: 'ativo' },
-  { label: 'Inadimplente', value: 'inadimplente' },
   { label: 'Trancado', value: 'trancado' },
   { label: 'Cancelado', value: 'cancelado' }
 ]

@@ -233,7 +233,7 @@ const openContract = async (aluno: any) => {
 
       if (contract) {
         const photo = contract.foto_assinatura_url || raw.foto_url || aluno.avatar
-        const isSigned = contract.status === 'aceito' || contract.status === 'assinado' || !!contract.data_aceite || !!contract.foto_assinatura_url
+        const isSigned = contract.status === 'aceito' || !!contract.data_aceite || !!contract.foto_assinatura_url
 
         if (isSigned || photo) {
           selectedSignedInfo.value = {
@@ -243,7 +243,7 @@ const openContract = async (aluno: any) => {
               ? new Date(contract.data_aceite).toLocaleString('pt-BR') 
               : new Date(contract.criado_em || Date.now()).toLocaleString('pt-BR'),
             token: contract.token || contract.aceite_hash || 'AUTH-DIGITAL',
-            ip: contract.aceite_ip || '127.0.0.1 (Assinatura Segura)',
+            ip: typeof contract.aceite_ip === 'string' ? contract.aceite_ip : 'Não informado',
             signerPhoto: photo
           }
         }

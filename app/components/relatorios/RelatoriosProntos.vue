@@ -300,8 +300,8 @@ const { data: modalitiesList } = await useAsyncData('report_modalities', async (
 
 // Relatórios salvos
 const savedReports = ref<any[]>([
-  { id: 's1', name: 'Alunos Ativos - Geral', origin: 'Alunos', columns: reports[1].columns },
-  { id: 's2', name: 'Pagamentos em Atraso', origin: 'Financeiro', columns: reports[2].columns }
+  { id: 's1', name: 'Alunos Ativos - Geral', origin: 'Alunos', columns: reports[1]?.columns ?? [] },
+  { id: 's2', name: 'Pagamentos em Atraso', origin: 'Financeiro', columns: reports[2]?.columns ?? [] }
 ])
 
 const filteredReports = computed(() => {

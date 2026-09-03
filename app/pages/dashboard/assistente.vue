@@ -98,7 +98,7 @@ const cancelPreview = (message: Message) => { message.preview = null; message.co
 const toggleRecording = () => { if (!recognition) return; if (isRecording.value) recognition.stop(); else recognition.start() }
 onMounted(() => {
   const saved = localStorage.getItem('popmusic-assistant-conversations'); if (saved) try { conversations.value = JSON.parse(saved) } catch {}
-  if (!conversations.value.length) newConversation(); else activeId.value = conversations.value[0].id
+  if (!conversations.value.length) newConversation(); else activeId.value = conversations.value[0]?.id ?? ''
   const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition; speechSupported.value = Boolean(SpeechRecognition)
   if (SpeechRecognition) { recognition = new SpeechRecognition(); recognition.lang = 'pt-BR'; recognition.interimResults = true; recognition.onstart = () => isRecording.value = true; recognition.onend = () => isRecording.value = false; recognition.onresult = (event: any) => input.value = Array.from(event.results).map((result: any) => result[0].transcript).join('') }
 })

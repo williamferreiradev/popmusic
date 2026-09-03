@@ -299,8 +299,8 @@ const currentWeekDays = computed(() => {
 })
 
 const currentPeriodLabel = computed(() => {
-  const start = currentWeekDays.value[0].fullDate
-  const end = currentWeekDays.value[6].fullDate
+  const start = currentWeekDays.value[0]?.fullDate ?? new Date()
+  const end = currentWeekDays.value[6]?.fullDate ?? start
   
   const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
   
@@ -437,7 +437,7 @@ const deactivateClass = async (classData: any) => {
 const handleStatusUpdate = ({ id, studentId, status }: { id: string | number, studentId: string | number, status: string }) => {
   const index = appointments.value.findIndex(a => a.id === id)
   if (index !== -1) {
-    const student = appointments.value[index].students.find((s: any) => s.id === studentId)
+    const student = appointments.value[index]?.students.find((s: any) => s.id === studentId)
     if (student) {
       student.status = status
     }

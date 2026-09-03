@@ -179,8 +179,7 @@ const searchQuery = ref('')
 
 // Sincroniza filtro com URL (opcional para UX)
 watch(activeStatus, (newVal) => {
-  const q = { ...route.query, filter: newVal }
-  if (newVal === 'todos') delete q.filter
+  const q = { ...route.query, filter: newVal === 'todos' ? undefined : newVal }
   router.push({ query: q })
 })
 

@@ -314,6 +314,7 @@
 ## 15. Testes automatizados e técnicos — P1
 
 - [x] Adicionar script de typecheck e dependências necessárias.
+- [x] Executar o typecheck completo sem erros (`npm run typecheck`).
 - [x] Adicionar ESLint e comandos de lint/formatação automática ao projeto.
 - [ ] Criar testes unitários para maioridade, valores, vencimentos e repasses.
 - [ ] Criar testes de integração para matrícula, contrato, cobrança e presença.

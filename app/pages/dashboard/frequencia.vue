@@ -261,22 +261,13 @@
       @confirm="handleJustifyConfirm"
     />
 
-    <AlreadyRegisteredModal 
-      :is-open="isAlreadyRegisteredModalOpen"
-      :class-label="selectedClassLabel"
-      :class-date="selectedDate"
-      @close="cancelAlreadyRegistered"
-      @confirm="proceedAlreadyRegistered"
-    />
-
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
-import { CheckSquare, Search, Users, AlertTriangle, Calendar as CalendarIcon } from '@lucide/vue'
+import { ref, computed } from 'vue'
+import { CheckSquare, Users, AlertTriangle, Calendar as CalendarIcon } from '@lucide/vue'
 import JustifyAbsenceModal from '~/components/modals/JustifyAbsenceModal.vue'
-import AlreadyRegisteredModal from '~/components/modals/AlreadyRegisteredModal.vue'
 
 const supabase = useSupabaseClient()
 const user = useSupabaseUser()
@@ -285,7 +276,7 @@ type AppState = 'initial' | 'loading' | 'loaded' | 'empty_class' | 'error'
 
 const currentState = ref<AppState>('initial')
 const selectedClass = ref('')
-const selectedDate = ref(new Date().toISOString().split('T')[0])
+const selectedDate = ref(new Date().toISOString().slice(0, 10))
 const activeDayPill = ref<string | number>('todos')
 
 // 1. Carregar turmas reais do Supabase
@@ -369,7 +360,7 @@ const handleDateChange = () => {
   }
 }
 
-const todayDate = new Date().toISOString().split('T')[0]
+const todayDate = new Date().toISOString().slice(0, 10)
 
 const isRetroactiveDate = computed(() => {
   if (!selectedDate.value) return false
@@ -420,19 +411,7 @@ const counts = computed(() => {
 })
 
 // --- Busca de Turma ---
-const isAlreadyRegisteredModalOpen = ref(false)
-
-const cancelAlreadyRegistered = () => {
-  isAlreadyRegisteredModalOpen.value = false
-  currentState.value = 'initial'
-}
-
-const proceedAlreadyRegistered = () => {
-  isAlreadyRegisteredModalOpen.value = false
-  executeSearch(true)
-}
-
-const executeSearch = async (prefilled = false) => {
+const executeSearch = async () => {
   if (!selectedClass.value) return
   currentState.value = 'loading'
   isFinalized.value = false
