@@ -1,6 +1,7 @@
 import { ref } from 'vue'
+import { calculateTeacherCommission, resolveChargeStatus } from '~/utils/businessRules'
+import type { ChargeStatus } from '~/utils/businessRules'
 
-export type ChargeStatus = 'pendente' | 'paga' | 'atrasada' | 'cancelada'
 export type CashflowType = 'entrada' | 'saida'
 
 export interface Charge {
@@ -114,12 +115,7 @@ export const useFinanceiro = () => {
         const todayStr = new Date().toISOString().slice(0, 10)
 
         charges.value = data.map((c: any) => {
-          let status: ChargeStatus = c.status || 'pendente'
-          
-          // Se estiver pendente e o vencimento já passou de hoje -> 'atrasada'
-          if (status === 'pendente' && c.vencimento && c.vencimento < todayStr) {
-            status = 'atrasada'
-          }
+          const status = resolveChargeStatus(c.status as ChargeStatus, c.vencimento, todayStr)
 
           return {
             id: c.id,
@@ -367,15 +363,13 @@ export const useFinanceiro = () => {
           })
 
           const studentsList: TeacherCommission[] = Object.values(alunoMap).map(item => {
-            const valorAula = item.count > 0 ? (item.valorMensal / 4) : 0
-            const repassePorAula = comissaoTipo === 'percentual' ? (valorAula * (comissaoValor / 100)) : comissaoValor
-            const totalRepasse = repassePorAula * item.count
+            const commission = calculateTeacherCommission(item.valorMensal, item.count, comissaoTipo, comissaoValor)
 
             return {
               studentName: item.studentName,
               classesGiven: item.count,
-              amountPerClass: repassePorAula,
-              total: totalRepasse,
+              amountPerClass: commission.amountPerClass,
+              total: commission.total,
               type: comissaoTipo,
               value: comissaoValor
             }

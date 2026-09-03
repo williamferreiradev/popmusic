@@ -1,4 +1,5 @@
 import type { PopMusicContractData } from '~/components/contratos/PopMusicContractDocument.vue'
+import { calculateContractTotals, isMinorOn } from './businessRules'
 
 const UNIDADES = ['', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove']
 const DEZ_A_DEZENOVE = ['dez', 'onze', 'doze', 'treze', 'quatorze', 'quinze', 'dezesseis', 'dezessete', 'dezoito', 'dezenove']
@@ -109,12 +110,8 @@ export function formatDateBR(dateInput?: string | Date | null): string {
  * estruturado exigido pelo documento de contrato oficial Pop Music
  */
 export function buildPopMusicContractData(aluno: any, contrato: any, turmasList?: any[]): PopMusicContractData {
-  const nascimento = aluno?.data_nascimento ? new Date(`${String(aluno.data_nascimento).slice(0, 10)}T12:00:00`) : null
-  const hoje = new Date()
-  const idade = nascimento && !isNaN(nascimento.getTime())
-    ? hoje.getFullYear() - nascimento.getFullYear() - (hoje < new Date(hoje.getFullYear(), nascimento.getMonth(), nascimento.getDate()) ? 1 : 0)
-    : null
-  const isMenor = idade !== null ? idade < 18 : !!aluno?.responsavel_nome
+  const menorPelaData = aluno?.data_nascimento ? isMinorOn(String(aluno.data_nascimento)) : null
+  const isMenor = menorPelaData ?? !!aluno?.responsavel_nome
   
   // Contratante (Responsável se menor, ou o próprio aluno)
   const nomeContratante = isMenor 
@@ -165,8 +162,7 @@ export function buildPopMusicContractData(aluno: any, contrato: any, turmasList?
 
   // Valores e Parcelas
   const valorMensalidadeNum = Number(contrato?.valor_mensalidade) || 180
-  const numParcelas = 12
-  const valorTotalNum = valorMensalidadeNum * numParcelas
+  const { installments: numParcelas, total: valorTotalNum } = calculateContractTotals(valorMensalidadeNum)
 
   const valorMensalidadeStr = valorMensalidadeNum.toFixed(2).replace('.', ',')
   const valorMensalidadeExtenso = valorMonetarioPorExtenso(valorMensalidadeNum)

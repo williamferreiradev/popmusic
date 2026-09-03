@@ -270,7 +270,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { Search, Plus, MoreVertical, FileX, Copy } from '@lucide/vue'
-import { useFinanceiro, type Charge, type ChargeStatus } from '../../composables/useFinanceiro'
+import { useFinanceiro, type Charge } from '../../composables/useFinanceiro'
+import type { ChargeStatus } from '~/utils/businessRules'
 
 // Modais
 import NewChargeModal from '../modals/NewChargeModal.vue'
