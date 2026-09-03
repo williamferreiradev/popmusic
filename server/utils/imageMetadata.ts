@@ -14,6 +14,7 @@ export function readImageMetadata(buffer: Buffer): ImageMetadata | null {
     if (buffer[offset] !== 0xff) { offset++; continue }
     while (offset < buffer.length && buffer[offset] === 0xff) offset++
     const marker = buffer[offset++]
+    if (marker === undefined) return null
     if (marker === 0xd8 || marker === 0x01) continue
     if (marker === 0xd9 || marker === 0xda) break
     if (offset + 2 > buffer.length) return null

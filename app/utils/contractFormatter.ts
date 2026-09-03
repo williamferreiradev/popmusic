@@ -35,23 +35,23 @@ export function numeroIntPorExtenso(n: number): string {
       n = 0
     } else {
       const c = Math.floor(n / 100)
-      partes.push(CENTENAS[c])
+      partes.push(CENTENAS[c] ?? '')
       n = n % 100
     }
   }
 
   // Dezenas e Unidades
   if (n >= 10 && n <= 19) {
-    partes.push(DEZ_A_DEZENOVE[n - 10])
+    partes.push(DEZ_A_DEZENOVE[n - 10] ?? '')
     n = 0
   } else if (n >= 20) {
     const d = Math.floor(n / 10)
-    partes.push(DEZENAS[d])
+    partes.push(DEZENAS[d] ?? '')
     n = n % 10
   }
 
   if (n > 0 && n < 10) {
-    partes.push(UNIDADES[n])
+    partes.push(UNIDADES[n] ?? '')
   }
 
   return partes.join(' e ')
@@ -182,7 +182,7 @@ export function buildPopMusicContractData(aluno: any, contrato: any, turmasList?
   const diaVencimento = String(contrato?.dia_vencimento || 10)
   
   const diaAtual = String(referenceDate.getDate()).padStart(2, '0')
-  const mesAtual = MESES_EXTENSO[referenceDate.getMonth()]
+  const mesAtual = MESES_EXTENSO[referenceDate.getMonth()] ?? ''
   const anoAtual = String(referenceDate.getFullYear()).slice(-2)
   const anoVigencia = String(referenceDate.getFullYear())
 

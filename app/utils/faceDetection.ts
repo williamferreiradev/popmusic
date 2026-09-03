@@ -128,9 +128,9 @@ export async function validateFaceImage(canvas: HTMLCanvasElement): Promise<Face
   for (let y = 0; y < height; y += step) {
     for (let x = 0; x < width; x += step) {
       const idx = (y * width + x) * 4
-      const r = data[idx]
-      const g = data[idx + 1]
-      const b = data[idx + 2]
+      const r = data[idx] ?? 0
+      const g = data[idx + 1] ?? 0
+      const b = data[idx + 2] ?? 0
 
       // Luminância
       const lum = 0.299 * r + 0.587 * g + 0.114 * b
@@ -155,7 +155,7 @@ export async function validateFaceImage(canvas: HTMLCanvasElement): Promise<Face
         // Gradiente horizontal simples para detectar bordas de feições faciais (olhos, sobrancelhas, nariz, boca)
         if (x + step < width) {
           const nextIdx = (y * width + (x + step)) * 4
-          const nextLum = 0.299 * data[nextIdx] + 0.587 * data[nextIdx + 1] + 0.114 * data[nextIdx + 2]
+          const nextLum = 0.299 * (data[nextIdx] ?? 0) + 0.587 * (data[nextIdx + 1] ?? 0) + 0.114 * (data[nextIdx + 2] ?? 0)
           const grad = Math.abs(lum - nextLum)
 
           if (grad > 15) {
