@@ -33,7 +33,7 @@
             class="hover:bg-light-bg/50 dark:hover:bg-dark-bg/50 transition-colors"
           >
             <td class="py-3 px-4 font-medium text-light-text dark:text-offwhite">
-              {{ formatarMes(repasse.mes_referencia || repasse.data_referencia) }}
+              {{ formatarMes(repasse.mes_referencia) }}
             </td>
             <td class="py-3 px-4 text-light-text/70 dark:text-offwhite/70">
               {{ repasse.data_pagamento ? `Pago em ${formatarData(repasse.data_pagamento)}` : 'Fechamento da competência' }}
@@ -75,19 +75,19 @@ const { data: repasses, pending, error: loadError } = await useAsyncData('profes
   return data
 })
 
-const formatarMes = (val: string) => {
+const formatarMes = (val: string | null) => {
   if (!val) return '-'
   try {
     const d = new Date(val)
     if (isNaN(d.getTime())) return val
     return new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(d)
-  } catch (e) {
+  } catch {
     return val
   }
 }
-const formatarData = (val: string) => new Date(`${val}T12:00:00`).toLocaleDateString('pt-BR')
+const formatarData = (val: string | null) => val ? new Date(`${val}T12:00:00`).toLocaleDateString('pt-BR') : '-'
 
-const getStatusClass = (status: string) => {
+const getStatusClass = (status: string | null) => {
   if (!status) return 'bg-yellow-500/10 text-yellow-600 border border-yellow-500/20'
   const s = status.toLowerCase()
   if (s.includes('pago') || s.includes('concluído')) return 'bg-green-500/10 text-green-500 border border-green-500/20'

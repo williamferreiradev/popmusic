@@ -22,8 +22,8 @@
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <div 
         v-for="turma in agenda" 
-        :key="turma.turma_id"
-        @click="goToChamada(turma.turma_id)"
+        :key="turma.turma_id || `${turma.modalidade}-${turma.horario_inicio}`"
+        @click="turma.turma_id && goToChamada(turma.turma_id)"
         class="bg-light-surface dark:bg-dark-surface p-5 rounded-xl border border-light-border dark:border-dark-border shadow-sm hover:border-primary/50 cursor-pointer transition-colors"
       >
         <div class="flex justify-between items-start mb-3">
