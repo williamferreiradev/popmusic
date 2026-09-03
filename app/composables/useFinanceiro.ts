@@ -80,6 +80,8 @@ export interface FinancialSummary {
 
 // Estados Reativos Globais
 const charges = ref<Charge[]>([])
+const pagedCharges = ref<Charge[]>([])
+const pagedChargesTotal = ref(0)
 const receipts = ref<Receipt[]>([])
 const teachers = ref<Teacher[]>([])
 const cashflow = ref<CashflowEntry[]>([])
@@ -100,6 +102,40 @@ export const useFinanceiro = () => {
       recebido: Number(summary?.recebido) || 0,
       atrasado: Number(summary?.atrasado) || 0
     }
+  }
+
+  const fetchPagedCharges = async (options: {
+    page: number; pageSize: number; status: string; search: string
+    startDate: string; endDate: string; paymentMethod: string
+  }) => {
+    let query = supabase.from('cobrancas').select(`
+      id, aluno_id, descricao, valor, vencimento, status, forma_pagamento,
+      data_pagamento, motivo_cancelamento, alunos!inner (id, nome)
+    `, { count: 'exact' })
+    const now = new Date()
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10)
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10)
+
+    if (options.status === 'abertas') query = query.in('status', ['pendente', 'atrasada'])
+    else if (options.status === 'mes_atual') query = query.or(`status.eq.atrasada,and(status.eq.pendente,vencimento.gte.${monthStart},vencimento.lte.${monthEnd})`)
+    else if (options.status !== 'todas') query = query.eq('status', options.status as any)
+    if (options.startDate) query = query.gte('vencimento', options.startDate)
+    if (options.endDate) query = query.lte('vencimento', options.endDate)
+    if (options.paymentMethod) query = query.eq('forma_pagamento', options.paymentMethod as any)
+    const term = options.search.trim().replace(/[(),\\]/g, ' ')
+    if (term) query = query.or(`descricao.ilike.%${term}%,alunos.nome.ilike.%${term}%`)
+
+    const from = (options.page - 1) * options.pageSize
+    const { data, count, error } = await query.order('vencimento').range(from, from + options.pageSize - 1)
+    if (error) throw error
+    const today = new Date().toISOString().slice(0, 10)
+    pagedCharges.value = (data || []).map((c: any) => ({
+      id: c.id, studentId: c.aluno_id, studentName: c.alunos?.nome || 'Aluno desconhecido',
+      description: c.descricao || 'Mensalidade', amount: Number(c.valor) || 0,
+      dueDate: c.vencimento, status: resolveChargeStatus(c.status, c.vencimento, today),
+      paidAt: c.data_pagamento, paymentMethod: c.forma_pagamento, cancelReason: c.motivo_cancelamento
+    }))
+    pagedChargesTotal.value = count || 0
   }
 
   // 1. Buscar Cobranças
@@ -723,6 +759,8 @@ export const useFinanceiro = () => {
 
   return {
     charges,
+    pagedCharges,
+    pagedChargesTotal,
     chargeSummary,
     receipts,
     teachers,
@@ -731,6 +769,7 @@ export const useFinanceiro = () => {
     isLoading,
     financialSummary,
     fetchCharges,
+    fetchPagedCharges,
     fetchChargeSummary,
     fetchReceipts,
     fetchAccounts,

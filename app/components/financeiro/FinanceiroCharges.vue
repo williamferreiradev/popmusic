@@ -18,6 +18,14 @@
       </div>
     </div>
 
+    <div class="flex items-center justify-between text-sm text-light-text/60 dark:text-offwhite/60">
+      <span>Mostrando {{ pagedChargesTotal ? (currentPage - 1) * pageSize + 1 : 0 }} a {{ Math.min((currentPage - 1) * pageSize + filteredCharges.length, pagedChargesTotal) }} de {{ pagedChargesTotal }}</span>
+      <div class="flex gap-2">
+        <button class="px-4 py-2 rounded-md border border-light-border dark:border-dark-border disabled:opacity-40" :disabled="currentPage === 1" @click="currentPage--">Anterior</button>
+        <button class="px-4 py-2 rounded-md border border-light-border dark:border-dark-border disabled:opacity-40" :disabled="currentPage >= totalPages" @click="currentPage++">Próximo</button>
+      </div>
+    </div>
+
     <div class="grid grid-cols-1 gap-3 rounded-xl border border-light-border bg-light-surface p-4 dark:border-dark-border dark:bg-dark-surface sm:grid-cols-2 lg:grid-cols-4">
       <div>
         <label class="mb-1 block text-xs font-bold text-light-text/60 dark:text-offwhite/60">Vencimento inicial</label>
@@ -268,7 +276,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { Search, Plus, MoreVertical, FileX, Copy } from '@lucide/vue'
 import { useFinanceiro, type Charge } from '../../composables/useFinanceiro'
 import type { ChargeStatus } from '~/utils/businessRules'
@@ -307,11 +315,11 @@ const vClickOutside = {
   }
 }
 
-const { charges, chargeSummary, accounts, fetchCharges, fetchChargeSummary, fetchAccounts, createCharge, payCharge, cancelCharge, refundCharge } = useFinanceiro()
+const { pagedCharges, pagedChargesTotal, chargeSummary, accounts, fetchPagedCharges, fetchChargeSummary, fetchAccounts, createCharge, payCharge, cancelCharge, refundCharge } = useFinanceiro()
 
-onMounted(async () => {
-  await Promise.all([fetchCharges(), fetchChargeSummary(), fetchAccounts()])
-})
+const currentPage = ref(1)
+const pageSize = 10
+const totalPages = computed(() => Math.max(1, Math.ceil(pagedChargesTotal.value / pageSize)))
 
 // Formatadores
 const formatCurrency = (value: number) => {
@@ -334,6 +342,18 @@ const startDate = ref('')
 const endDate = ref('')
 const paymentMethodFilter = ref('')
 const activeDropdown = ref<string | null>(null)
+
+const loadPage = () => fetchPagedCharges({
+  page: currentPage.value, pageSize, status: activeFilter.value, search: searchQuery.value,
+  startDate: startDate.value, endDate: endDate.value, paymentMethod: paymentMethodFilter.value
+})
+
+onMounted(async () => { await Promise.all([loadPage(), fetchChargeSummary(), fetchAccounts()]) })
+watch([activeFilter, searchQuery, startDate, endDate, paymentMethodFilter], async () => {
+  currentPage.value = 1
+  await loadPage()
+})
+watch(currentPage, loadPage)
 
 const hasAdvancedFilters = computed(() => Boolean(startDate.value || endDate.value || paymentMethodFilter.value))
 const clearAdvancedFilters = () => {
@@ -366,7 +386,7 @@ const filteredCharges = computed(() => {
   const currentYear = now.getFullYear()
   const currentMonth = now.getMonth()
 
-  const list = charges.value.filter(c => {
+  const list = pagedCharges.value.filter(c => {
     // Aplica busca por aluno ou descrição
     if (searchQuery.value) {
       const q = searchQuery.value.toLowerCase()
@@ -506,6 +526,7 @@ const handleNewCharge = async (data: any) => {
     valor: data.amount,
     vencimento: data.dueDate
   })
+  await loadPage()
   isNewChargeOpen.value = false
   showToast('Cobrança avulsa criada!')
 }
@@ -514,6 +535,7 @@ const handlePayment = async (data: any) => {
   if (selectedCharge.value) {
     try {
       await payCharge(selectedCharge.value.id, data.paymentMethod, data.account, data.paidAt, data.observation)
+      await loadPage()
       isPaymentModalOpen.value = false
       showToast('Pagamento registrado. Recibo e caixa gerados!', 'success')
     } catch (error: any) {
@@ -526,6 +548,7 @@ const handlePayment = async (data: any) => {
 const handleCancel = async (data: any) => {
   if (selectedCharge.value) {
     await cancelCharge(selectedCharge.value.id, data.reason)
+    await loadPage()
     isCancelModalOpen.value = false
     showToast('Cobrança cancelada com sucesso.')
   }
@@ -535,6 +558,7 @@ const handleRefund = async (data: any) => {
   if (!selectedCharge.value) return
   try {
     await refundCharge(selectedCharge.value.id, data.account, data.refundedAt, data.reason)
+    await loadPage()
     isRefundModalOpen.value = false
     showToast('Pagamento estornado e saída registrada no caixa.', 'success')
   } catch (error: any) {
