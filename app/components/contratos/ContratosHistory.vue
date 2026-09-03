@@ -31,6 +31,14 @@
       </div>
     </div>
 
+    <div class="flex items-center justify-between text-sm text-light-text/60 dark:text-offwhite/60">
+      <span>Mostrando {{ contractHistoryTotal ? (currentPage - 1) * pageSize + 1 : 0 }} a {{ Math.min((currentPage - 1) * pageSize + filteredContracts.length, contractHistoryTotal) }} de {{ contractHistoryTotal }}</span>
+      <div class="flex gap-2">
+        <button class="px-4 py-2 rounded-md border border-light-border dark:border-dark-border disabled:opacity-40" :disabled="currentPage === 1" @click="currentPage--">Anterior</button>
+        <button class="px-4 py-2 rounded-md border border-light-border dark:border-dark-border disabled:opacity-40" :disabled="currentPage >= totalPages" @click="currentPage++">Próximo</button>
+      </div>
+    </div>
+
     <!-- Tabela -->
     <div class="bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-xl shadow-sm flex flex-col flex-1">
       <div class="overflow-x-auto min-h-[300px] pb-16">
@@ -158,10 +166,14 @@ import { useContratos, type Contract } from '../../composables/useContratos'
 
 const route = useRoute()
 const router = useRouter()
-const { contractsList, fetchContracts, resendLink, renewContract } = useContratos()
+const { contractHistory, contractHistoryTotal, fetchContractHistory, resendLink, renewContract } = useContratos()
+
+const currentPage = ref(1)
+const pageSize = 10
+const totalPages = computed(() => Math.max(1, Math.ceil(contractHistoryTotal.value / pageSize)))
 
 onMounted(async () => {
-  await fetchContracts()
+  await fetchContractHistory(currentPage.value, pageSize, activeStatus.value, searchQuery.value)
 })
 
 const statusFilters = [
@@ -184,18 +196,16 @@ watch(activeStatus, (newVal) => {
 })
 
 const filteredContracts = computed(() => {
-  let list = [...contractsList.value]
+  return contractHistory.value
+})
 
-  if (activeStatus.value !== 'todos') {
-    list = list.filter(c => c.status === activeStatus.value)
-  }
+watch([activeStatus, searchQuery], async () => {
+  currentPage.value = 1
+  await fetchContractHistory(1, pageSize, activeStatus.value, searchQuery.value)
+})
 
-  if (searchQuery.value) {
-    const q = searchQuery.value.toLowerCase()
-    list = list.filter(c => c.studentName.toLowerCase().includes(q))
-  }
-
-  return list.sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime())
+watch(currentPage, async page => {
+  await fetchContractHistory(page, pageSize, activeStatus.value, searchQuery.value)
 })
 
 // Formatadores
@@ -258,6 +268,7 @@ const openResendLink = (c: Contract) => {
 }
 const handleResendConfirm = async (contractId: string) => {
   const result = await resendLink(contractId)
+  await fetchContractHistory(currentPage.value, pageSize, activeStatus.value, searchQuery.value)
   isResendModalOpen.value = false
   selectedContractId.value = null
   alert(result.success ? 'Link reenviado por e-mail com sucesso!' : result.message)
@@ -277,6 +288,7 @@ const openRenewContract = (c: Contract) => {
 }
 const handleRenewConfirm = async (data: { id: string, amount: number, day: number }) => {
   const result = await renewContract(data.id, data.amount, data.day)
+  await fetchContractHistory(currentPage.value, pageSize, activeStatus.value, searchQuery.value)
   isRenewModalOpen.value = false
   selectedContractForRenew.value = null
   alert(result.success ? 'Renovação criada e enviada por e-mail com sucesso!' : result.message)

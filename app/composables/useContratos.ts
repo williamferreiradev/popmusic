@@ -20,6 +20,8 @@ export interface Contract {
 const contractsList = ref<Contract[]>([])
 const contractModel = ref('')
 const isLoading = ref(false)
+const contractHistory = ref<Contract[]>([])
+const contractHistoryTotal = ref(0)
 const serverMetrics = ref<{
   aguardando: number
   aceitosMes: number
@@ -29,6 +31,60 @@ const serverMetrics = ref<{
 
 export const useContratos = () => {
   const supabase = useSupabaseClient()
+
+  const mapContract = (c: any): Contract => {
+    let status: ContractStatus = (c.status === 'aguardando_assinatura' || c.status === 'aguardando') ? 'aguardando' : c.status
+    if (status === 'aguardando' && c.token_expira_em && new Date(c.token_expira_em).getTime() < Date.now()) status = 'expirado'
+    if (status === 'aceito' && c.data_fim_vigencia) {
+      const diffDays = (new Date(c.data_fim_vigencia).getTime() - Date.now()) / 86400000
+      if (diffDays <= 0) status = 'vencido'
+      else if (diffDays <= 30) status = 'vencendo'
+    }
+    return {
+      id: c.id,
+      studentId: c.aluno_id,
+      studentName: c.alunos?.nome || 'Aluno Sem Nome',
+      studentPhone: c.alunos?.telefone || '',
+      token: c.token,
+      sentAt: c.data_envio || c.token_expira_em,
+      acceptedAt: c.data_aceite,
+      expiresAt: c.token_expira_em,
+      status,
+      valor: Number(c.valor_mensalidade) || 0,
+      diaVencimento: c.dia_vencimento || 10,
+      validityEnd: c.data_fim_vigencia
+    }
+  }
+
+  const fetchContractHistory = async (page = 1, pageSize = 10, status = 'todos', search = '') => {
+    isLoading.value = true
+    try {
+      let query = supabase.from('contratos').select(`
+        id, aluno_id, token, token_expira_em, data_envio, data_aceite,
+        data_fim_vigencia, status, valor_mensalidade, dia_vencimento,
+        alunos!inner (id, nome, telefone)
+      `, { count: 'exact' })
+      const now = new Date()
+      const today = now.toISOString().slice(0, 10)
+      const inThirtyDays = new Date(now.getTime() + 30 * 86400000).toISOString().slice(0, 10)
+
+      if (status === 'aguardando') query = query.eq('status', 'aguardando_assinatura').gte('token_expira_em', now.toISOString())
+      else if (status === 'vencendo') query = query.eq('status', 'aceito').gte('data_fim_vigencia', today).lte('data_fim_vigencia', inThirtyDays)
+      else if (status === 'aceito') query = query.eq('status', 'aceito').or(`data_fim_vigencia.is.null,data_fim_vigencia.gt.${inThirtyDays}`)
+      else if (status === 'expirado') query = query.or(`status.eq.expirado,and(status.eq.aguardando_assinatura,token_expira_em.lt.${now.toISOString()})`)
+
+      const term = search.trim().replace(/[(),\\]/g, ' ')
+      if (term) query = query.ilike('alunos.nome', `%${term}%`)
+
+      const from = (page - 1) * pageSize
+      const { data, count, error } = await query.order('criado_em', { ascending: false }).range(from, from + pageSize - 1)
+      if (error) throw error
+      contractHistory.value = (data || []).map(mapContract)
+      contractHistoryTotal.value = count || 0
+    } finally {
+      isLoading.value = false
+    }
+  }
 
   // Busca todos os contratos reais com dados dos alunos
   const fetchContracts = async () => {
@@ -332,12 +388,15 @@ Dados oficiais da contratada disponíveis no cadastro da escola.`
 
   return {
     contractsList,
+    contractHistory,
+    contractHistoryTotal,
     contractModel,
     isLoading,
     metrics,
     oldestPending,
     closestExpiring,
     fetchContracts,
+    fetchContractHistory,
     fetchContractMetrics,
     fetchModel,
     getContractByToken,

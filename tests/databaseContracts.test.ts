@@ -56,6 +56,24 @@ describe('resumo escalável de contratos', () => {
   })
 })
 
+describe('histórico paginado de contratos', () => {
+  const composable = normalize(read('app/composables/useContratos.ts'))
+  const history = normalize(read('app/components/contratos/ContratosHistory.vue'))
+
+  it('aplica filtros, contagem e intervalo no Supabase', () => {
+    assert.ok(composable.includes('fetchcontracthistory'))
+    assert.ok(composable.includes("{ count: 'exact' }"))
+    assert.ok(composable.includes('.range(from, from + pagesize - 1)'))
+    assert.ok(composable.includes(".ilike('alunos.nome'"))
+  })
+
+  it('navega pelas páginas sem recortar a lista no navegador', () => {
+    assert.ok(history.includes('contracthistorytotal'))
+    assert.ok(history.includes('watch(currentpage'))
+    assert.doesNotMatch(history, /contracthistory\.value\.slice\(/)
+  })
+})
+
 describe('contrato de integração da matrícula', () => {
   const migration = normalize(read('supabase/migrations/202608310008_matricula_transacional.sql'))
   const form = read('app/components/modals/StudentCreateModal.vue')
