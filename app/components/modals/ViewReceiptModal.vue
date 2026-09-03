@@ -115,6 +115,7 @@
         <div class="flex items-center gap-2 w-full sm:w-auto">
           <button 
             @click="sendWhatsApp"
+            :disabled="sending"
             class="flex-1 sm:flex-initial px-3 py-2 bg-green-500/10 hover:bg-green-500/20 text-green-600 dark:text-green-400 text-xs font-bold rounded-md transition-colors flex items-center justify-center gap-1.5 border border-green-500/20"
           >
             <MessageSquare class="w-3.5 h-3.5" />
@@ -122,6 +123,7 @@
           </button>
           <button 
             @click="sendEmail"
+            :disabled="sending"
             class="flex-1 sm:flex-initial px-3 py-2 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold rounded-md transition-colors flex items-center justify-center gap-1.5 border border-primary/20"
           >
             <Mail class="w-3.5 h-3.5" />
@@ -151,6 +153,7 @@ import { valorMonetarioPorExtenso } from '~/utils/contractFormatter'
 const props = defineProps<{
   isOpen: boolean
   receipt: Receipt | null
+  sending?: boolean
 }>()
 
 const emit = defineEmits(['close', 'sent'])

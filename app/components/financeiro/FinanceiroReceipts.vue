@@ -104,6 +104,7 @@
     <ViewReceiptModal 
       :is-open="isViewModalOpen"
       :receipt="selectedReceipt"
+      :sending="isSendingReceipt"
       @close="isViewModalOpen = false; selectedReceipt = null"
       @sent="handleSent"
     />
@@ -111,6 +112,7 @@
     <ResendReceiptModal 
       :is-open="isResendModalOpen"
       :receipt="selectedReceipt"
+      :sending="isSendingReceipt"
       @close="isResendModalOpen = false; selectedReceipt = null"
       @confirm="handleResend"
     />
@@ -182,15 +184,22 @@ const openResendModal = (receipt: Receipt) => {
   isResendModalOpen.value = true
 }
 
-const handleSent = (method: string) => {
-  const meio = method === 'whatsapp' ? 'WhatsApp' : 'E-mail'
-  showToast(`Recibo enviado via ${meio} com sucesso!`)
+const isSendingReceipt = ref(false)
+const handleSent = async (method: string) => {
+  if (method === 'whatsapp') { showToast('WhatsApp aberto para envio manual do recibo.'); return }
+  if (!selectedReceipt.value || isSendingReceipt.value) return
+  isSendingReceipt.value = true
+  try {
+    await $fetch('/api/send-receipt-email',{method:'POST',body:{chargeId:selectedReceipt.value.chargeId}})
+    showToast('Recibo enviado por e-mail com sucesso!')
+  } catch (error:any) {
+    alert(`Não foi possível enviar o recibo. ${error?.data?.statusMessage||error?.message||'Tente novamente.'}`)
+  } finally { isSendingReceipt.value=false }
 }
 
-const handleResend = (method: 'whatsapp' | 'email') => {
+const handleResend = async (method: 'whatsapp' | 'email') => {
   isResendModalOpen.value = false
-  const meio = method === 'whatsapp' ? 'WhatsApp' : 'E-mail'
-  showToast(`Recibo reenviado via ${meio}.`)
+  await handleSent(method)
 }
 
 const toastVisible = ref(false)
