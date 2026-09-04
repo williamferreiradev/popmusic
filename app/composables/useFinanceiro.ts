@@ -745,7 +745,7 @@ export const useFinanceiro = () => {
     categoria?: string
   }) => {
     try {
-      await supabase.from('fluxo_caixa').insert({
+      const { error } = await supabase.from('fluxo_caixa').insert({
         tipo: entry.tipo,
         descricao: entry.descricao,
         valor: entry.valor,
@@ -755,9 +755,11 @@ export const useFinanceiro = () => {
         origem: 'manual'
       })
 
-      await fetchCashflow()
+      if (error) throw error
+      await Promise.all([fetchCashflow(), fetchFinancialSummary()])
     } catch (e) {
       console.error('Erro ao lançar entrada no caixa:', e)
+      throw e
     }
   }
 
@@ -769,7 +771,7 @@ export const useFinanceiro = () => {
     vencimento: string
   }) => {
     try {
-      await supabase.from('cobrancas').insert({
+      const { error } = await supabase.from('cobrancas').insert({
         aluno_id: data.aluno_id,
         descricao: data.descricao,
         valor: data.valor,
@@ -777,9 +779,11 @@ export const useFinanceiro = () => {
         status: 'pendente'
       })
 
-      await Promise.all([fetchCharges(), fetchChargeSummary()])
+      if (error) throw error
+      await Promise.all([fetchCharges(), fetchChargeSummary(), fetchFinancialSummary()])
     } catch (e) {
       console.error('Erro ao criar cobrança:', e)
+      throw e
     }
   }
 

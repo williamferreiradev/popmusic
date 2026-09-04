@@ -520,15 +520,19 @@ const openRefundModal = (charge: Charge) => {
 
 // Funções de Ação
 const handleNewCharge = async (data: any) => {
-  await createCharge({
-    aluno_id: data.studentId || data.aluno_id,
-    descricao: data.description,
-    valor: data.amount,
-    vencimento: data.dueDate
-  })
-  await loadPage()
-  isNewChargeOpen.value = false
-  showToast('Cobrança avulsa criada!')
+  try {
+    await createCharge({
+      aluno_id: data.studentId || data.aluno_id,
+      descricao: data.description,
+      valor: data.amount,
+      vencimento: data.dueDate
+    })
+    await loadPage()
+    isNewChargeOpen.value = false
+    showToast('Cobrança avulsa criada!')
+  } catch (error: any) {
+    alert(`Não foi possível criar a cobrança. ${error.message || 'Tente novamente.'}`)
+  }
 }
 
 const handlePayment = async (data: any) => {
@@ -547,10 +551,14 @@ const handlePayment = async (data: any) => {
 
 const handleCancel = async (data: any) => {
   if (selectedCharge.value) {
-    await cancelCharge(selectedCharge.value.id, data.reason)
-    await loadPage()
-    isCancelModalOpen.value = false
-    showToast('Cobrança cancelada com sucesso.')
+    try {
+      await cancelCharge(selectedCharge.value.id, data.reason)
+      await loadPage()
+      isCancelModalOpen.value = false
+      showToast('Cobrança cancelada com sucesso.')
+    } catch (error: any) {
+      alert(`Não foi possível cancelar a cobrança. ${error.message || 'Tente novamente.'}`)
+    }
   }
 }
 
@@ -567,8 +575,8 @@ const handleRefund = async (data: any) => {
   }
 }
 
-const resendCharge = (charge: Charge) => {
-  showToast(`Lembrete reenviado para ${charge.studentName} via WhatsApp.`, 'success')
+const resendCharge = (_charge: Charge) => {
+  showToast('WhatsApp automático ainda não está configurado. Faça o envio manual pelo cadastro do aluno.', 'info')
 }
 
 // Toast

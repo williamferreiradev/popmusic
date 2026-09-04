@@ -301,3 +301,23 @@ describe('acoes de comunicacao dos relatorios', () => {
     assert.ok(reports.includes("navigateto('/dashboard/contratos')"))
   })
 })
+
+describe('erros nas operacoes financeiras manuais', () => {
+  const finance = normalize(read('app/composables/useFinanceiro.ts'))
+  const charges = normalize(read('app/components/financeiro/FinanceiroCharges.vue'))
+  const cashflow = normalize(read('app/components/financeiro/FinanceiroCashflow.vue'))
+
+  it('nao confirma cobranca ou caixa quando o Supabase recusa a gravacao', () => {
+    assert.ok((finance.match(/if \(error\) throw error/g) || []).length >= 2)
+    assert.ok(finance.includes('await promise.all([fetchcashflow(), fetchfinancialsummary()])'))
+    assert.ok(finance.includes('fetchcharges(), fetchchargesummary(), fetchfinancialsummary()'))
+    assert.ok(charges.includes('não foi possível criar a cobrança'))
+    assert.ok(charges.includes('não foi possível cancelar a cobrança'))
+    assert.ok(cashflow.includes('não foi possível adicionar o lançamento'))
+  })
+
+  it('nao simula lembrete automatico de WhatsApp', () => {
+    assert.ok(charges.includes('whatsapp automático ainda não está configurado'))
+    assert.doesNotMatch(charges, /lembrete reenviado[^;]+via whatsapp/)
+  })
+})

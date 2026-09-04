@@ -227,18 +227,21 @@ const openReadonlyModal = (t: CashflowEntry) => {
 
 const handleNewEntry = async (data: any) => {
   const conta = accounts.value.find(a => a.nome === data.account) || accounts.value[0]
-  if (!conta) return
-
-  await addCashflowEntry({
-    tipo: data.type,
-    descricao: data.description,
-    valor: data.amount,
-    data: data.date,
-    conta_id: conta.id,
-    categoria: data.category
-  })
-  isNewEntryModalOpen.value = false
-  showToast('Lançamento adicionado com sucesso!')
+  if (!conta) return alert('Cadastre uma conta financeira antes de criar o lançamento.')
+  try {
+    await addCashflowEntry({
+      tipo: data.type,
+      descricao: data.description,
+      valor: data.amount,
+      data: data.date,
+      conta_id: conta.id,
+      categoria: data.category
+    })
+    isNewEntryModalOpen.value = false
+    showToast('Lançamento adicionado com sucesso!')
+  } catch (error: any) {
+    alert(`Não foi possível adicionar o lançamento. ${error.message || 'Tente novamente.'}`)
+  }
 }
 
 // Toast
