@@ -6,11 +6,12 @@ Este documento contém somente o necessário para colocar a primeira versão em 
 
 - [x] Aplicação publicada em HTTPS na Vercel.
 - [x] Rota inicial redireciona para o login e a tela de login responde corretamente.
-- [x] Testes automatizados: 75 aprovados, nenhuma falha (04/09/2026).
+- [x] Testes automatizados: 78 aprovados, nenhuma falha (04/09/2026).
 - [x] TypeScript/typecheck sem erros (04/09/2026).
 - [x] ESLint sem erros (04/09/2026).
 - [x] Portal do aluno diferencia falha de carregamento de estado vazio e mantém tabelas financeiras utilizáveis no celular.
 - [x] CRUDs de modalidades e salas validam os dados, mostram falhas reais e impedem comandos repetidos durante a gravação.
+- [x] Agenda mantém os vínculos ao editar turmas, valida a capacidade da sala e não mascara falhas do banco.
 - [x] Frontend e servidor compilam; o empacotamento local para apenas no `EPERM readlink` do Windows/OneDrive.
 - [x] Build em ambiente externo confirmado pela implantação funcional da Vercel.
 

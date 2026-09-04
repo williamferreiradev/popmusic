@@ -157,6 +157,7 @@
 - [x] Impedir inativação de catálogo usado por turma ativa sem tratamento.
 - [x] Implementar criação, edição e inativação transacional de turma; teste funcional remoto permanece no roteiro de homologação.
 - [x] Atualizar a agenda imediatamente após salvar ou desativar uma turma.
+- [x] Garantir que a edição da turma preserve modalidade, professor e sala e validar a capacidade antes de gravar.
 - [x] Garantir que turmas inativas não apareçam em novas matrículas.
 
 ## 8. Contrato e assinatura — P0

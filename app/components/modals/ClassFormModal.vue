@@ -11,6 +11,7 @@
         <BaseInput v-model="form.capacidade" label="Capacidade máxima" type="number" min="1" required />
       </div>
       <div v-if="conflictMessage" class="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-500">{{ conflictMessage }}</div>
+      <div v-else-if="capacityMessage" class="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-500">{{ capacityMessage }}</div>
       <div class="flex flex-col-reverse sm:flex-row sm:justify-between gap-3 pt-4 border-t border-light-border dark:border-dark-border">
         <button v-if="classData" type="button" :disabled="saving" class="px-4 py-2 rounded-md text-sm font-medium text-red-500 hover:bg-red-500/10 disabled:opacity-50" @click="deactivate">Desativar turma</button>
         <span v-else/>
@@ -60,8 +61,16 @@ const conflictMessage = computed(() => {
   if (!conflict) return ''
   return conflict.sala_id === form.salaId ? 'Esta sala já possui outra turma nesse horário.' : 'Este professor já possui outra turma nesse horário.'
 })
+const capacityMessage = computed(() => {
+  const room = props.rooms.find(item => item.id === form.salaId)
+  if (!room || !form.capacidade) return ''
+  return Number(form.capacidade) > Number(room.capacidade_padrao)
+    ? `A capacidade máxima desta sala é ${room.capacidade_padrao} aluno(s).`
+    : ''
+})
 const isValid = computed(() => Boolean(form.modalidadeId && form.professorId && form.salaId && form.diaSemana !== '' &&
-  form.horarioInicio && form.horarioFim > form.horarioInicio && Number(form.capacidade) > 0 && !conflictMessage.value))
+  form.horarioInicio && form.horarioFim > form.horarioInicio && Number.isInteger(Number(form.capacidade)) &&
+  Number(form.capacidade) > 0 && !conflictMessage.value && !capacityMessage.value))
 const close = () => !props.saving && emit('close')
 const save = () => isValid.value && emit('save', { modalidade_id: form.modalidadeId, professor_id: form.professorId, sala_id: form.salaId,
   dia_semana: Number(form.diaSemana), horario_inicio: form.horarioInicio, horario_fim: form.horarioFim, capacidade_maxima: Number(form.capacidade), ativo: true })

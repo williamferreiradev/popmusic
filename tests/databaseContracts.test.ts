@@ -59,6 +59,26 @@ describe('detalhes reais da agenda', () => {
     assert.ok(agenda.includes('monthcells'))
     assert.doesNotMatch(agenda, /em desenvolvimento/)
   })
+
+  it('mantem os identificadores necessarios ao editar uma turma', () => {
+    const form = normalize(read('app/components/modals/ClassFormModal.vue'))
+    for (const field of ['modalidade_id', 'professor_id', 'sala_id']) assert.ok(agenda.includes(field))
+    assert.ok(form.includes('modalidadeid: source.modalidade_id'))
+  })
+
+  it('mostra falhas reais e nao transforma erro do banco em agenda vazia', () => {
+    assert.ok(agenda.includes('error: catalogserror'))
+    assert.ok(agenda.includes('error: turmaserror'))
+    assert.ok(agenda.includes('if (error) throw error'))
+    assert.doesNotMatch(agenda, /erro ao buscar turmas na agenda:[^}]+return \[\]/)
+  })
+
+  it('valida a capacidade selecionada contra a capacidade da sala', () => {
+    const form = normalize(read('app/components/modals/ClassFormModal.vue'))
+    assert.ok(agenda.includes('capacidade_padrao'))
+    assert.ok(form.includes('capacitymessage'))
+    assert.ok(form.includes('number.isinteger(number(form.capacidade))'))
+  })
 })
 
 describe('resumo escalável de contratos', () => {

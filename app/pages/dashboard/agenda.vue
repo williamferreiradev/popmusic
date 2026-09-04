@@ -1,5 +1,5 @@
 <template>
-  <div class="p-8 w-full flex flex-col gap-6 h-[calc(100vh-theme(spacing.16))]">
+  <div class="p-4 sm:p-8 w-full flex flex-col gap-6 min-h-[calc(100vh-theme(spacing.16))]">
     <!-- Cabeçalho e Controles -->
     <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
       <div>
@@ -61,7 +61,15 @@
     </div>
 
     <!-- Área da Agenda -->
-    <div class="flex-1 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-lg shadow-sm overflow-hidden flex flex-col">
+    <div v-if="feedback" class="rounded-lg border px-4 py-3 text-sm" :class="feedback.type === 'success' ? 'border-green-500/40 bg-green-500/10 text-green-700 dark:text-green-300' : 'border-red-500/40 bg-red-500/10 text-red-700 dark:text-red-300'" role="status">
+      {{ feedback.message }}
+    </div>
+
+    <div v-if="catalogsError || turmasError" class="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-6 text-center text-sm text-red-700 dark:text-red-300">
+      Não foi possível carregar a agenda completa. Atualize a página e tente novamente.
+    </div>
+
+    <div v-if="!catalogsError && !turmasError" class="flex-1 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-lg shadow-sm overflow-hidden flex flex-col">
       
       <!-- Cabeçalho dos Dias (Semana) -->
       <div v-if="view === 'Semana'" class="grid grid-cols-[60px_repeat(7,1fr)] border-b border-light-border dark:border-dark-border">
@@ -190,17 +198,18 @@ const selectedAppointment = ref(null)
 const isClassFormOpen = ref(false)
 const editingClass = ref<any>(null)
 const isSavingClass = ref(false)
+const feedback = ref<{ type: 'success' | 'error', message: string } | null>(null)
 
 const hours = [
   '08:00', '09:00', '10:00', '11:00', '12:00', 
   '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00'
 ]
 
-const { data: catalogs } = await useAsyncData('agenda_catalogos', async () => {
+const { data: catalogs, error: catalogsError } = await useAsyncData('agenda_catalogos', async () => {
   const [modalities, teachers, rooms] = await Promise.all([
     supabase.from('modalidades').select('id, nome').eq('ativo', true).order('nome'),
     supabase.from('professores').select('id, nome').eq('ativo', true).order('nome'),
-    supabase.from('salas').select('id, nome').eq('ativo', true).order('nome')
+    supabase.from('salas').select('id, nome, capacidade_padrao').eq('ativo', true).order('nome')
   ])
   if (modalities.error) throw modalities.error
   if (teachers.error) throw teachers.error
@@ -209,11 +218,14 @@ const { data: catalogs } = await useAsyncData('agenda_catalogos', async () => {
 })
 
 // Carregamento de Turmas Reais do Supabase
-const { data: rawTurmas, refresh: refreshTurmas } = await useAsyncData('agenda_turmas', async () => {
+const { data: rawTurmas, error: turmasError, refresh: refreshTurmas } = await useAsyncData('agenda_turmas', async () => {
   const { data, error } = await supabase
     .from('turmas')
     .select(`
       id,
+      modalidade_id,
+      professor_id,
+      sala_id,
       dia_semana,
       horario_inicio,
       horario_fim,
@@ -237,10 +249,7 @@ const { data: rawTurmas, refresh: refreshTurmas } = await useAsyncData('agenda_t
     `)
     .eq('ativo', true)
 
-  if (error) {
-    console.error('Erro ao buscar turmas na agenda:', error)
-    return []
-  }
+  if (error) throw error
   return data || []
 })
 
@@ -441,6 +450,7 @@ const closeClassForm = () => {
 
 const saveClass = async (payload: any) => {
   isSavingClass.value = true
+  feedback.value = null
   try {
     const { error } = await (supabase as any).rpc('salvar_turma', {
       p_id: editingClass.value?.id || null,
@@ -454,9 +464,11 @@ const saveClass = async (payload: any) => {
     })
     if (error) throw error
     await refreshTurmas()
+    const wasEditing = Boolean(editingClass.value)
     closeClassForm()
+    feedback.value = { type: 'success', message: `Turma ${wasEditing ? 'atualizada' : 'criada'} com sucesso.` }
   } catch (error: any) {
-    alert(`Não foi possível salvar a turma. ${error.message || 'Tente novamente.'}`)
+    feedback.value = { type: 'error', message: `Não foi possível salvar a turma. ${error.message || 'Tente novamente.'}` }
   } finally {
     isSavingClass.value = false
   }
@@ -465,14 +477,18 @@ const saveClass = async (payload: any) => {
 const deactivateClass = async (classData: any) => {
   if (!classData?.id || !confirm('Desativar esta turma? Os históricos e matrículas serão preservados.')) return
   isSavingClass.value = true
-  const { error } = await (supabase as any).rpc('inativar_turma', { p_turma_id: classData.id })
-  isSavingClass.value = false
-  if (error) {
-    alert(`Não foi possível desativar a turma. ${error.message}`)
-    return
+  feedback.value = null
+  try {
+    const { error } = await (supabase as any).rpc('inativar_turma', { p_turma_id: classData.id })
+    if (error) throw error
+    await refreshTurmas()
+    closeClassForm()
+    feedback.value = { type: 'success', message: 'Turma desativada com sucesso.' }
+  } catch (error: any) {
+    feedback.value = { type: 'error', message: `Não foi possível desativar a turma. ${error.message || 'Tente novamente.'}` }
+  } finally {
+    isSavingClass.value = false
   }
-  await refreshTurmas()
-  closeClassForm()
 }
 
 const handleStatusUpdate = ({ id, studentId, status }: { id: string | number, studentId: string | number, status: string }) => {
