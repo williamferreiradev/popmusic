@@ -15,7 +15,7 @@ Este documento contém somente o necessário para colocar a primeira versão em 
 ## Bloqueadores antes de liberar para uso real
 
 - [x] Executar `docs/sql/auditoria_final_supabase.sql` no Supabase e guardar o resultado (`docs/evidencias/auditoria_supabase_2026-09-04.md`).
-- [ ] Confirmar que todas as migrações até `031` foram aplicadas no banco de produção.
+- [x] Confirmar migrações aplicadas no banco de produção até `033`, incluindo segurança e cancelamento sem fidelidade.
 - [ ] Confirmar no Supabase as URLs de redirecionamento do domínio de produção.
 - [ ] Fazer backup do banco antes da homologação.
 - [x] Validar que o bucket `fotos_alunos` existe e não é público (confirmado pela auditoria).

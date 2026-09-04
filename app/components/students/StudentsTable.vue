@@ -128,11 +128,12 @@
     />
 
     <!-- Modal de Confirmação de Exclusão -->
-    <ConfirmDeleteModal
+    <CancelStudentModal
       :is-open="isDeleteModalOpen"
-      title="Cancelar Matrícula"
-      message="A matrícula será cancelada sem apagar contratos, cobranças, chamadas ou recibos. Confirme para informar o motivo."
-      @close="isDeleteModalOpen = false"
+      :student="selectedStudent"
+      :is-loading="isCancelling"
+      :error-message="cancelError"
+      @close="closeCancelModal"
       @confirm="handleStudentDeleted"
     />
 
@@ -167,7 +168,7 @@ import { MoreHorizontal, Eye, Edit2, Trash2, FileText } from '@lucide/vue'
 import BaseBadge from '../BaseBadge.vue'
 import StudentProfileModal from '../modals/StudentProfileModal.vue'
 import StudentEditModal from '../modals/StudentEditModal.vue'
-import ConfirmDeleteModal from '../modals/ConfirmDeleteModal.vue'
+import CancelStudentModal from '../modals/CancelStudentModal.vue'
 import LockStudentModal from '../modals/LockStudentModal.vue'
 import UnlockStudentModal from '../modals/UnlockStudentModal.vue'
 import PreviewContractModal from '../modals/PreviewContractModal.vue'
@@ -204,6 +205,8 @@ const openMenuId = ref<string | null>(null)
 const isProfileModalOpen = ref(false)
 const isEditModalOpen = ref(false)
 const isDeleteModalOpen = ref(false)
+const isCancelling = ref(false)
+const cancelError = ref('')
 const isLockModalOpen = ref(false)
 const isUnlockModalOpen = ref(false)
 const isContractModalOpen = ref(false)
@@ -288,8 +291,13 @@ const openEdit = (aluno: any) => {
 
 const openDelete = (aluno: any) => {
   selectedStudent.value = aluno
+  cancelError.value = ''
   isDeleteModalOpen.value = true
   closeMenu()
+}
+
+const closeCancelModal = () => {
+  if (!isCancelling.value) isDeleteModalOpen.value = false
 }
 
 const handleProfileEdit = () => {
@@ -342,21 +350,20 @@ const handleStudentUpdated = (_data: any) => {
   emit('refresh')
 }
 
-const handleStudentDeleted = async () => {
-  if (selectedStudent.value?.id) {
-    const alunoId = selectedStudent.value.id
-    try {
-      const motivo=prompt('Informe o motivo do cancelamento:')?.trim()||''
-      if(motivo.length<5) throw new Error('O motivo deve ter pelo menos 5 caracteres.')
-      const { error }=await (supabase as any).rpc('cancelar_aluno',{p_aluno_id:alunoId,p_motivo:motivo})
-      if (error) throw error
-    } catch (e: any) {
-      console.error('Erro ao excluir aluno:', e)
-      alert(`Não foi possível excluir o aluno. ${e.message || ''}`)
-    }
+const handleStudentDeleted = async (data: { id: string, reason: string }) => {
+  isCancelling.value = true
+  cancelError.value = ''
+  try {
+    const { error } = await (supabase as any).rpc('cancelar_aluno', { p_aluno_id: data.id, p_motivo: data.reason })
+    if (error) throw error
+    isDeleteModalOpen.value = false
+    emit('refresh')
+  } catch (e: any) {
+    console.error('Erro ao cancelar aluno:', e)
+    cancelError.value = `Não foi possível cancelar. ${e.message || 'Tente novamente.'}`
+  } finally {
+    isCancelling.value = false
   }
-  isDeleteModalOpen.value = false
-  emit('refresh')
 }
 
 onMounted(() => {
