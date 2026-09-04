@@ -5,6 +5,7 @@ import { describe, it } from 'node:test'
 const read = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8')
 const normalize = (text: string) => text.replace(/\s+/g, ' ').toLowerCase()
 const security = normalize(read('supabase/migrations/202608310001_security_hardening.sql'))
+const anonymousHardening = normalize(read('supabase/migrations/202609040032_revogar_anon_tabelas_sensiveis.sql'))
 
 describe('RLS das tabelas sensíveis', () => {
   const sensitiveTables = [
@@ -30,6 +31,22 @@ describe('RLS das tabelas sensíveis', () => {
       assert.ok(security.includes(`revoke all on table public.${table} from anon`))
     }
     assert.doesNotMatch(security, /create policy[^;]+to anon[^;]+using\s*\(\s*true\s*\)/)
+  })
+  it('revoga anon e public de todo o conjunto auditado de tabelas sensiveis', () => {
+    const auditedTables = [
+      'usuarios', 'alunos', 'professores', 'professor_modalidades',
+      'modalidades', 'salas', 'turmas', 'matriculas_turma', 'contratos',
+      'cobrancas', 'presencas', 'recibos', 'repasses_professor',
+      'repasse_itens', 'fluxo_caixa', 'contas_financeiras', 'configuracoes',
+      'feriados', 'modelos_contrato', 'chamadas_aula', 'auditoria',
+      'comunicacoes', 'estornos_pagamento'
+    ]
+
+    for (const table of auditedTables) {
+      assert.ok(anonymousHardening.includes(`public.${table}`), `Revogacao ausente em public.${table}`)
+    }
+    assert.ok(anonymousHardening.includes('from anon, public'))
+    assert.ok(anonymousHardening.includes('alter default privileges in schema public revoke all privileges on tables from anon, public'))
   })
 })
 
