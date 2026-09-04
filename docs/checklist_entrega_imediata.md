@@ -6,7 +6,7 @@ Este documento contém somente o necessário para colocar a primeira versão em 
 
 - [x] Aplicação publicada em HTTPS na Vercel.
 - [x] Rota inicial redireciona para o login e a tela de login responde corretamente.
-- [x] Testes automatizados: 59 aprovados, nenhuma falha (04/09/2026).
+- [x] Testes automatizados: 60 aprovados, nenhuma falha (04/09/2026).
 - [x] TypeScript/typecheck sem erros (04/09/2026).
 - [x] ESLint sem erros (04/09/2026).
 - [x] Frontend e servidor compilam; o empacotamento local para apenas no `EPERM readlink` do Windows/OneDrive.
@@ -14,11 +14,11 @@ Este documento contém somente o necessário para colocar a primeira versão em 
 
 ## Bloqueadores antes de liberar para uso real
 
-- [ ] Executar `docs/sql/auditoria_final_supabase.sql` no Supabase e guardar o resultado.
+- [x] Executar `docs/sql/auditoria_final_supabase.sql` no Supabase e guardar o resultado (`docs/evidencias/auditoria_supabase_2026-09-04.md`).
 - [ ] Confirmar que todas as migrações até `031` foram aplicadas no banco de produção.
 - [ ] Confirmar no Supabase as URLs de redirecionamento do domínio de produção.
 - [ ] Fazer backup do banco antes da homologação.
-- [ ] Validar o bucket usado pelas fotos/assinaturas e o acesso seguro aos arquivos.
+- [x] Validar que o bucket `fotos_alunos` existe e não é público (confirmado pela auditoria).
 - [ ] Rotacionar a senha e qualquer chave que tenha sido compartilhada durante o desenvolvimento.
 
 ## Homologação rápida — administrador
@@ -54,4 +54,3 @@ Este documento contém somente o necessário para colocar a primeira versão em 
 - WhatsApp automático e pagamento automático.
 - QR Code, reposições avançadas e relatórios personalizados.
 - Monitoramento avançado, alertas e indicadores de evasão.
-

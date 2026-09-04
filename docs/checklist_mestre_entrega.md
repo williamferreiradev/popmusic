@@ -33,18 +33,18 @@
 ## 1. Banco de dados e migrações — P0
 
 - [ ] Fazer backup completo do banco atual antes de aplicar novas migrações.
-- [ ] Executar `docs/sql/auditoria_final_supabase.sql` e guardar o CSV do resultado (SQL somente leitura já preparado).
-- [ ] Corrigir matrículas ativas duplicadas.
-- [ ] Corrigir presenças duplicadas por aluno, turma, data e tipo.
-- [ ] Corrigir contratos assinados sem data ou hash.
+- [x] Executar `docs/sql/auditoria_final_supabase.sql` e guardar o resultado (`docs/evidencias/auditoria_supabase_2026-09-04.md`).
+- [x] Confirmar ausência de matrículas ativas duplicadas na auditoria.
+- [x] Confirmar ausência de presenças duplicadas por aluno, turma, data e tipo na auditoria.
+- [x] Confirmar ausência de contratos assinados sem data ou hash na auditoria.
 - [ ] Aplicar as constraints de integridade somente depois da limpeza.
 - [ ] Confirmar chaves estrangeiras e comportamento de exclusão de todas as tabelas.
-- [ ] Confirmar índices para buscas por aluno, professor, turma, vencimento e status.
-- [ ] Verificar se todas as tabelas sensíveis estão com RLS habilitada.
-- [ ] Confirmar que `anon` não acessa alunos, contratos, cobranças, recibos ou presenças.
+- [x] Confirmar índices obrigatórios para buscas por aluno, professor, turma, vencimento e status na auditoria.
+- [x] Verificar na auditoria que todas as tabelas sensíveis estão com RLS habilitada.
+- [x] Confirmar na auditoria que `anon` não possui privilégios nas tabelas sensíveis.
 - [ ] Confirmar que `service_role` existe somente no servidor e nas Edge Functions.
 - [x] Verificar e alinhar o uso de `vw_professor_agenda`, dados relacionais de alunos e `vw_professor_meu_repasse` com as colunas reais.
-- [ ] Garantir que as views do professor respeitem RLS ou usem `security_invoker`.
+- [x] Garantir pela auditoria que as views dos portais usam `security_invoker`.
 - [ ] Criar migração versionada para qualquer view ou função que hoje exista apenas no banco remoto.
 - [x] Atualizar os tipos TypeScript para refletir o esquema implantado até a migration 028.
 - [ ] Testar restauração do backup em um projeto de homologação.
@@ -339,7 +339,7 @@
 - [x] Configurar domínio e HTTPS; `https://popmusic-beige.vercel.app/` redireciona para `/login` e `/login` responde HTTP 200.
 - [ ] Aplicar migrações na ordem correta e registrar a versão implantada.
 - [ ] Implantar Edge Functions e seus segredos.
-- [ ] Configurar e validar buckets de armazenamento.
+- [x] Configurar e validar o bucket privado `fotos_alunos` (confirmado pela auditoria de 04/09/2026).
 - [ ] Criar usuário administrador inicial com segurança.
 - [ ] Configurar monitoramento de erros do frontend, servidor e funções.
 - [ ] Configurar alertas para falha de e-mail, WhatsApp e rotinas críticas.
