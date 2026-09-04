@@ -461,11 +461,12 @@ const executeSearch = async () => {
     }
 
     // 2. Buscar presenças já gravadas para esta turma e data
-    const { data: presencasGravadas } = await supabase
+    const { data: presencasGravadas, error: presencasError } = await supabase
       .from('presencas')
       .select('*')
       .eq('turma_id', selectedClass.value)
       .eq('data_aula', selectedDate.value)
+    if (presencasError) throw presencasError
 
     const presencasMap: Record<string, any> = {}
     if (presencasGravadas) {
@@ -604,11 +605,11 @@ const handleJustifyConfirm = async (data: { reason: string, observation?: string
     outro: 'outro'
   }
   const reason = reasonMap[data.reason] || 'outro'
+  const previous = { attendance: student.attendance, attendanceTime: student.attendanceTime, justifyReason: student.justifyReason }
 
   student.attendance = 'falta_justificada'
   student.attendanceTime = time
   student.justifyReason = reason
-  isJustifyModalOpen.value = false
 
   try {
     if (student.presencaId) {
@@ -636,8 +637,11 @@ const handleJustifyConfirm = async (data: { reason: string, observation?: string
       if (error) throw error
       if (inserted) student.presencaId = inserted.id
     }
+    isJustifyModalOpen.value = false
   } catch (error) {
     console.error('Erro ao justificar falta:', error)
+    Object.assign(student, previous)
+    alert('Não foi possível salvar a justificativa. Verifique sua conexão e tente novamente.')
   }
 }
 </script>

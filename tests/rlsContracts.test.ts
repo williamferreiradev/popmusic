@@ -50,6 +50,24 @@ describe('RLS das tabelas sensíveis', () => {
   })
 })
 
+describe('bloqueio da chamada finalizada', () => {
+  const attendanceLock = normalize(read('supabase/migrations/202609040034_bloquear_presenca_chamada_finalizada.sql'))
+  const professorPage = normalize(read('app/pages/professor/chamada.vue'))
+
+  it('impede insert e update do professor enquanto houver fechamento ativo', () => {
+    assert.ok(attendanceLock.includes('for insert to authenticated'))
+    assert.ok(attendanceLock.includes('for update to authenticated'))
+    assert.ok((attendanceLock.match(/not exists \(/g) || []).length >= 3)
+    assert.ok(attendanceLock.includes('ca.ativa=true'))
+  })
+
+  it('restaura a tela e informa falha ao justificar ausencia', () => {
+    assert.ok(professorPage.includes('object.assign(student, previous)'))
+    assert.ok(professorPage.includes('não foi possível salvar a justificativa'))
+    assert.ok(professorPage.includes('if (presencaserror) throw presencaserror'))
+  })
+})
+
 describe('isolamento por papel', () => {
   it('restringe o aluno aos próprios dados', () => {
     for (const policy of [

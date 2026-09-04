@@ -6,7 +6,7 @@ Este documento contém somente o necessário para colocar a primeira versão em 
 
 - [x] Aplicação publicada em HTTPS na Vercel.
 - [x] Rota inicial redireciona para o login e a tela de login responde corretamente.
-- [x] Testes automatizados: 68 aprovados, nenhuma falha (04/09/2026).
+- [x] Testes automatizados: 70 aprovados, nenhuma falha (04/09/2026).
 - [x] TypeScript/typecheck sem erros (04/09/2026).
 - [x] ESLint sem erros (04/09/2026).
 - [x] Frontend e servidor compilam; o empacotamento local para apenas no `EPERM readlink` do Windows/OneDrive.
@@ -16,6 +16,7 @@ Este documento contém somente o necessário para colocar a primeira versão em 
 
 - [x] Executar `docs/sql/auditoria_final_supabase.sql` no Supabase e guardar o resultado (`docs/evidencias/auditoria_supabase_2026-09-04.md`).
 - [x] Confirmar migrações aplicadas no banco de produção até `033`, incluindo segurança e cancelamento sem fidelidade.
+- [ ] Aplicar a migração `034`, que bloqueia alterações do professor depois da chamada finalizada.
 - [ ] Confirmar no Supabase as URLs de redirecionamento do domínio de produção.
 - [ ] Fazer backup do banco antes da homologação.
 - [x] Validar que o bucket `fotos_alunos` existe e não é público (confirmado pela auditoria).
