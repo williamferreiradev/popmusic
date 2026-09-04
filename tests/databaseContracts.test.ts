@@ -261,3 +261,17 @@ describe('cancelamento sem fidelidade', () => {
     assert.doesNotMatch(cancellation, /delete\s+from/)
   })
 })
+
+describe('pre-visualizacao do contrato do aluno', () => {
+  const table = normalize(read('app/components/students/StudentsTable.vue'))
+  const profile = normalize(read('app/components/modals/StudentProfileModal.vue'))
+
+  it('usa valor e vencimento do contrato salvo em vez de valores fixos', () => {
+    assert.ok(table.includes('selectedcontract.value = contract'))
+    assert.ok(table.includes('buildpopmusiccontractdata(raw, selectedcontract.value || {}, turmaslist)'))
+    assert.ok(profile.includes('studentcontract.value = contract'))
+    assert.ok(profile.includes('buildpopmusiccontractdata(raw, studentcontract.value || {}, turmaslist)'))
+    assert.doesNotMatch(table, /valor_mensalidade:\s*180/)
+    assert.doesNotMatch(profile, /valor_mensalidade:\s*180/)
+  })
+})

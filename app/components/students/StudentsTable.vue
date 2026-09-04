@@ -213,6 +213,7 @@ const isContractModalOpen = ref(false)
 const selectedStudent = ref<any>(null)
 const selectedStudentForContract = ref<any>(null)
 const selectedSignedInfo = ref<SignedContractInfo | null>(null)
+const selectedContract = ref<any>(null)
 
 const selectedContractData = computed<PopMusicContractData>(() => {
   const raw = selectedStudentForContract.value?.raw || selectedStudentForContract.value
@@ -225,12 +226,13 @@ const selectedContractData = computed<PopMusicContractData>(() => {
     })
   }
 
-  return buildPopMusicContractData(raw, { valor_mensalidade: 180, dia_vencimento: 10 }, turmasList)
+  return buildPopMusicContractData(raw, selectedContract.value || {}, turmasList)
 })
 
 const openContract = async (aluno: any) => {
   selectedStudentForContract.value = aluno
   selectedSignedInfo.value = null
+  selectedContract.value = null
   isContractModalOpen.value = true
   closeMenu()
 
@@ -247,6 +249,7 @@ const openContract = async (aluno: any) => {
         .maybeSingle()
 
       if (contract) {
+        selectedContract.value = contract
         const photo = contract.foto_assinatura_url || raw.foto_url || aluno.avatar
         const isSigned = contract.status === 'aceito' || !!contract.data_aceite || !!contract.foto_assinatura_url
 

@@ -231,6 +231,7 @@ defineEmits(['close', 'edit', 'lock', 'unlock'])
 
 const isContractModalOpen = ref(false)
 const studentSignedInfo = ref<SignedContractInfo | null>(null)
+const studentContract = ref<any>(null)
 
 const openContractModal = async () => {
   await fetchStudentContract()
@@ -241,6 +242,8 @@ const fetchStudentContract = async () => {
   const raw = props.student?.raw || props.student
   const alunoId = raw?.id
   if (!alunoId) return
+  studentContract.value = null
+  studentSignedInfo.value = null
 
   try {
     const { data: contract } = await supabase
@@ -252,6 +255,7 @@ const fetchStudentContract = async () => {
       .maybeSingle()
 
     if (contract) {
+      studentContract.value = contract
       const photo = contract.foto_assinatura_url || raw.foto_url || props.student?.avatar
       const isSigned = contract.status === 'aceito' || !!contract.data_aceite || !!contract.foto_assinatura_url
 
@@ -292,7 +296,7 @@ const studentContractData = computed<PopMusicContractData>(() => {
     })
   }
 
-  return buildPopMusicContractData(raw, { valor_mensalidade: 180, dia_vencimento: 10 }, turmasList)
+  return buildPopMusicContractData(raw, studentContract.value || {}, turmasList)
 })
 
 const studentAvatar = computed(() => {
