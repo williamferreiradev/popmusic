@@ -161,6 +161,13 @@ describe('contrato de integração da matrícula', () => {
     assert.ok(migration.includes("raise exception 'ja existe aluno com este cpf'"))
     assert.ok(migration.includes('pg_advisory_xact_lock'))
   })
+
+  it('envia o dia de vencimento escolhido para o contrato', () => {
+    assert.match(form, /v-model="formData\.dueDay"/)
+    assert.match(form, /p_dia_vencimento:\s*dueDay/)
+    assert.match(form, /dia_vencimento:\s*dueDay/)
+    assert.doesNotMatch(form, /p_dia_vencimento:\s*10/)
+  })
 })
 
 describe('contrato de integração da assinatura e cobrança', () => {

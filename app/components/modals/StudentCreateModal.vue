@@ -126,6 +126,14 @@
       </div>
 
       <div class="flex flex-col gap-3 w-full">
+        <BaseInput
+          v-model="formData.dueDay"
+          label="Dia de vencimento da mensalidade"
+          type="number"
+          min="1"
+          max="28"
+          required
+        />
         <BaseSelect
           v-model="selectedModalityId"
           label="Modalidade"
@@ -229,6 +237,7 @@ const formData = reactive({
   birthDate: '',
   phone: '',
   email: '',
+  dueDay: 10,
   instruments: [] as string[],
   guardianName: '',
   guardianCpf: '',
@@ -360,6 +369,7 @@ const resetForm = () => {
   formData.birthDate = ''
   formData.phone = ''
   formData.email = ''
+  formData.dueDay = 10
   formData.instruments = []
   selectedModalityId.value = ''
   formData.guardianName = ''
@@ -388,6 +398,11 @@ const { contractModel, fetchModel } = useContratos()
 
 const handleSubmit = async () => {
   if (formData.instruments.length === 0) return
+  const dueDay = Number(formData.dueDay)
+  if (!Number.isInteger(dueDay) || dueDay < 1 || dueDay > 28) {
+    alert('Informe um dia de vencimento entre 1 e 28.')
+    return
+  }
   isLoading.value = true
 
   try {
@@ -402,7 +417,7 @@ const handleSubmit = async () => {
       responsavel_cpf: isMinor.value ? formData.guardianCpf.replace(/\D/g, '') : null,
       responsavel_telefone: isMinor.value ? formData.guardianPhone.replace(/\D/g, '') : null
     }
-    const popContractData = buildPopMusicContractData(alunoContrato, { valor_mensalidade: totalMensalidade, dia_vencimento: 10 }, turmasList)
+    const popContractData = buildPopMusicContractData(alunoContrato, { valor_mensalidade: totalMensalidade, dia_vencimento: dueDay }, turmasList)
     let textoContrato = contractModel.value || ''
     Object.entries(popContractData).forEach(([key, val]) => {
       textoContrato = textoContrato.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), String(val || ''))
@@ -414,7 +429,7 @@ const handleSubmit = async () => {
       p_responsavel_nome: isMinor.value ? formData.guardianName : null,
       p_responsavel_cpf: isMinor.value ? formData.guardianCpf : null,
       p_responsavel_telefone: isMinor.value ? formData.guardianPhone : null,
-      p_texto_contrato: textoContrato, p_dia_vencimento: 10
+      p_texto_contrato: textoContrato, p_dia_vencimento: dueDay
     })
     if (error) throw error
     const resultado = data as { aluno_id: string, aluno_nome: string, telefone: string, email: string, token: string }
