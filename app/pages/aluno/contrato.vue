@@ -1,5 +1,5 @@
 <template>
-  <div class="p-8 w-full flex flex-col gap-6">
+  <div class="p-4 sm:p-8 w-full flex flex-col gap-6">
     <header>
       <h1 class="text-2xl font-bold text-light-text dark:text-offwhite">Meu Contrato</h1>
       <p class="text-sm text-light-text/60 dark:text-offwhite/50 mt-1">Veja os detalhes do seu contrato de matrícula ativo.</p>
@@ -9,6 +9,9 @@
       <Loader2 class="w-8 h-8 animate-spin text-primary" />
     </div>
 
+    <div v-else-if="loadError" class="text-center py-12 bg-red-500/10 rounded-xl border border-red-500/30">
+      <p class="font-medium text-red-600 dark:text-red-400">Não foi possível carregar seu contrato. Tente novamente.</p>
+    </div>
     <div v-else-if="!contrato" class="text-center py-12 bg-light-surface dark:bg-dark-surface rounded-xl border border-light-border dark:border-dark-border">
       <p class="text-light-text/50 dark:text-offwhite/50">Nenhum contrato ativo encontrado.</p>
     </div>
@@ -63,7 +66,7 @@ import { Loader2, FileText } from '@lucide/vue'
 
 const supabase = useSupabaseClient()
 
-const { data: contrato, pending } = await useAsyncData('aluno_contrato', async () => {
+const { data: contrato, pending, error: loadError } = await useAsyncData('aluno_contrato', async () => {
   const { data, error } = await supabase
     .from('vw_aluno_meu_contrato')
     .select('*')
@@ -71,10 +74,7 @@ const { data: contrato, pending } = await useAsyncData('aluno_contrato', async (
     .limit(1)
     .maybeSingle()
     
-  if (error) {
-    console.error('Erro ao buscar contrato do aluno:', error)
-    return null
-  }
+  if (error) throw error
   
   return data
 })

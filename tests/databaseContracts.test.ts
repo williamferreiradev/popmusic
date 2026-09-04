@@ -321,3 +321,29 @@ describe('erros nas operacoes financeiras manuais', () => {
     assert.doesNotMatch(charges, /lembrete reenviado[^;]+via whatsapp/)
   })
 })
+
+describe('estados reais do portal do aluno', () => {
+  const pages = [
+    read('app/pages/aluno/aulas.vue'),
+    read('app/pages/aluno/financeiro.vue'),
+    read('app/pages/aluno/frequencia.vue'),
+    read('app/pages/aluno/contrato.vue')
+  ].map(normalize)
+
+  it('nao apresenta falha do Supabase como lista vazia', () => {
+    for (const page of pages) {
+      assert.ok(page.includes('error: loaderror'))
+      assert.ok(page.includes('if (error) throw error'))
+      assert.ok(page.includes('v-else-if="loaderror"'))
+    }
+  })
+
+  it('mantem espacamento utilizavel no celular e rolagem nas tabelas', () => {
+    for (const page of pages) assert.ok(page.includes('p-4 sm:p-8'))
+
+    const finance = normalize(read('app/pages/aluno/financeiro.vue'))
+    const attendance = normalize(read('app/pages/aluno/frequencia.vue'))
+    assert.ok(finance.includes('overflow-x-auto'))
+    assert.ok(attendance.includes('overflow-x-auto'))
+  })
+})

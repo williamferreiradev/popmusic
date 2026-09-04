@@ -323,6 +323,7 @@
 - [x] Criar testes de contrato de integração para matrícula, assinatura, cobrança e presença sem alterar a produção.
 - [ ] Criar testes de integração para matrícula, contrato, cobrança e presença.
 - [x] Criar testes de contrato das políticas RLS para gestão, professor, aluno e visitante anônimo.
+- [x] Cobrir automaticamente estados de erro, vazio e responsividade básica das telas de aulas, cobranças, frequência e contrato do aluno.
 - [ ] Executar testes RLS com usuários reais de homologação para cada papel.
 - [ ] Criar testes end-to-end para os cinco fluxos principais.
 - [x] Executar build em ambiente sem a restrição local de `readlink` (implantação funcional da Vercel; localmente a compilação termina e o empacotamento é interrompido apenas pelo `EPERM readlink` do Windows/OneDrive).

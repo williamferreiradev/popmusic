@@ -1,5 +1,5 @@
 <template>
-  <div class="p-8 w-full flex flex-col gap-6">
+  <div class="p-4 sm:p-8 w-full flex flex-col gap-6">
     <header class="flex flex-col gap-2">
       <h1 class="text-2xl font-bold text-light-text dark:text-offwhite">Olá, {{ userProfile?.nome?.split(' ')[0] || 'Aluno' }}!</h1>
       <p class="text-sm text-light-text/60 dark:text-offwhite/50">Bem-vindo(a) ao seu portal do aluno. Aqui está o resumo das suas atividades.</p>
@@ -47,7 +47,8 @@ const user = useSupabaseUser()
 
 const { data: userProfile } = await useAsyncData('aluno_profile_home', async () => {
   if (!user.value?.sub) return null
-  const { data } = await supabase.from('usuarios').select('nome').eq('id', user.value.sub).single()
+  const { data, error } = await supabase.from('usuarios').select('nome').eq('id', user.value.sub).single()
+  if (error) throw error
   return data
 })
 </script>

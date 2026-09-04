@@ -1,5 +1,5 @@
 <template>
-  <div class="p-8 w-full flex flex-col gap-6">
+  <div class="p-4 sm:p-8 w-full flex flex-col gap-6">
     <header>
       <h1 class="text-2xl font-bold text-light-text dark:text-offwhite">Financeiro</h1>
       <p class="text-sm text-light-text/60 dark:text-offwhite/50 mt-1">Consulte o status das suas mensalidades e outras cobranças.</p>
@@ -9,11 +9,14 @@
       <Loader2 class="w-8 h-8 animate-spin text-primary" />
     </div>
 
+    <div v-else-if="loadError" class="text-center py-12 bg-red-500/10 rounded-xl border border-red-500/30">
+      <p class="font-medium text-red-600 dark:text-red-400">Não foi possível carregar suas cobranças. Tente novamente.</p>
+    </div>
     <div v-else-if="!cobrancas || cobrancas.length === 0" class="text-center py-12 bg-light-surface dark:bg-dark-surface rounded-xl border border-light-border dark:border-dark-border">
       <p class="text-light-text/50 dark:text-offwhite/50">Nenhuma cobrança registrada.</p>
     </div>
 
-    <div v-else class="bg-light-surface dark:bg-dark-surface rounded-xl border border-light-border dark:border-dark-border overflow-hidden shadow-sm">
+    <div v-else class="bg-light-surface dark:bg-dark-surface rounded-xl border border-light-border dark:border-dark-border overflow-x-auto shadow-sm">
       <table class="w-full text-left border-collapse">
         <thead>
           <tr class="bg-light-border/30 dark:bg-dark-border/30 border-b border-light-border dark:border-dark-border text-sm font-medium text-light-text/70 dark:text-offwhite/70">
@@ -59,16 +62,13 @@ import { Loader2 } from '@lucide/vue'
 
 const supabase = useSupabaseClient()
 
-const { data: cobrancas, pending } = await useAsyncData('aluno_financeiro', async () => {
+const { data: cobrancas, pending, error: loadError } = await useAsyncData('aluno_financeiro', async () => {
   const { data, error } = await supabase
     .from('vw_aluno_minhas_cobrancas')
     .select('*')
     .order('vencimento', { ascending: true })
     
-  if (error) {
-    console.error('Erro ao buscar financeiro do aluno:', error)
-    return []
-  }
+  if (error) throw error
   
   return data
 })
