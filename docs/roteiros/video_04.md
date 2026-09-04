@@ -1,3 +1,5 @@
+# ARQUIVO HISTÓRICO — use `serie_build_in_public_reverso.md`
+
 # 🎬 ROTEIRO MAGNÉTICO — VÍDEO 04 (35 Segundos)
 > **Tema:** A Modelagem do Banco de Dados no PostgreSQL (Supabase) & Segurança RLS  
 > **Objetivo:** Mostrar autoridade em arquitetura de dados e integridade relacional.  

@@ -1,3 +1,5 @@
+# ARQUIVO HISTÓRICO — use `serie_build_in_public_reverso.md`
+
 # 🎬 ROTEIRO MAGNÉTICO — VÍDEO 05 (40 Segundos)
 > **Tema:** O Recurso Matador — Contrato Digital com Biometria Facial ao Vivo por WebCam  
 > **Objetivo:** Gerar choque e encantamento com a tecnologia de assinatura digital sem papel e com validação antifraude.  

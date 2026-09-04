@@ -1,3 +1,5 @@
+# ARQUIVO HISTÓRICO — use `serie_build_in_public_reverso.md`
+
 # 🎬 ROTEIRO MAGNÉTICO — VÍDEO 01 (GANCHO CABULOSO & VIRAL)
 > **Tema:** O Resgate — Salvando a Escola de Música de um Amigo do Caos Manual  
 > **Estilo:** *Clickbait Ético / Storytelling Dramático de Alta Retenção*  

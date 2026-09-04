@@ -1,3 +1,5 @@
+# ARQUIVO HISTÓRICO — use `serie_build_in_public_reverso.md`
+
 # 🎬 ROTEIRO MAGNÉTICO — VÍDEO 03 (35 Segundos)
 > **Tema:** O Design Dark/Neon com Tailwind CSS que surpreendeu o cliente  
 > **Objetivo:** Destacar o poder do design moderno (estética premium, contraste #00E096 e #050505, glassmorphism) e como isso agrega valor financeiro percebido ao software.  

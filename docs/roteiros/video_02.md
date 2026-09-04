@@ -1,3 +1,5 @@
+# ARQUIVO HISTÓRICO — use `serie_build_in_public_reverso.md`
+
 # 🎬 ROTEIRO MAGNÉTICO — VÍDEO 02 (30 Segundos)
 > **Tema:** A Stack dos Sonhos para Software Sob Medida: Nuxt 4 + Supabase + Tailwind CSS  
 > **Objetivo:** Demonstrar autoridade técnica explicando por que desenvolvedores inteligentes não reinventam a roda com backend do zero em projetos sob medida.  

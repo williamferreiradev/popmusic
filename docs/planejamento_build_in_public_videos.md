@@ -1,3 +1,7 @@
+# ARQUIVO HISTÓRICO — NÃO USAR PARA GRAVAÇÃO
+
+Este rascunho contém termos e recursos alterados durante a validação. Use `docs/roteiros/serie_build_in_public_reverso.md` e `docs/roteiros/guia_de_producao_e_publicacao.md`.
+
 # 🚀 Planejamento Estratégico de Conteúdo: Build in Public — Sistema Pop Music
 > **História & Estratégia Real:** Criando um **software sob medida do zero** para salvar a operação da escola de música de um amigo (Academia Pop Music), que estava 100% no manual (papelada, planilhas perdidas, contratos impressos e cálculo manual de comissões). 
 > 
