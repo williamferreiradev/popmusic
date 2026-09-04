@@ -1,5 +1,5 @@
 <template>
-  <div class="p-8 w-full flex flex-col gap-6">
+  <div class="p-4 sm:p-8 w-full flex flex-col gap-6">
     
     <!-- Cabeçalho -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -44,7 +44,7 @@
         <div class="w-full sm:w-48">
           <BaseSelect 
             v-model="classFilter"
-            placeholder="Todas as Turmas"
+            placeholder="Todas as Modalidades"
             :options="classOptions"
           />
         </div>
@@ -57,6 +57,7 @@
       <StudentsTable
         :students="mappedStudents"
         :pending="pending"
+        :load-error="Boolean(studentsError)"
         :current-page="currentPage"
         :items-per-page="itemsPerPage"
         :total-count="studentsResult?.count || 0"
@@ -88,27 +89,28 @@ const supabase = useSupabaseClient()
 // Controle de Modais
 const isCreateModalOpen = ref(false)
 
-const handleStudentSaved = (data: any) => {
-  console.log('Novo aluno salvo:', data)
+const handleStudentSaved = (_data: any) => {
   refresh() // Atualiza a lista em segundo plano, mantendo o popup de sucesso aberto
 }
 
 // Estado dos filtros
 const searchQuery = ref('')
+const debouncedSearch = ref('')
 const statusFilter = ref<'' | 'pendente' | 'ativo' | 'trancado' | 'cancelado'>('')
 const classFilter = ref('')
 const currentPage = ref(1)
 const itemsPerPage = 8
 
 // Buscar modalidades para o filtro (usamos useAsyncData sem depender de var reativa)
-const { data: modalidades } = await useAsyncData('modalidades', async () => {
-  const { data } = await supabase.from('modalidades').select('id, nome').eq('ativo', true).order('nome')
+const { data: modalidades, error: modalitiesError } = await useAsyncData('modalidades', async () => {
+  const { data, error } = await supabase.from('modalidades').select('id, nome').eq('ativo', true).order('nome')
+  if (error) throw error
   return data || []
 })
 
 const classOptions = computed(() => {
   const opts = (modalidades.value || []).map((m: any) => ({ label: m.nome, value: m.id }))
-  return [{ label: 'Todas as Turmas', value: '' }, ...opts]
+  return [{ label: modalitiesError.value ? 'Erro ao carregar modalidades' : 'Todas as Modalidades', value: '' }, ...opts]
 })
 
 const statusOptions = [
@@ -120,7 +122,7 @@ const statusOptions = [
 ]
 
 // Buscar alunos com watch nos filtros que batem no banco
-const { data: studentsResult, pending, refresh } = await useAsyncData('students_list', async () => {
+const { data: studentsResult, pending, error: studentsError, refresh } = await useAsyncData('students_list', async () => {
   const enrollmentRelation = classFilter.value ? 'matriculas_turma!inner' : 'matriculas_turma'
   const classRelation = classFilter.value ? 'turmas!inner' : 'turmas'
   let query = supabase.from('alunos').select(`
@@ -139,8 +141,8 @@ const { data: studentsResult, pending, refresh } = await useAsyncData('students_
     query = query.eq('status', statusFilter.value)
   }
   
-  if (searchQuery.value) {
-    const term = searchQuery.value.trim().replace(/[(),\\]/g, ' ')
+  if (debouncedSearch.value) {
+    const term = debouncedSearch.value.trim().replace(/[(),\\]/g, ' ')
     query = query.or(`nome.ilike.%${term}%,cpf.ilike.%${term}%,email.ilike.%${term}%`)
   }
 
@@ -155,17 +157,24 @@ const { data: studentsResult, pending, refresh } = await useAsyncData('students_
     .order('nome')
     .range(from, from + itemsPerPage - 1)
   
-  if (error) {
-    console.error('Erro ao buscar alunos:', error)
-    return { rows: [], count: 0 }
-  }
+  if (error) throw error
 
   return { rows: data || [], count: count || 0 }
 }, {
-  watch: [searchQuery, statusFilter, classFilter, currentPage]
+  watch: [debouncedSearch, statusFilter, classFilter, currentPage]
 })
 
-watch([searchQuery, statusFilter, classFilter], () => { currentPage.value = 1 })
+let searchTimer: ReturnType<typeof setTimeout> | undefined
+watch(searchQuery, value => {
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => { debouncedSearch.value = value }, 350)
+})
+watch([debouncedSearch, statusFilter, classFilter], () => { currentPage.value = 1 })
+watch(() => studentsResult.value?.count, count => {
+  const lastPage = Math.max(1, Math.ceil((count || 0) / itemsPerPage))
+  if (currentPage.value > lastPage) currentPage.value = lastPage
+})
+onBeforeUnmount(() => clearTimeout(searchTimer))
 
 // Mapear dados para a tabela
 const mappedStudents = computed(() => {

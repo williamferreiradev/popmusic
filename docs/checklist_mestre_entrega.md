@@ -141,7 +141,7 @@
 - [x] Implementar troca de turma encerrando o vínculo anterior e preservando histórico.
 - [x] Implementar trancamento, destrancamento e cancelamento com data, motivo e regras financeiras.
 - [x] Substituir exclusão física de aluno pela inativação transacional com preservação do histórico.
-- [ ] Testar busca, filtros, paginação e estados sem dados.
+- [x] Cobrir automaticamente busca, filtros, paginação e estados vazio/erro; homologação visual com dados reais permanece no roteiro.
 
 ## 7. Modalidades, salas, professores e turmas — P0
 

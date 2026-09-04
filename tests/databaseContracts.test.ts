@@ -27,12 +27,30 @@ describe('paginação da lista de alunos', () => {
   it('consulta somente a página atual e solicita a contagem total ao Supabase', () => {
     assert.ok(page.includes("{ count: 'exact' }"))
     assert.ok(page.includes('.range(from, from + itemsperpage - 1)'))
-    assert.ok(page.includes('watch: [searchquery, statusfilter, classfilter, currentpage]'))
+    assert.ok(page.includes('watch: [debouncedsearch, statusfilter, classfilter, currentpage]'))
   })
 
   it('delega a mudança de página ao servidor sem recortar os dados localmente', () => {
     assert.ok(table.includes("emit('page-change'"))
     assert.doesNotMatch(table, /students\.slice\(/)
+  })
+
+  it('diferencia erro de lista vazia e corrige pagina fora do total', () => {
+    assert.ok(page.includes('error: studentserror'))
+    assert.ok(page.includes(':load-error="boolean(studentserror)"'))
+    assert.ok(table.includes('v-else-if="!pending && loaderror"'))
+    assert.ok(page.includes('if (currentpage.value > lastpage) currentpage.value = lastpage'))
+  })
+
+  it('reduz consultas durante a digitacao e identifica corretamente o filtro', () => {
+    assert.ok(page.includes('settimeout(() => { debouncedsearch.value = value }, 350)'))
+    assert.ok(page.includes('todas as modalidades'))
+    assert.ok(page.includes('error: modalitieserror'))
+  })
+
+  it('atualiza a lista depois de trancar ou destrancar somente quando o banco aceita', () => {
+    assert.match(table, /trancar_aluno[\s\S]+if\(error\) throw error[\s\S]+emit\('refresh'\)[\s\S]+catch/)
+    assert.match(table, /destrancar_aluno[\s\S]+if\(error\) throw error[\s\S]+emit\('refresh'\)[\s\S]+catch/)
   })
 })
 

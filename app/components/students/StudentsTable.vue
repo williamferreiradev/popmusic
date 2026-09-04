@@ -68,6 +68,13 @@
           </tr>
         </tbody>
         <!-- Empty State -->
+        <tbody v-else-if="!pending && loadError">
+          <tr>
+            <td colspan="5" class="px-5 py-12 text-center text-red-600 dark:text-red-400">
+              Não foi possível carregar os alunos. Atualize a página e tente novamente.
+            </td>
+          </tr>
+        </tbody>
         <tbody v-else-if="!pending && (!props.students || props.students.length === 0)">
           <tr>
             <td colspan="5" class="px-5 py-12 text-center text-light-text/50 dark:text-offwhite/50">
@@ -100,7 +107,7 @@
           Anterior
         </button>
         <button
-          :disabled="currentPage === totalPages"
+          :disabled="currentPage >= totalPages"
           class="px-4 py-1.5 rounded-md border border-light-border dark:border-dark-border hover:bg-light-bg dark:hover:bg-dark-bg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           @click="nextPage"
         >
@@ -183,6 +190,10 @@ const props = defineProps({
     required: true
   },
   pending: {
+    type: Boolean,
+    default: false
+  },
+  loadError: {
     type: Boolean,
     default: false
   },
@@ -330,22 +341,22 @@ const handleStudentLocked = async (data: { id:string, reason:string }) => {
   try {
     const { error } = await (supabase as any).rpc('trancar_aluno',{p_aluno_id:data.id,p_motivo:data.reason})
     if(error) throw error
+    isLockModalOpen.value = false
+    emit('refresh')
   } catch (e:any) {
     alert(`Não foi possível trancar. ${e.message||''}`)
   }
-  isLockModalOpen.value = false
-  emit('refresh')
 }
 
 const handleStudentUnlocked = async (data: { id: string }) => {
   try {
     const { error }=await (supabase as any).rpc('destrancar_aluno',{p_aluno_id:data.id})
     if(error) throw error
+    isUnlockModalOpen.value = false
+    emit('refresh')
   } catch (e:any) {
     alert(`Não foi possível destrancar. ${e.message||''}`)
   }
-  isUnlockModalOpen.value = false
-  emit('refresh')
 }
 
 const handleStudentUpdated = (_data: any) => {
