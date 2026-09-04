@@ -168,6 +168,14 @@ describe('contrato de integração da matrícula', () => {
     assert.match(form, /dia_vencimento:\s*dueDay/)
     assert.doesNotMatch(form, /p_dia_vencimento:\s*10/)
   })
+
+  it('diferencia matrícula criada de e-mail efetivamente enviado', () => {
+    assert.match(form, /let emailSent = false/)
+    assert.match(form, /emailSent = true/)
+    assert.match(form, /createdContractData\.emailSent/)
+    assert.match(form, /contractId:\s*resultado\.contrato_id/)
+    assert.match(form, /o e-mail não foi enviado/i)
+  })
 })
 
 describe('contrato de integração da assinatura e cobrança', () => {

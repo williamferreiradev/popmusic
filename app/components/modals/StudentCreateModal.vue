@@ -19,9 +19,13 @@
       </div>
 
       <!-- Aviso de E-mail Enviado -->
-      <div v-if="createdContractData.email" class="w-full flex items-center justify-center gap-2 p-2.5 rounded-lg bg-primary/10 border border-primary/20 text-xs font-semibold text-primary">
+      <div v-if="createdContractData.email && createdContractData.emailSent" class="w-full flex items-center justify-center gap-2 p-2.5 rounded-lg bg-primary/10 border border-primary/20 text-xs font-semibold text-primary">
         <Mail class="w-4 h-4 shrink-0" />
         Link enviado automaticamente para: {{ createdContractData.email }}
+      </div>
+      <div v-else-if="createdContractData.email" class="w-full rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-left text-xs text-amber-700 dark:text-amber-300">
+        <p class="font-bold">Matrícula concluída, mas o e-mail não foi enviado.</p>
+        <p class="mt-1">Copie o link abaixo ou envie pelo WhatsApp. O envio poderá ser tentado novamente depois.</p>
       </div>
 
       <!-- Caixa do Link -->
@@ -221,7 +225,7 @@ const emit = defineEmits(['close', 'saved'])
 const isLoading = ref(false)
 const copied = ref(false)
 const selectedModalityId = ref('')
-const createdContractData = ref<{ studentName: string, token: string, phone: string, email: string } | null>(null)
+const createdContractData = ref<{ studentName: string, token: string, phone: string, email: string, emailSent: boolean } | null>(null)
 
 watch(() => props.isOpen, (newVal) => {
   if (newVal) {
@@ -432,22 +436,25 @@ const handleSubmit = async () => {
       p_texto_contrato: textoContrato, p_dia_vencimento: dueDay
     })
     if (error) throw error
-    const resultado = data as { aluno_id: string, aluno_nome: string, telefone: string, email: string, token: string }
+    const resultado = data as { aluno_id: string, aluno_nome: string, telefone: string, email: string, token: string, contrato_id: string }
     const signUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/assinar/${resultado.token}`
+    let emailSent = false
 
     if (resultado.email) {
       try {
         await $fetch('/api/send-contract-email', { method: 'POST', body: {
           studentName: resultado.aluno_nome, studentEmail: resultado.email,
           guardianName: isMinor.value ? formData.guardianName : undefined, signUrl,
-          courseName: selectedClasses.map(c => c.label).join(', '), monthlyFee: totalMensalidade
+          courseName: selectedClasses.map(c => c.label).join(', '), monthlyFee: totalMensalidade,
+          contractId: resultado.contrato_id
         } })
+        emailSent = true
       } catch (emailErr) {
         console.warn('Matrícula concluída, mas o e-mail não foi enviado:', emailErr)
       }
     }
 
-    createdContractData.value = { studentName: resultado.aluno_nome, token: resultado.token, phone: resultado.telefone || '', email: resultado.email || '' }
+    createdContractData.value = { studentName: resultado.aluno_nome, token: resultado.token, phone: resultado.telefone || '', email: resultado.email || '', emailSent }
     emit('saved', { id: resultado.aluno_id, nome: resultado.aluno_nome })
   } catch (error: any) {
     console.error('Erro ao salvar aluno:', error)
