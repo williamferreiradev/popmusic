@@ -35,7 +35,7 @@ export default defineEventHandler(async (event) => {
 
     if (error) {
       safeServerError('contrato:consulta', error)
-      return { contract: null, error: error.message }
+      throw createError({ statusCode: 503, statusMessage: 'Não foi possível consultar o contrato agora.' })
     }
 
     if (!contract) {
@@ -45,7 +45,9 @@ export default defineEventHandler(async (event) => {
     if (contract.status === 'cancelado') {
       throw createError({ statusCode: 410, statusMessage: 'Este contrato foi cancelado.' })
     }
-    if (!['aceito', 'renovado'].includes(contract.status) && new Date(contract.token_expira_em).getTime() < Date.now()) {
+    const signedStatuses = ['aceito', 'renovado', 'vencendo', 'vencido']
+    const expiresAt = new Date(contract.token_expira_em).getTime()
+    if (!signedStatuses.includes(contract.status) && (!Number.isFinite(expiresAt) || expiresAt < Date.now())) {
       throw createError({ statusCode: 410, statusMessage: 'O link de assinatura expirou.' })
     }
 

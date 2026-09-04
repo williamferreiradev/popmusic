@@ -241,6 +241,30 @@ describe('contrato de integração da assinatura e cobrança', () => {
     assert.ok(immutableSnapshot.includes("digest(convert_to(v_snapshot::text, 'utf8'), 'sha256')"))
     assert.ok(immutableSnapshot.includes("raise exception 'a via assinada do contrato e imutavel'"))
   })
+
+  it('distingue link indisponivel de falha temporaria ao carregar', () => {
+    const endpoint = normalize(read('server/api/contrato/[token].get.ts'))
+    const page = normalize(read('app/pages/assinar/[token].vue'))
+    assert.ok(endpoint.includes("const signedstatuses = ['aceito', 'renovado', 'vencendo', 'vencido']"))
+    assert.ok(endpoint.includes("statuscode: 503"))
+    assert.ok(page.includes('error: loaderror'))
+    assert.ok(page.includes('loaderror.statuscode === 410'))
+  })
+
+  it('impede nova assinatura em todos os estados ja assinados', () => {
+    const endpoint = normalize(read('server/api/contrato/[token].post.ts'))
+    assert.ok(endpoint.includes("['aceito', 'vencendo', 'vencido'].includes(contract.status)"))
+    assert.ok(endpoint.includes('!number.isfinite(expiresat)'))
+  })
+
+  it('nao cria presenca futura artificial e informa o resultado real do email', () => {
+    const endpoint = normalize(read('server/api/contrato/[token].post.ts'))
+    const page = normalize(read('app/pages/assinar/[token].vue'))
+    assert.doesNotMatch(endpoint, /from\('presencas'\)\.insert/)
+    assert.ok(endpoint.includes('emailsent = emailresult?.success === true'))
+    assert.ok(page.includes("emaildeliverystatus.value = res.emailsent === true ? 'sent' : 'failed'"))
+    assert.ok(page.includes("emaildeliverystatus === 'failed'"))
+  })
 })
 
 describe('contrato de integração da presença', () => {

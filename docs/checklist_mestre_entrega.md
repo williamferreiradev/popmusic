@@ -171,6 +171,7 @@
 - [x] Impedir reutilização do token depois da assinatura.
 - [x] Impedir duas assinaturas simultâneas do mesmo contrato com bloqueio de linha.
 - [x] Validar contrato inexistente, cancelado, expirado e já assinado.
+- [x] Impedir que a assinatura gere presenças futuras artificiais; a frequência nasce somente da chamada do professor.
 - [x] Solicitar consentimento explícito para captura e armazenamento da foto e registrá-lo junto da assinatura transacional.
 - [x] Validar câmera recusada, indisponível, ocupada, incompatível e interrompida.
 - [x] Validar tamanho, formato, estrutura, dimensões e qualidade visual mínima da imagem.

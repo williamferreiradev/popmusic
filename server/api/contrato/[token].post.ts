@@ -65,7 +65,7 @@ export default defineEventHandler(async (event) => {
       return { success: false, message: 'Contrato não encontrado.' }
     }
 
-    if (contract.status === 'aceito') {
+    if (['aceito', 'vencendo', 'vencido'].includes(contract.status)) {
       throw createError({ statusCode: 409, statusMessage: 'Este contrato já foi assinado.' })
     }
     if (contract.status === 'renovado') {
@@ -74,7 +74,8 @@ export default defineEventHandler(async (event) => {
     if (contract.status === 'cancelado') {
       throw createError({ statusCode: 410, statusMessage: 'Este contrato foi cancelado.' })
     }
-    if (contract.status === 'expirado' || new Date(contract.token_expira_em).getTime() < Date.now()) {
+    const expiresAt = new Date(contract.token_expira_em).getTime()
+    if (contract.status === 'expirado' || !Number.isFinite(expiresAt) || expiresAt < Date.now()) {
       throw createError({ statusCode: 410, statusMessage: 'O link de assinatura expirou.' })
     }
 
@@ -161,15 +162,14 @@ export default defineEventHandler(async (event) => {
             }
           }
         }
-        if (presencasParaInserir.length > 0) {
-          await client.from('presencas').insert(presencasParaInserir)
-        }
+        // A recorrência vem da turma. A presença será criada pela chamada do professor.
       }
     } catch (agendaErr) {
       safeServerWarning('assinatura:agenda', agendaErr)
     }
 
     // 7. Enviar e-mail de confirmação
+    let emailSent = false
     if (aluno.email) {
       try {
         const host = getRequestHost(event)
@@ -177,7 +177,7 @@ export default defineEventHandler(async (event) => {
         const contractUrl = `${protocol}://${host}/assinar/${token}`
         const isMenor = !!(aluno.responsavel_nome || aluno.nome_responsavel)
 
-        await $fetch('/api/send-signed-confirmation-email', {
+        const emailResult: any = await $fetch('/api/send-signed-confirmation-email', {
           method: 'POST',
           headers: { 'x-internal-email-secret': process.env.INTERNAL_EMAIL_SECRET || '' },
           body: {
@@ -191,6 +191,7 @@ export default defineEventHandler(async (event) => {
             pixKey: ''
           }
         })
+        emailSent = emailResult?.success === true
       } catch (emailErr) {
         safeServerWarning('assinatura:email', emailErr)
       }
@@ -201,6 +202,7 @@ export default defineEventHandler(async (event) => {
 
     return { 
       success: true, 
+      emailSent,
       contract: {
         ...contract,
         status: 'aceito',

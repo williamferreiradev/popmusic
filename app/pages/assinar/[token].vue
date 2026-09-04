@@ -23,7 +23,19 @@
     <main class="flex-1 flex flex-col items-center p-3 sm:p-6 overflow-y-auto print:p-0 print:overflow-visible">
       
       <!-- Se não encontrou contrato ou deu erro na rota -->
-      <div v-if="!contract" class="w-full max-w-2xl bg-light-surface dark:bg-dark-surface p-8 rounded-xl border border-light-border dark:border-dark-border text-center mt-12 shadow-sm print:hidden">
+      <div v-if="pending" class="w-full max-w-2xl p-12 text-center mt-12 print:hidden">
+        <div class="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
+        <p class="mt-3 text-sm text-light-text/60 dark:text-offwhite/60">Carregando contrato...</p>
+      </div>
+
+      <div v-else-if="loadError" class="w-full max-w-2xl bg-light-surface dark:bg-dark-surface p-8 rounded-xl border border-light-border dark:border-dark-border text-center mt-12 shadow-sm print:hidden">
+        <Clock v-if="loadError.statusCode === 410" class="w-16 h-16 mx-auto mb-4 text-amber-500 opacity-50" />
+        <AlertCircle v-else class="w-16 h-16 mx-auto mb-4 text-red-500/50" />
+        <h1 class="text-xl font-bold text-light-text dark:text-offwhite mb-2">{{ loadError.statusCode === 410 ? 'Este link não está mais disponível' : 'Não foi possível carregar o contrato' }}</h1>
+        <p class="text-light-text/60 dark:text-offwhite/60">{{ loadError.statusCode === 410 ? 'O link expirou ou o contrato foi cancelado. Solicite um novo envio à secretaria.' : 'Ocorreu uma falha temporária. Atualize a página e tente novamente.' }}</p>
+      </div>
+
+      <div v-else-if="!contract" class="w-full max-w-2xl bg-light-surface dark:bg-dark-surface p-8 rounded-xl border border-light-border dark:border-dark-border text-center mt-12 shadow-sm print:hidden">
         <AlertCircle class="w-16 h-16 mx-auto mb-4 text-light-text/20 dark:text-offwhite/20" />
         <h1 class="text-xl font-bold text-light-text dark:text-offwhite mb-2">Contrato não encontrado</h1>
         <p class="text-light-text/60 dark:text-offwhite/60">Verifique se o link está correto ou solicite um novo envio à secretaria.</p>
@@ -112,6 +124,7 @@
               <AlertCircle class="w-4 h-4 shrink-0" />
               Por favor, tire sua foto facial no Passo 2 acima para habilitar a assinatura.
             </p>
+            <p v-if="submitError" class="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-600 dark:text-red-400" role="alert">{{ submitError }}</p>
 
             <button 
               :disabled="!hasAccepted || !hasPhotoConsent || !userFacePhoto || isSubmitting"
@@ -172,9 +185,13 @@
         </div>
 
         <!-- Aviso de E-mail Enviado -->
-        <div v-if="contract?.alunos?.email" class="w-full flex items-center gap-2 p-2.5 rounded-lg bg-primary/10 border border-primary/20 text-xs font-semibold text-primary mb-4">
+        <div v-if="contract?.alunos?.email && emailDeliveryStatus === 'sent'" class="w-full flex items-center gap-2 p-2.5 rounded-lg bg-primary/10 border border-primary/20 text-xs font-semibold text-primary mb-4">
           <Mail class="w-4 h-4 shrink-0" />
           Enviamos uma cópia do contrato e chave PIX para: {{ contract.alunos.email }}
+        </div>
+        <div v-else-if="contract?.alunos?.email && emailDeliveryStatus === 'failed'" class="w-full flex items-center gap-2 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs font-semibold text-amber-700 dark:text-amber-300 mb-4">
+          <AlertCircle class="w-4 h-4 shrink-0" />
+          O contrato foi assinado, mas o e-mail não pôde ser enviado. Use “Salvar PDF” e avise a secretaria.
         </div>
 
         <div class="flex flex-col gap-2 w-full">
@@ -225,7 +242,7 @@ const copyPixKey = async () => {
   }
 }
 
-const { data: contract, refresh } = await useAsyncData(`contrato-${token}`, async () => {
+const { data: contract, pending, error: loadError, refresh } = await useAsyncData(`contrato-${token}`, async () => {
   const res: any = await $fetch(`/api/contrato/${encodeURIComponent(token)}`)
   return res?.contract || null
 })
@@ -236,6 +253,8 @@ const hasPhotoConsent = ref(false)
 const userFacePhoto = ref<string | null>(null)
 const isSubmitting = ref(false)
 const isSuccessModalOpen = ref(false)
+const submitError = ref('')
+const emailDeliveryStatus = ref<'unknown' | 'sent' | 'failed'>('unknown')
 
 const isSigned = computed(() => {
   if (!contract.value) return false
@@ -305,10 +324,11 @@ const triggerPrint = () => {
 const handleAccept = async () => {
   if (!hasAccepted.value || !hasPhotoConsent.value || !userFacePhoto.value || !contract.value) return
   isSubmitting.value = true
+  submitError.value = ''
   
   // 1. Tentar assinar via API do servidor (Robusto e sem problema de RLS)
   try {
-    const res: any = await $fetch(`/api/contrato/${token}`, {
+    const res: any = await $fetch(`/api/contrato/${encodeURIComponent(token)}`, {
       method: 'POST',
       body: {
         photo: userFacePhoto.value,
@@ -320,14 +340,17 @@ const handleAccept = async () => {
       if (res.contract) {
         contract.value = res.contract
       }
+      emailDeliveryStatus.value = res.emailSent === true ? 'sent' : 'failed'
       isSuccessModalOpen.value = true
       await refresh()
+      isSubmitting.value = false
       return
     }
     throw new Error('A assinatura não foi confirmada pelo servidor.')
   } catch (serverSignErr) {
     console.error('Erro ao assinar contrato no servidor:', serverSignErr)
-    alert('Não foi possível assinar o contrato. Verifique se o link expirou ou já foi utilizado.')
+    const failure = serverSignErr as { data?: { message?: string, statusMessage?: string }, statusMessage?: string }
+    submitError.value = failure.data?.statusMessage || failure.data?.message || failure.statusMessage || 'Não foi possível assinar o contrato. Verifique o link e tente novamente.'
     isSubmitting.value = false
     return
   }
