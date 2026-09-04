@@ -491,11 +491,13 @@ const removeSaved = (id: string) => {
   }
 }
 
-const handleQuickAction = ({ action, row }: any) => {
+const handleQuickAction = ({ action }: any) => {
   if (action === 'resend_charge') {
-    alert(`Lembrete reenviado para ${row.name} com sucesso via WhatsApp!`)
+    alert('O envio automático por WhatsApp ainda não está configurado. Abra o Financeiro para copiar os dados e enviar manualmente.')
+    navigateTo('/dashboard/financeiro')
   } else if (action === 'resend_link') {
-    alert(`Link do contrato reenviado para ${row.name}!`)
+    alert('Abra Contratos para reenviar o link por e-mail e conferir o resultado real do envio.')
+    navigateTo('/dashboard/contratos')
   } else if (action === 'view_details') {
     navigateTo('/dashboard/financeiro')
   }

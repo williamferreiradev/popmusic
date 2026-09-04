@@ -290,3 +290,14 @@ describe('pre-visualizacao do contrato do aluno', () => {
     assert.doesNotMatch(profile, /valor_mensalidade:\s*180/)
   })
 })
+
+describe('acoes de comunicacao dos relatorios', () => {
+  const reports = normalize(read('app/components/relatorios/RelatoriosProntos.vue'))
+
+  it('nao simula envio de WhatsApp ou reenvio de contrato', () => {
+    assert.doesNotMatch(reports, /lembrete reenviado[^;]+sucesso via whatsapp/)
+    assert.doesNotMatch(reports, /link do contrato reenviado para/)
+    assert.ok(reports.includes('o envio automático por whatsapp ainda não está configurado'))
+    assert.ok(reports.includes("navigateto('/dashboard/contratos')"))
+  })
+})
