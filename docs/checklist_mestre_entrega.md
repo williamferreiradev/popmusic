@@ -325,7 +325,7 @@
 - [x] Criar testes de contrato das políticas RLS para gestão, professor, aluno e visitante anônimo.
 - [ ] Executar testes RLS com usuários reais de homologação para cada papel.
 - [ ] Criar testes end-to-end para os cinco fluxos principais.
-- [ ] Executar build limpo em ambiente sem a restrição local de `readlink`.
+- [x] Executar build em ambiente sem a restrição local de `readlink` (implantação funcional da Vercel; localmente a compilação termina e o empacotamento é interrompido apenas pelo `EPERM readlink` do Windows/OneDrive).
 - [ ] Verificar erros e avisos do console do navegador.
 - [ ] Medir tempo de carregamento das páginas mais utilizadas.
 - [ ] Testar volume maior de alunos, cobranças, turmas e presenças.
