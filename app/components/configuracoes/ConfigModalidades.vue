@@ -10,6 +10,10 @@
       </BaseButton>
     </div>
 
+    <div v-if="feedback" class="rounded-lg border px-4 py-3 text-sm" :class="feedback.type === 'success' ? 'border-green-500/40 bg-green-500/10 text-green-700 dark:text-green-300' : 'border-red-500/40 bg-red-500/10 text-red-700 dark:text-red-300'" role="status">
+      {{ feedback.message }}
+    </div>
+
     <!-- Tabela -->
     <div class="overflow-x-auto rounded-lg border border-light-border dark:border-dark-border bg-light-surface dark:bg-dark-surface shadow-sm">
       <table class="w-full text-left border-collapse">
@@ -28,6 +32,9 @@
             <td colspan="6" class="py-8 text-center">
               <div class="flex justify-center"><Loader2 class="w-6 h-6 animate-spin text-primary" /></div>
             </td>
+          </tr>
+          <tr v-else-if="loadError">
+            <td colspan="6" class="py-8 px-4 text-center text-red-600 dark:text-red-400">Não foi possível carregar as modalidades. Tente novamente.</td>
           </tr>
           <tr v-else-if="!modalities || modalities.length === 0">
             <td colspan="6" class="py-8 text-center text-light-text/50 dark:text-offwhite/50">Nenhuma modalidade cadastrada ainda.</td>
@@ -53,7 +60,7 @@
                 <button class="p-1.5 text-light-text/60 dark:text-offwhite/60 hover:text-primary transition-colors" title="Editar" @click="openModal(mod)">
                   <Pencil class="w-4 h-4" />
                 </button>
-                <button class="p-1.5 text-light-text/60 dark:text-offwhite/60 transition-colors" :class="mod.active ? 'hover:text-red-500' : 'hover:text-green-500'" :title="mod.active ? 'Inativar' : 'Reativar'" @click="toggleActive(mod)">
+                <button :disabled="statusLoadingId === mod.id" class="p-1.5 text-light-text/60 dark:text-offwhite/60 transition-colors disabled:opacity-40" :class="mod.active ? 'hover:text-red-500' : 'hover:text-green-500'" :title="mod.active ? 'Inativar' : 'Reativar'" @click="toggleActive(mod)">
                   <UserX v-if="mod.active" class="w-4 h-4" /><UserCheck v-else class="w-4 h-4" />
                 </button>
               </div>
@@ -108,7 +115,7 @@ import BaseBadge from '../BaseBadge.vue'
 defineEmits(['unsaved-changes'])
 const supabase = useSupabaseClient()
 
-const { data: modalities, pending, refresh } = await useAsyncData('config_modalidades', async () => {
+const { data: modalities, pending, error: loadError, refresh } = await useAsyncData('config_modalidades', async () => {
   const { data, error } = await supabase
     .from('modalidades')
     .select(`
@@ -119,10 +126,7 @@ const { data: modalities, pending, refresh } = await useAsyncData('config_modali
     `)
     .order('nome')
 
-  if (error) {
-    console.error('Erro ao buscar modalidades:', error)
-    return []
-  }
+  if (error) throw error
 
   return (data || []).map((mod: any) => {
     let activeCount = 0
@@ -149,12 +153,15 @@ const { data: modalities, pending, refresh } = await useAsyncData('config_modali
 const isModalOpen = ref(false)
 const isEditing = ref(false)
 const isLoadingSave = ref(false)
+const statusLoadingId = ref('')
+const feedback = ref<{ type: 'success' | 'error', message: string } | null>(null)
 const formData = ref({ id: '', name: '', price: '', color: '' })
 
 const availableColors = ['#7A1F1F', '#C9A227', '#2563EB', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#6B7280']
 
 const isFormValid = computed(() => {
-  return formData.value.name.trim() !== '' && formData.value.price !== '' && formData.value.color !== ''
+  const price = Number(formData.value.price)
+  return formData.value.name.trim().length >= 2 && Number.isFinite(price) && price >= 0 && formData.value.color !== ''
 })
 
 const openModal = (mod?: any) => {
@@ -175,6 +182,7 @@ const closeModal = () => {
 const save = async () => {
   if (!isFormValid.value) return
   isLoadingSave.value = true
+  feedback.value = null
 
   const price = parseFloat(formData.value.price)
 
@@ -186,9 +194,10 @@ const save = async () => {
     if (error) throw error
     await refresh()
     closeModal()
+    feedback.value = { type: 'success', message: `Modalidade ${isEditing.value ? 'atualizada' : 'criada'} com sucesso.` }
   } catch (error: any) {
     console.error('Erro ao salvar modalidade:', error)
-    alert(`Não foi possível salvar. ${error.message || 'Tente novamente.'}`)
+    feedback.value = { type: 'error', message: `Não foi possível salvar. ${error.message || 'Tente novamente.'}` }
   } finally {
     isLoadingSave.value = false
   }
@@ -197,8 +206,17 @@ const save = async () => {
 const toggleActive = async (mod: any) => {
   const action = mod.active ? 'inativar' : 'reativar'
   if (!confirm(`Deseja ${action} ${mod.name}?`)) return
-  const { error } = await (supabase as any).rpc('alterar_status_modalidade', { p_modalidade_id: mod.id, p_ativo: !mod.active })
-  if (error) { alert(`Não foi possível ${action}. ${error.message}`); return }
-  await refresh()
+  statusLoadingId.value = mod.id
+  feedback.value = null
+  try {
+    const { error } = await (supabase as any).rpc('alterar_status_modalidade', { p_modalidade_id: mod.id, p_ativo: !mod.active })
+    if (error) throw error
+    await refresh()
+    feedback.value = { type: 'success', message: `Modalidade ${mod.active ? 'inativada' : 'reativada'} com sucesso.` }
+  } catch (error: any) {
+    feedback.value = { type: 'error', message: `Não foi possível ${action}. ${error.message || 'Tente novamente.'}` }
+  } finally {
+    statusLoadingId.value = ''
+  }
 }
 </script>

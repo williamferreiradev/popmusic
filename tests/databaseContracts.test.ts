@@ -347,3 +347,34 @@ describe('estados reais do portal do aluno', () => {
     assert.ok(attendance.includes('overflow-x-auto'))
   })
 })
+
+describe('crud seguro de modalidades e salas', () => {
+  const modalities = normalize(read('app/components/configuracoes/ConfigModalidades.vue'))
+  const rooms = normalize(read('app/components/configuracoes/ConfigSalas.vue'))
+  const catalogMigration = normalize(read('supabase/migrations/202609020021_catalogos_seguros.sql'))
+
+  it('diferencia falha de carregamento de catalogo vazio', () => {
+    for (const component of [modalities, rooms]) {
+      assert.ok(component.includes('error: loaderror'))
+      assert.ok(component.includes('if (error) throw error'))
+      assert.ok(component.includes('v-else-if="loaderror"'))
+    }
+    assert.ok(rooms.includes('error: modalitieserror'))
+    assert.ok(rooms.includes('v-if="modalitieserror"'))
+  })
+
+  it('valida valores e evita operacoes de status repetidas', () => {
+    assert.ok(modalities.includes('number.isfinite(price) && price >= 0'))
+    assert.ok(rooms.includes('number.isinteger(capacity) && capacity > 0'))
+    assert.ok(modalities.includes(':disabled="statusloadingid === mod.id"'))
+    assert.ok(rooms.includes(':disabled="statusloadingid === room.id"'))
+  })
+
+  it('mantem criacao, edicao, inativacao e reativacao protegidas no banco', () => {
+    for (const operation of ['salvar_modalidade', 'alterar_status_modalidade', 'salvar_sala', 'alterar_status_sala']) {
+      assert.ok(catalogMigration.includes(`function public.${operation}`))
+    }
+    assert.ok(catalogMigration.includes('a modalidade possui turma ativa'))
+    assert.ok(catalogMigration.includes('a sala possui turma ativa'))
+  })
+})

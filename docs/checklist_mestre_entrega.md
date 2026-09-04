@@ -147,6 +147,7 @@
 
 - [ ] Testar criação, edição, inativação e reativação de modalidade.
 - [x] Impedir modalidade duplicada ou definir a regra para nomes iguais.
+- [x] Cobrir automaticamente validação, erros de carregamento e proteção contra gravação repetida nos CRUDs de modalidades e salas.
 - [ ] Testar criação, edição, inativação e reativação de sala.
 - [x] Validar capacidade da sala maior que zero.
 - [x] Impedir conflito de sala no mesmo dia e horário, inclusive em gravações simultâneas.
