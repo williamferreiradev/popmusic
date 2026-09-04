@@ -22,7 +22,7 @@
 - [x] Definir cálculo do professor por percentual da mensalidade ou valor fixo por aluno pago.
 - [x] Disponibilizar o repasse após a baixa da mensalidade e exigir confirmação manual da gestão.
 - [ ] Definir regras de vencimento, multa, juros, desconto e tolerância.
-- [ ] Definir o que ocorre financeiramente ao trancar, cancelar ou trocar uma matrícula.
+- [x] Definir a regra financeira do cancelamento sem fidelidade, preservando pagos, vencidos e mês com presença; trancamento e troca preservam histórico.
 - [ ] Definir duração, renovação e cancelamento do contrato.
 - [ ] Aprovar o texto jurídico do contrato para maior e menor de idade.
 - [ ] Confirmar quem assina pelo menor e quais dados do responsável são obrigatórios.

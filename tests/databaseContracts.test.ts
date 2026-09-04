@@ -243,3 +243,21 @@ describe('contrato de integração entre mensalidade e repasse', () => {
     assert.match(financeComposable, /fetchteachers\(\), fetchcashflow\(\), fetchfinancialsummary\(\)/)
   })
 })
+
+describe('cancelamento sem fidelidade', () => {
+  const cancellation = normalize(read('supabase/migrations/202609040033_cancelamento_sem_fidelidade.sql'))
+
+  it('preserva pagamentos, vencidos e o mes em que o aluno compareceu', () => {
+    assert.ok(cancellation.includes("status in ('pendente','atrasada')"))
+    assert.ok(cancellation.includes('vencimento>current_date'))
+    assert.ok(cancellation.includes("p.status='presente'"))
+    assert.ok(cancellation.includes('not v_fez_aula_no_mes'))
+    assert.doesNotMatch(cancellation, /status\s*=\s*'paga'/)
+  })
+
+  it('encerra matricula e contrato sem apagar o historico', () => {
+    assert.ok(cancellation.includes("status='cancelado'"))
+    assert.ok(cancellation.includes("motivo_fim='cancelamento: '"))
+    assert.doesNotMatch(cancellation, /delete\s+from/)
+  })
+})
