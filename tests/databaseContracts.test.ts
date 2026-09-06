@@ -480,6 +480,31 @@ describe('dados verdadeiros nos relatorios', () => {
   })
 })
 
+describe('edicao transacional do aluno', () => {
+  const migration = normalize(read('supabase/migrations/202609060036_aluno_turmas_transacional.sql'))
+  const edit = normalize(read('app/components/modals/StudentEditModal.vue'))
+  const create = normalize(read('app/components/modals/StudentCreateModal.vue'))
+
+  it('atualiza cadastro e turmas na mesma funcao protegida', () => {
+    assert.ok(migration.includes('function public.salvar_aluno_com_turmas'))
+    assert.ok(migration.includes('perform public.atualizar_turmas_aluno'))
+    assert.ok(migration.includes("public.meu_papel() <> 'gestao'"))
+  })
+
+  it('a tela usa somente a operacao transacional', () => {
+    assert.ok(edit.includes("rpc('salvar_aluno_com_turmas'"))
+    assert.doesNotMatch(edit, /from\('alunos'\)\.update/)
+    assert.doesNotMatch(edit, /rpc\('atualizar_turmas_aluno'/)
+  })
+
+  it('mostra erros nos formularios sem perder o contexto', () => {
+    assert.ok(edit.includes('v-if="formerror"'))
+    assert.ok(create.includes('v-if="formerror"'))
+    assert.doesNotMatch(edit, /alert\(`/)
+    assert.doesNotMatch(create, /alert\(/)
+  })
+})
+
 describe('erros nas operacoes financeiras manuais', () => {
   const finance = normalize(read('app/composables/useFinanceiro.ts'))
   const charges = normalize(read('app/components/financeiro/FinanceiroCharges.vue'))

@@ -77,6 +77,8 @@
         <p v-if="formData.instruments.length === 0" class="text-xs text-red-500 mt-1">Selecione pelo menos um instrumento.</p>
       </div>
 
+      <p v-if="formError" class="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-700 dark:text-red-300" role="alert">{{ formError }}</p>
+
       <!-- Espaçamento extra pro footer -->
       <div class="mt-2"/>
       
@@ -123,6 +125,7 @@ const emit = defineEmits(['close', 'saved'])
 
 const supabase = useSupabaseClient()
 const isLoading = ref(false)
+const formError = ref('')
 const todayDate = new Date().toISOString().split('T')[0]
 
 const formData = reactive({
@@ -200,7 +203,7 @@ watch(() => props.student, (newStudent) => {
 }, { immediate: true })
 
 const handleClose = () => {
-  emit('close')
+  if (!isLoading.value) emit('close')
 }
 
 const toggleInstrument = (val: string) => {
@@ -215,29 +218,23 @@ const toggleInstrument = (val: string) => {
 const handleSubmit = async () => {
   if (!props.student?.id) return
   isLoading.value = true
+  formError.value = ''
   
   try {
-    const { error: updateError } = await supabase.from('alunos').update({
-      nome: formData.name.trim(),
-      cpf: formData.cpf.replace(/\D/g, ''),
-      data_nascimento: formData.birthDate,
-      telefone: formData.phone.replace(/\D/g, ''),
-      email: formData.email.trim(),
-      responsavel_nome: isMinor.value ? formData.guardianName : null,
-      responsavel_cpf: isMinor.value ? formData.guardianCpf.replace(/\D/g, '') : null,
-      responsavel_telefone: isMinor.value ? formData.guardianPhone.replace(/\D/g, '') : null
-    } as any).eq('id', props.student.id)
-
-    if (updateError) throw updateError
-
-    const { error: turmaError } = await (supabase as any).rpc('atualizar_turmas_aluno', { p_aluno_id: props.student.id, p_turma_ids: formData.instruments })
-    if (turmaError) throw turmaError
+    const { error } = await (supabase as any).rpc('salvar_aluno_com_turmas', {
+      p_aluno_id: props.student.id, p_nome: formData.name, p_cpf: formData.cpf,
+      p_data_nascimento: formData.birthDate, p_telefone: formData.phone, p_email: formData.email,
+      p_turma_ids: formData.instruments, p_responsavel_nome: isMinor.value ? formData.guardianName : null,
+      p_responsavel_cpf: isMinor.value ? formData.guardianCpf : null,
+      p_responsavel_telefone: isMinor.value ? formData.guardianPhone : null
+    })
+    if (error) throw error
 
     emit('saved', { id: props.student.id, ...formData })
     handleClose()
   } catch (error: any) {
     console.error('Erro ao atualizar aluno:', error)
-    alert(`Erro ao salvar: ${error.message || 'Verifique os dados digitados.'}`)
+    formError.value = `Não foi possível salvar. ${error.message || 'Verifique os dados digitados.'}`
   } finally {
     isLoading.value = false
   }

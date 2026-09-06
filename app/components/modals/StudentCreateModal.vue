@@ -75,6 +75,7 @@
 
     <!-- Formulário de Matrícula -->
     <form v-else class="flex flex-col gap-4" @submit.prevent="handleSubmit">
+      <p v-if="formError" class="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-700 dark:text-red-300" role="alert">{{ formError }}</p>
       
       <BaseInput 
         v-model="formData.name" 
@@ -223,6 +224,7 @@ const props = defineProps({
 const emit = defineEmits(['close', 'saved'])
 
 const isLoading = ref(false)
+const formError = ref('')
 const copied = ref(false)
 const selectedModalityId = ref('')
 const createdContractData = ref<{ studentName: string, token: string, phone: string, email: string, emailSent: boolean } | null>(null)
@@ -368,6 +370,7 @@ const copyLink = async () => {
 }
 
 const resetForm = () => {
+  formError.value = ''
   formData.name = ''
   formData.cpf = ''
   formData.birthDate = ''
@@ -401,10 +404,11 @@ const toggleInstrument = (val: string) => {
 const { contractModel, fetchModel } = useContratos()
 
 const handleSubmit = async () => {
+  formError.value = ''
   if (formData.instruments.length === 0) return
   const dueDay = Number(formData.dueDay)
   if (!Number.isInteger(dueDay) || dueDay < 1 || dueDay > 28) {
-    alert('Informe um dia de vencimento entre 1 e 28.')
+    formError.value = 'Informe um dia de vencimento entre 1 e 28.'
     return
   }
   isLoading.value = true
@@ -458,7 +462,7 @@ const handleSubmit = async () => {
     emit('saved', { id: resultado.aluno_id, nome: resultado.aluno_nome })
   } catch (error: any) {
     console.error('Erro ao salvar aluno:', error)
-    alert(`Erro ao salvar aluno: ${error.message || 'Verifique se o CPF ou Email já está cadastrado.'}`)
+    formError.value = `Não foi possível concluir a matrícula. ${error.message || 'Verifique se o CPF ou e-mail já está cadastrado.'}`
   } finally {
     isLoading.value = false
   }
