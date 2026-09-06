@@ -459,6 +459,27 @@ describe('reenvio real de recibos', () => {
   })
 })
 
+describe('dados verdadeiros nos relatorios', () => {
+  const reports = normalize(read('app/components/relatorios/RelatoriosProntos.vue'))
+
+  it('nao inventa frequencia ou situacao financeira para alunos ativos', () => {
+    assert.doesNotMatch(reports, /attendance: '100%'/)
+    assert.doesNotMatch(reports, /financial: 'pago'/)
+    assert.ok(reports.includes("phone: a.telefone || '-'"))
+  })
+
+  it('considera somente modalidades com vinculo atual', () => {
+    assert.ok(reports.includes('.filter((m: any) => !m.data_fim)'))
+    assert.ok(reports.includes('matriculas_turma (data_fim,'))
+  })
+
+  it('verifica erros do supabase e informa a falha na tela', () => {
+    assert.ok((reports.match(/if \(error\) throw error/g) || []).length >= 4)
+    assert.ok(reports.includes("reporterror.value = 'não foi possível gerar o relatório."))
+    assert.ok(reports.includes('role="alert"'))
+  })
+})
+
 describe('erros nas operacoes financeiras manuais', () => {
   const finance = normalize(read('app/composables/useFinanceiro.ts'))
   const charges = normalize(read('app/components/financeiro/FinanceiroCharges.vue'))

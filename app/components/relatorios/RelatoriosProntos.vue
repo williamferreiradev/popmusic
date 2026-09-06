@@ -95,6 +95,10 @@
       />
     </div>
 
+    <div v-if="reportError" class="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-700 dark:text-red-300" role="alert">
+      {{ reportError }}
+    </div>
+
   </div>
 </template>
 
@@ -133,8 +137,8 @@ const reports: ReportConfig[] = [
     columns: [
       { key: 'name', label: 'Nome' },
       { key: 'modality', label: 'Modalidade(s)' },
-      { key: 'attendance', label: 'Frequência (%)' },
-      { key: 'financial', label: 'Situação financeira', type: 'badge' }
+      { key: 'status', label: 'Status', type: 'badge' },
+      { key: 'phone', label: 'Telefone' }
     ]
   },
   {
@@ -189,6 +193,7 @@ const reportInputValue = ref('')
 const activeReport = ref<ReportConfig | null>(null)
 const generatedTitle = ref('')
 const isLoading = ref(false)
+const reportError = ref('')
 const activeReportData = ref<any[]>([])
 const resultPanelRef = ref<HTMLElement | null>(null)
 
@@ -221,6 +226,7 @@ const generateReport = async (report: ReportConfig) => {
   activeReport.value = report
   expandedCard.value = null
   isLoading.value = true
+  reportError.value = ''
   
   if (report.requiresInput) {
     const inputLabel = report.inputType === 'modalidade' ? 'Modalidade' : 'Mês'
@@ -237,20 +243,22 @@ const generateReport = async (report: ReportConfig) => {
 
   try {
     if (report.id === 'ativos') {
-      const { data: alunos } = await supabase
+      const { data: alunos, error } = await supabase
         .from('alunos')
         .select(`
           id, nome, status, telefone,
-          matriculas_turma (
+          matriculas_turma (data_fim,
             turmas (
               modalidades (nome)
             )
           )
         `)
         .eq('status', 'ativo')
+      if (error) throw error
 
       activeReportData.value = (alunos || []).map((a: any) => {
         const mods = (a.matriculas_turma || [])
+          .filter((m: any) => !m.data_fim)
           .map((m: any) => m.turmas?.modalidades?.nome)
           .filter(Boolean)
           .join(', ') || 'Nenhuma'
@@ -258,18 +266,19 @@ const generateReport = async (report: ReportConfig) => {
         return {
           name: a.nome,
           modality: mods,
-          attendance: '100%',
-          financial: 'Pago'
+          status: 'Ativo',
+          phone: a.telefone || '-'
         }
       })
     } else if (report.id === 'inadimplentes') {
-      const { data: cobrancas } = await supabase
+      const { data: cobrancas, error } = await supabase
         .from('cobrancas')
         .select(`
           id, valor, vencimento, status,
           alunos (nome, telefone)
         `)
         .eq('status', 'atrasada')
+      if (error) throw error
 
       activeReportData.value = (cobrancas || []).map((c: any) => {
         const diffDays = Math.max(0, Math.floor((Date.now() - new Date(c.vencimento).getTime()) / (1000 * 60 * 60 * 24)))
@@ -281,13 +290,14 @@ const generateReport = async (report: ReportConfig) => {
         }
       })
     } else if (report.id === 'contratos') {
-      const { data: contratos } = await supabase
+      const { data: contratos, error } = await supabase
         .from('contratos')
         .select(`
           id, status, data_envio,
           alunos (nome)
         `)
         .eq('status', 'aguardando_assinatura')
+      if (error) throw error
 
       activeReportData.value = (contratos || []).map((c: any) => {
         const d = c.data_envio ? c.data_envio.split('T')[0] : ''
@@ -300,10 +310,11 @@ const generateReport = async (report: ReportConfig) => {
       })
     } else if (report.id === 'aniversariantes') {
       const currentMonth = (new Date().getMonth() + 1).toString().padStart(2, '0')
-      const { data: alunos } = await supabase
+      const { data: alunos, error } = await supabase
         .from('alunos')
         .select('id, nome, data_nascimento, telefone')
         .not('data_nascimento', 'is', null)
+      if (error) throw error
 
       const aniversariantes = (alunos || []).filter((a: any) => {
         if (!a.data_nascimento) return false
@@ -327,6 +338,7 @@ const generateReport = async (report: ReportConfig) => {
   } catch (error) {
     console.error('Erro ao gerar relatório:', error)
     activeReportData.value = []
+    reportError.value = 'Não foi possível gerar o relatório. Verifique sua conexão e tente novamente.'
   } finally {
     isLoading.value = false
   }
@@ -335,6 +347,7 @@ const generateReport = async (report: ReportConfig) => {
 const closeResult = () => {
   activeReport.value = null
   activeReportData.value = []
+  reportError.value = ''
 }
 
 const handleQuickAction = ({ action }: any) => {
