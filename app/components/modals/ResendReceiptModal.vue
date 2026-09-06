@@ -8,23 +8,17 @@
     <div class="flex flex-col gap-4">
       
       <p class="text-sm text-light-text dark:text-offwhite leading-relaxed">
-        Enviar o recibo de <span class="font-bold">{{ receipt?.studentName }}</span> 
-        (R$ {{ receipt?.amount?.toFixed(2).replace('.', ',') }}, pago em {{ formatDateBR(receipt?.paidAt || '') }}) por:
+        Reenviar por e-mail o recibo de <span class="font-bold">{{ receipt?.studentName }}</span>
+        (R$ {{ receipt?.amount?.toFixed(2).replace('.', ',') }}, pago em {{ formatDateBR(receipt?.paidAt || '') }}).
       </p>
 
       <!-- Botões de envio -->
-      <div class="grid grid-cols-2 gap-3 mt-2">
+      <div class="mt-2">
         <button 
           :disabled="sending"
-          class="flex items-center justify-center gap-2 px-4 py-3 bg-green-500/10 hover:bg-green-500/20 text-green-600 dark:text-green-500 font-bold rounded-lg border border-green-500/20 transition-colors disabled:opacity-50" @click="confirm('whatsapp')"
+          class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary/10 hover:bg-primary/20 text-primary dark:text-primary-hover font-bold rounded-lg border border-primary/20 transition-colors disabled:opacity-50" @click="confirm"
         >
-          WhatsApp
-        </button>
-        <button 
-          :disabled="sending"
-          class="flex items-center justify-center gap-2 px-4 py-3 bg-primary/10 hover:bg-primary/20 text-primary dark:text-primary-hover font-bold rounded-lg border border-primary/20 transition-colors disabled:opacity-50" @click="confirm('email')"
-        >
-          E-mail
+          {{ sending ? 'Enviando...' : 'Reenviar por e-mail' }}
         </button>
       </div>
 
@@ -36,7 +30,7 @@
 import BaseModal from '../BaseModal.vue'
 import type { Receipt } from '../../composables/useFinanceiro'
 
-defineProps<{
+const props = defineProps<{
   isOpen: boolean
   receipt: Receipt | null
   sending?: boolean
@@ -45,11 +39,11 @@ defineProps<{
 const emit = defineEmits(['close', 'confirm'])
 
 const handleClose = () => {
-  emit('close')
+  if (!props.sending) emit('close')
 }
 
-const confirm = (method: 'whatsapp' | 'email') => {
-  emit('confirm', method)
+const confirm = () => {
+  if (!props.sending) emit('confirm')
 }
 
 const formatDateBR = (isoStr: string) => {

@@ -128,6 +128,10 @@
       @confirm="handleResend"
     />
 
+    <div v-if="sendError" class="fixed bottom-6 left-1/2 z-[60] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 rounded-lg border border-red-500/40 bg-red-950 px-5 py-3 text-sm font-medium text-white shadow-xl" role="alert">
+      {{ sendError }}
+    </div>
+
     <!-- Toast flutuante -->
     <div
       class="fixed bottom-6 right-6 bg-light-surface dark:bg-dark-surface border-l-4 border-green-500 shadow-xl rounded-r-md px-6 py-3 transition-all duration-300 z-50 flex flex-col"
@@ -199,21 +203,23 @@ const openResendModal = (receipt: Receipt) => {
 }
 
 const isSendingReceipt = ref(false)
+const sendError = ref('')
 const handleSent = async (method: string) => {
   if (method === 'whatsapp') { showToast('WhatsApp aberto para envio manual do recibo.'); return }
   if (!selectedReceipt.value || isSendingReceipt.value) return
   isSendingReceipt.value = true
+  sendError.value = ''
   try {
     await $fetch('/api/send-receipt-email',{method:'POST',body:{chargeId:selectedReceipt.value.chargeId}})
+    isResendModalOpen.value = false
     showToast('Recibo enviado por e-mail com sucesso!')
   } catch (error:any) {
-    alert(`Não foi possível enviar o recibo. ${error?.data?.statusMessage||error?.message||'Tente novamente.'}`)
+    sendError.value = `Não foi possível enviar o recibo. ${error?.data?.statusMessage||error?.message||'Tente novamente.'}`
   } finally { isSendingReceipt.value=false }
 }
 
-const handleResend = async (method: 'whatsapp' | 'email') => {
-  isResendModalOpen.value = false
-  await handleSent(method)
+const handleResend = async () => {
+  await handleSent('email')
 }
 
 const toastVisible = ref(false)

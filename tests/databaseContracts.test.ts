@@ -437,6 +437,28 @@ describe('modelo de contrato transacional', () => {
   })
 })
 
+describe('reenvio real de recibos', () => {
+  const receipts = normalize(read('app/components/financeiro/FinanceiroReceipts.vue'))
+  const modal = normalize(read('app/components/modals/ResendReceiptModal.vue'))
+
+  it('oferece somente o canal de email realmente integrado', () => {
+    assert.doesNotMatch(modal, /confirm\('whatsapp'\)/)
+    assert.ok(modal.includes('reenviar por e-mail'))
+  })
+
+  it('mantem o modal durante o envio e fecha somente depois do sucesso', () => {
+    const request = receipts.indexOf("$fetch('/api/send-receipt-email'")
+    const close = receipts.indexOf('isresendmodalopen.value = false', request)
+    assert.ok(request >= 0 && close > request)
+    assert.ok(modal.includes("if (!props.sending) emit('close')"))
+  })
+
+  it('mostra a falha real sem alert nativo', () => {
+    assert.ok(receipts.includes("senderror.value = `não foi possível enviar o recibo."))
+    assert.doesNotMatch(receipts, /alert\(`não foi possível enviar o recibo/)
+  })
+})
+
 describe('erros nas operacoes financeiras manuais', () => {
   const finance = normalize(read('app/composables/useFinanceiro.ts'))
   const charges = normalize(read('app/components/financeiro/FinanceiroCharges.vue'))
