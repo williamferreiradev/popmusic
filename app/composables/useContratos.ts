@@ -237,19 +237,13 @@ Dados oficiais da contratada disponíveis no cadastro da escola.`
 
   // Salva ou cria nova versão do modelo
   const saveModel = async (newModel: string) => {
-    try {
-      contractModel.value = newModel
+    const text = newModel.trim()
+    if (text.length < 100) throw new Error('O modelo precisa ter pelo menos 100 caracteres.')
       
       // Desativa anteriores e insere nova versão
-      await supabase.from('modelos_contrato').update({ ativo: false } as any).eq('ativo', true)
-      await supabase.from('modelos_contrato').insert({
-        texto: newModel,
-        versao: Date.now(),
-        ativo: true
-      })
-    } catch (e) {
-      console.error('Erro ao salvar modelo:', e)
-    }
+    const { error } = await (supabase as any).rpc('salvar_modelo_contrato', { p_texto: text })
+    if (error) throw error
+    contractModel.value = text
   }
 
   // Retorna estatísticas baseadas na data atual vs datas do contrato

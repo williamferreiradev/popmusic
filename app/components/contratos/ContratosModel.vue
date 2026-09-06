@@ -6,14 +6,7 @@
       
       <!-- Toolbar Simples -->
       <div class="flex items-center justify-between p-3 border-b border-light-border dark:border-dark-border bg-light-bg/50 dark:bg-dark-bg/50">
-        <div class="flex items-center gap-2">
-          <!-- Botoes Mock de Formatação -->
-          <button class="p-1.5 rounded hover:bg-light-border dark:hover:bg-dark-border text-light-text/70 dark:text-offwhite/70 transition-colors font-bold" title="Negrito">B</button>
-          <button class="p-1.5 rounded hover:bg-light-border dark:hover:bg-dark-border text-light-text/70 dark:text-offwhite/70 transition-colors italic font-serif" title="Itálico">I</button>
-          <div class="w-px h-5 bg-light-border dark:bg-dark-border mx-1"/>
-          <button class="p-1.5 rounded hover:bg-light-border dark:hover:bg-dark-border text-light-text/70 dark:text-offwhite/70 transition-colors" title="Alinhar à esquerda"><AlignLeft class="w-4 h-4" /></button>
-          <button class="p-1.5 rounded hover:bg-light-border dark:hover:bg-dark-border text-light-text/70 dark:text-offwhite/70 transition-colors" title="Centralizar"><AlignCenter class="w-4 h-4" /></button>
-        </div>
+        <p class="text-xs text-light-text/60 dark:text-offwhite/60">Editor de texto simples com variáveis dinâmicas</p>
         <div class="flex items-center gap-2">
           <button 
             class="px-3 py-1.5 text-xs font-bold text-light-text dark:text-offwhite hover:bg-light-border dark:hover:bg-dark-border rounded border border-light-border dark:border-dark-border transition-colors flex items-center gap-2"
@@ -23,11 +16,12 @@
             Pré-visualizar
           </button>
           <button 
+            :disabled="isSaving"
             class="px-3 py-1.5 text-xs font-bold text-white bg-primary hover:bg-primary-hover rounded transition-colors shadow-sm flex items-center gap-2"
             @click="confirmSave"
           >
             <Save class="w-3.5 h-3.5" />
-            Salvar modelo
+            {{ isSaving ? 'Salvando...' : 'Salvar modelo' }}
           </button>
         </div>
       </div>
@@ -39,6 +33,9 @@
         class="flex-1 w-full p-6 resize-none outline-none bg-transparent text-sm text-light-text dark:text-offwhite leading-relaxed font-sans"
         placeholder="Escreva o texto do contrato aqui..."
       />
+      <p v-if="feedback" class="border-t border-light-border dark:border-dark-border px-6 py-3 text-sm" :class="feedback.type === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'" role="status">
+        {{ feedback.message }}
+      </p>
       
     </div>
 
@@ -82,13 +79,15 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { AlignLeft, AlignCenter, Eye, Save, FileCode2 } from '@lucide/vue'
+import { Eye, Save, FileCode2 } from '@lucide/vue'
 import { useContratos } from '../../composables/useContratos'
 import PreviewContractModal from '../modals/PreviewContractModal.vue'
 
 const { contractModel, fetchModel, saveModel } = useContratos()
 const editorRef = ref<HTMLTextAreaElement | null>(null)
 const isPreviewModalOpen = ref(false)
+const isSaving = ref(false)
+const feedback = ref<{ type: 'success' | 'error', message: string } | null>(null)
 
 onMounted(async () => {
   await fetchModel()
@@ -171,10 +170,19 @@ const insertVariable = (variable: string) => {
   }, 0)
 }
 
-const confirmSave = () => {
+const confirmSave = async () => {
+  if (isSaving.value) return
   if (confirm("Salvar novo modelo de contrato?\n\nEsta alteração não afeta contratos já enviados ou aceitos. Todos os novos contratos gerados a partir de agora usarão este texto.")) {
-    saveModel(contractModel.value)
-    alert("Modelo salvo com sucesso!") // Toast na prática
+    isSaving.value = true
+    feedback.value = null
+    try {
+      await saveModel(contractModel.value)
+      feedback.value = { type: 'success', message: 'Modelo salvo e ativado com sucesso.' }
+    } catch (error: any) {
+      feedback.value = { type: 'error', message: `Não foi possível salvar o modelo. ${error.message || 'Tente novamente.'}` }
+    } finally {
+      isSaving.value = false
+    }
   }
 }
 </script>

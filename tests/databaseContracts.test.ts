@@ -412,6 +412,31 @@ describe('relatorios sem operacoes simuladas', () => {
   })
 })
 
+describe('modelo de contrato transacional', () => {
+  const migration = normalize(read('supabase/migrations/202609060035_modelo_contrato_transacional.sql'))
+  const contracts = normalize(read('app/composables/useContratos.ts'))
+  const editor = normalize(read('app/components/contratos/ContratosModel.vue'))
+
+  it('versiona e troca o modelo ativo dentro de uma unica funcao', () => {
+    assert.ok(migration.includes('function public.salvar_modelo_contrato'))
+    assert.ok(migration.includes('lock table public.modelos_contrato'))
+    assert.ok(migration.includes('returning id into v_id'))
+  })
+
+  it('restringe a operacao a gestao e valida o conteudo', () => {
+    assert.ok(migration.includes("public.meu_papel() <> 'gestao'"))
+    assert.ok(migration.includes("length(trim(coalesce(p_texto, ''))) < 100"))
+    assert.ok(migration.includes('revoke all on function public.salvar_modelo_contrato(text) from public, anon'))
+  })
+
+  it('aguarda o banco e nao mostra sucesso quando a gravacao falha', () => {
+    assert.ok(contracts.includes("rpc('salvar_modelo_contrato'"))
+    assert.ok(editor.includes('await savemodel(contractmodel.value)'))
+    assert.ok(editor.includes("feedback.value = { type: 'error'"))
+    assert.doesNotMatch(editor, /alert\("modelo salvo com sucesso!"\)/)
+  })
+})
+
 describe('erros nas operacoes financeiras manuais', () => {
   const finance = normalize(read('app/composables/useFinanceiro.ts'))
   const charges = normalize(read('app/components/financeiro/FinanceiroCharges.vue'))
