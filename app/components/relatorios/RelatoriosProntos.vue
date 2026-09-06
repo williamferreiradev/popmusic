@@ -12,14 +12,6 @@
           class="w-full bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-lg py-3 pl-10 pr-4 text-light-text dark:text-offwhite placeholder:text-light-text/40 dark:placeholder:text-offwhite/40 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors shadow-sm"
         >
       </div>
-      <!-- Sugestão de aluno fake -->
-      <div v-if="searchQuery.length > 2 && !searchQuery.toLowerCase().includes('relató')" class="absolute top-full left-0 w-full mt-1 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-lg shadow-lg z-10 p-2">
-        <p class="text-xs font-semibold text-light-text/50 dark:text-offwhite/50 mb-2 px-2 uppercase tracking-wider">Ir para Aluno</p>
-        <button class="w-full text-left px-3 py-2 rounded-md hover:bg-light-border/20 dark:hover:bg-dark-border/20 flex items-center justify-between text-sm transition-colors">
-          <span class="font-medium text-light-text dark:text-offwhite">{{ searchQuery }} (Dossiê)</span>
-          <ArrowRight class="w-4 h-4 text-primary" />
-        </button>
-      </div>
     </div>
 
     <!-- Grade de Relatórios -->
@@ -80,39 +72,6 @@
       </div>
     </div>
 
-    <!-- Área de Meus Relatórios Salvos -->
-    <div v-if="savedReports.length > 0" class="mt-4">
-      <h3 class="text-lg font-bold text-light-text dark:text-offwhite mb-4 flex items-center gap-2">
-        <Bookmark class="w-5 h-5 text-gold" />
-        Meus relatórios salvos
-      </h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div 
-          v-for="saved in savedReports" 
-          :key="saved.id"
-          class="bg-light-surface dark:bg-dark-surface border border-gold/30 rounded-xl p-5 flex flex-col gap-3 group relative"
-        >
-          <div class="flex items-start gap-3">
-            <div class="p-2 rounded-lg bg-gold/10 text-gold">
-              <Filter class="w-5 h-5" />
-            </div>
-            <div class="flex-1">
-              <h3 class="font-bold text-light-text dark:text-offwhite leading-tight mb-1">{{ saved.name }}</h3>
-              <p class="text-xs text-light-text/60 dark:text-offwhite/60 leading-relaxed">Filtro Personalizado ({{ saved.origin }})</p>
-            </div>
-          </div>
-          
-          <button class="absolute top-3 right-3 p-1.5 text-light-text/40 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all rounded-md" title="Remover" @click="removeSaved(saved.id)">
-            <Trash2 class="w-4 h-4" />
-          </button>
-
-          <div class="mt-auto pt-2">
-            <BaseButton variant="outline" class="w-full" @click="generateSavedReport(saved)">Gerar Relatório</BaseButton>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- Painel de Resultado -->
     <div v-if="activeReport" ref="resultPanelRef" class="mt-4 pt-4 border-t border-light-border dark:border-dark-border animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div v-if="isLoading" class="w-full flex flex-col gap-4 animate-pulse">
@@ -142,12 +101,10 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
 import { 
-  Search, Users, UserCheck, AlertCircle, AlertTriangle, 
-  UserMinus, Gift, FileSignature, Wallet, ArrowRight,
-  Send, Eye, RefreshCw, Bookmark, Filter, Trash2
+  Search, UserCheck, AlertCircle,
+  Gift, FileSignature, Send, RefreshCw
 } from '@lucide/vue'
 import BaseButton from '../BaseButton.vue'
-import BaseSelect from '../BaseSelect.vue'
 import RelatoriosResultTable, { type TableColumn } from './RelatoriosResultTable.vue'
 
 const supabase = useSupabaseClient()
@@ -168,21 +125,6 @@ interface ReportConfig {
 }
 
 const reports: ReportConfig[] = [
-  {
-    id: 'modalidade',
-    title: 'Alunos por modalidade',
-    description: 'Liste os alunos de uma modalidade específica (violão, teclado, etc).',
-    icon: Users,
-    requiresInput: true,
-    inputType: 'modalidade',
-    columns: [
-      { key: 'name', label: 'Nome' },
-      { key: 'status', label: 'Status', type: 'badge' },
-      { key: 'teacher', label: 'Professor' },
-      { key: 'time', label: 'Horário' },
-      { key: 'financial', label: 'Situação financeira', type: 'badge' }
-    ]
-  },
   {
     id: 'ativos',
     title: 'Alunos ativos',
@@ -212,33 +154,6 @@ const reports: ReportConfig[] = [
     ]
   },
   {
-    id: 'evasao',
-    title: 'Alunos em risco de evasão',
-    description: 'Alunos com frequência baixa ou faltas consecutivas.',
-    icon: AlertTriangle,
-    columns: [
-      { key: 'name', label: 'Nome' },
-      { key: 'class', label: 'Turma' },
-      { key: 'attendance', label: 'Frequência (%)' },
-      { key: 'consecutive_absences', label: 'Faltas consecutivas' },
-      { key: 'phone', label: 'Telefone' }
-    ]
-  },
-  {
-    id: 'cancelamentos',
-    title: 'Cancelamentos do mês',
-    description: 'Alunos que cancelaram a matrícula no mês atual.',
-    icon: UserMinus,
-    requiresInput: true,
-    inputType: 'mes',
-    columns: [
-      { key: 'name', label: 'Nome' },
-      { key: 'modality', label: 'Modalidade' },
-      { key: 'date', label: 'Data de cancelamento' },
-      { key: 'reason', label: 'Motivo' }
-    ]
-  },
-  {
     id: 'aniversariantes',
     title: 'Aniversariantes do mês',
     description: 'Alunos que fazem aniversário este mês.',
@@ -264,21 +179,6 @@ const reports: ReportConfig[] = [
       { key: 'date', label: 'Data de envio' },
       { key: 'days', label: 'Dias aguardando' }
     ]
-  },
-  {
-    id: 'repasses',
-    title: 'Repasses pendentes',
-    description: 'Quanto cada professor tem a receber no momento.',
-    icon: Wallet,
-    hasActions: true,
-    actionType: 'view_details',
-    actionIcon: Eye,
-    actionTooltip: 'Ver Detalhes',
-    columns: [
-      { key: 'teacher', label: 'Professor' },
-      { key: 'amount', label: 'Valor pendente' },
-      { key: 'students', label: 'Quantidade de alunos' }
-    ]
   }
 ]
 
@@ -291,18 +191,6 @@ const generatedTitle = ref('')
 const isLoading = ref(false)
 const activeReportData = ref<any[]>([])
 const resultPanelRef = ref<HTMLElement | null>(null)
-
-// Modalidades do banco para o seletor
-await useAsyncData('report_modalities', async () => {
-  const { data } = await supabase.from('modalidades').select('id, nome').eq('ativo', true)
-  return (data || []).map((m: any) => ({ label: m.nome, value: m.id }))
-})
-
-// Relatórios salvos
-const savedReports = ref<any[]>([
-  { id: 's1', name: 'Alunos Ativos - Geral', origin: 'Alunos', columns: reports[1]?.columns ?? [] },
-  { id: 's2', name: 'Pagamentos em Atraso', origin: 'Financeiro', columns: reports[2]?.columns ?? [] }
-])
 
 const filteredReports = computed(() => {
   if (!searchQuery.value) return reports
@@ -433,30 +321,6 @@ const generateReport = async (report: ReportConfig) => {
           phone: a.telefone || '-'
         }
       })
-    } else if (report.id === 'repasses') {
-      const { data: profs } = await supabase
-        .from('professores')
-        .select(`
-          id, nome, valor_hora_aula,
-          turmas (
-            id,
-            matriculas_turma (id)
-          )
-        `)
-        .eq('ativo', true)
-
-      activeReportData.value = (profs || []).map((p: any) => {
-        let studentCount = 0
-        ;(p.turmas || []).forEach((t: any) => {
-          studentCount += (t.matriculas_turma || []).length
-        })
-        const pending = studentCount * 4 * (p.valor_hora_aula || 50)
-        return {
-          teacher: p.nome,
-          amount: formatCurrency(pending),
-          students: studentCount.toString()
-        }
-      })
     } else {
       activeReportData.value = []
     }
@@ -468,27 +332,9 @@ const generateReport = async (report: ReportConfig) => {
   }
 }
 
-const generateSavedReport = (saved: any) => {
-  activeReport.value = {
-    id: saved.id,
-    title: saved.name,
-    description: '',
-    icon: Filter,
-    columns: saved.columns
-  }
-  generatedTitle.value = saved.name
-  generateReport(saved)
-}
-
 const closeResult = () => {
   activeReport.value = null
   activeReportData.value = []
-}
-
-const removeSaved = (id: string) => {
-  if (confirm('Remover este relatório salvo?')) {
-    savedReports.value = savedReports.value.filter(s => s.id !== id)
-  }
 }
 
 const handleQuickAction = ({ action }: any) => {

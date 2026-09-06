@@ -6,7 +6,7 @@ Este documento contém somente o necessário para colocar a primeira versão em 
 
 - [x] Aplicação publicada em HTTPS na Vercel.
 - [x] Rota inicial redireciona para o login e a tela de login responde corretamente.
-- [x] Testes automatizados: 87 aprovados, nenhuma falha (06/09/2026).
+- [x] Testes automatizados: 90 aprovados, nenhuma falha (06/09/2026).
 - [x] TypeScript/typecheck sem erros (04/09/2026).
 - [x] ESLint sem erros (04/09/2026).
 - [x] Portal do aluno diferencia falha de carregamento de estado vazio e mantém tabelas financeiras utilizáveis no celular.
@@ -15,6 +15,7 @@ Este documento contém somente o necessário para colocar a primeira versão em 
 - [x] Lista de alunos diferencia erro e vazio, reduz consultas na busca e mantém filtros e paginação consistentes.
 - [x] Assinatura distingue links indisponíveis de falhas temporárias, bloqueia reaceite e informa o resultado real do e-mail.
 - [x] Financeiro dos professores não simula WhatsApp ou ajuste local e protege o pagamento contra repetição.
+- [x] Relatórios expõem somente consultas conectadas ao banco e exportação CSV real, sem filtros, dados ou PDF simulados.
 - [x] Frontend e servidor compilam; o empacotamento local para apenas no `EPERM readlink` do Windows/OneDrive.
 - [x] Build em ambiente externo confirmado pela implantação funcional da Vercel.
 

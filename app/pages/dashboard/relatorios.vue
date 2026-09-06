@@ -67,13 +67,11 @@ import { BarChart3 } from '@lucide/vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import RelatoriosProntos from '~/components/relatorios/RelatoriosProntos.vue'
-import RelatoriosConstrutor from '~/components/relatorios/RelatoriosConstrutor.vue'
 
-type TabId = 'prontos' | 'construtor'
+type TabId = 'prontos'
 
 const tabs: { id: TabId, label: string, component: any }[] = [
-  { id: 'prontos', label: 'Relatórios Prontos', component: RelatoriosProntos },
-  { id: 'construtor', label: 'Construtor Personalizado', component: RelatoriosConstrutor }
+  { id: 'prontos', label: 'Relatórios', component: RelatoriosProntos }
 ]
 
 const route = useRoute()

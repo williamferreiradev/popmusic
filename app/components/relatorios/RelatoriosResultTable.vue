@@ -7,9 +7,6 @@
         <BaseButton variant="outline" size="sm" class="flex items-center gap-2" @click="exportCSV">
           <Download class="w-4 h-4" /> CSV
         </BaseButton>
-        <BaseButton variant="outline" size="sm" class="flex items-center gap-2" @click="exportPDF">
-          <FileText class="w-4 h-4" /> PDF
-        </BaseButton>
         <button class="ml-2 p-1.5 text-light-text/60 dark:text-offwhite/60 hover:text-primary dark:hover:text-primary-hover rounded-md transition-colors" title="Fechar resultado" @click="$emit('close')">
           <X class="w-5 h-5" />
         </button>
@@ -62,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-import { Download, FileText, X, Settings, Filter } from '@lucide/vue'
+import { Download, X, Settings, Filter } from '@lucide/vue'
 import BaseButton from '../BaseButton.vue'
 import BaseBadge from '../BaseBadge.vue'
 
@@ -111,10 +108,6 @@ const getBadgeVariant = (value: string) => {
   if (val.includes('inadimplente') || val.includes('cancelado') || val.includes('atraso') || val.includes('expirado')) return 'danger'
   if (val.includes('pendente') || val.includes('aguardando') || val.includes('vencendo')) return 'warning'
   return 'neutral'
-}
-
-const exportPDF = () => {
-  alert('Simulação: Gerando arquivo PDF com cabeçalho, tabelas formatadas e contagem total de linhas.')
 }
 
 const exportCSV = () => {

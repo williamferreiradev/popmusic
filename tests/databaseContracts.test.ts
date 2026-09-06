@@ -389,6 +389,29 @@ describe('operacoes reais no financeiro dos professores', () => {
   })
 })
 
+describe('relatorios sem operacoes simuladas', () => {
+  const page = normalize(read('app/pages/dashboard/relatorios.vue'))
+  const ready = normalize(read('app/components/relatorios/RelatoriosProntos.vue'))
+  const result = normalize(read('app/components/relatorios/RelatoriosResultTable.vue'))
+
+  it('nao publica o construtor que ainda utiliza dados de demonstracao', () => {
+    assert.doesNotMatch(page, /relatoriosconstrutor/)
+    assert.doesNotMatch(page, /construtor personalizado/)
+  })
+
+  it('nao mostra relatorios salvos ou sugestoes inventadas', () => {
+    assert.doesNotMatch(ready, /sugest[aã]o de aluno fake/)
+    assert.doesNotMatch(ready, /const savedreports/)
+    assert.doesNotMatch(ready, /studentcount \* 4/)
+  })
+
+  it('mantem csv real e remove o pdf simulado', () => {
+    assert.ok(result.includes('text/csv'))
+    assert.doesNotMatch(result, /simula[cç][aã]o: gerando arquivo pdf/)
+    assert.doesNotMatch(result, /@click="exportpdf"/)
+  })
+})
+
 describe('erros nas operacoes financeiras manuais', () => {
   const finance = normalize(read('app/composables/useFinanceiro.ts'))
   const charges = normalize(read('app/components/financeiro/FinanceiroCharges.vue'))
