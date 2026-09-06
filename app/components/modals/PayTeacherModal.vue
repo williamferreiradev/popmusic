@@ -45,15 +45,17 @@
       <div class="flex justify-end gap-3 mt-4">
         <button 
           class="px-4 py-2 text-sm font-medium text-light-text/70 dark:text-offwhite/70 hover:bg-light-border/50 dark:hover:bg-dark-border/50 rounded-md transition-colors"
+          :disabled="saving"
           @click="handleClose"
         >
           Cancelar
         </button>
         <button 
-          class="px-6 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-bold rounded-md transition-colors shadow-sm"
+          :disabled="saving"
+          class="px-6 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-bold rounded-md transition-colors shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
           @click="confirm"
         >
-          Confirmar repasse
+          {{ saving ? 'Registrando...' : 'Confirmar repasse' }}
         </button>
       </div>
 
@@ -72,6 +74,7 @@ const props = defineProps<{
   isOpen: boolean
   teacher: Teacher | null
   accounts: Array<{ id: string, nome: string }>
+  saving?: boolean
 }>()
 
 const emit = defineEmits(['close', 'confirm'])
@@ -110,10 +113,11 @@ watch(() => props.isOpen, (newVal) => {
 })
 
 const handleClose = () => {
-  emit('close')
+  if (!props.saving) emit('close')
 }
 
 const confirm = () => {
+  if (props.saving) return
   validationErrors.value = {
     paymentMethod: !formData.value.paymentMethod,
     paidAt: !formData.value.paidAt,

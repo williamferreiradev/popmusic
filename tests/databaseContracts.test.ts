@@ -364,6 +364,31 @@ describe('acoes de comunicacao dos relatorios', () => {
   })
 })
 
+describe('operacoes reais no financeiro dos professores', () => {
+  const teachers = normalize(read('app/components/financeiro/FinanceiroTeachers.vue'))
+  const statement = normalize(read('app/components/modals/TeacherStatementModal.vue'))
+  const payment = normalize(read('app/components/modals/PayTeacherModal.vue'))
+
+  it('nao confirma whatsapp ou ajuste de comissao somente no navegador', () => {
+    assert.doesNotMatch(teachers, /demonstrativo enviado via whatsapp/)
+    assert.doesNotMatch(teachers, /comiss[aã]o ajustada para este m[eê]s/)
+    assert.doesNotMatch(teachers, /adjustcommissionmodal/)
+    assert.doesNotMatch(statement, /enviar por whatsapp/)
+  })
+
+  it('bloqueia pagamento repetido e mostra falha sem fechar o fluxo', () => {
+    assert.ok(teachers.includes('ispayingteacher.value = true'))
+    assert.ok(teachers.includes('operationerror.value = `não foi possível pagar o repasse.'))
+    assert.ok(payment.includes(':disabled="saving"'))
+    assert.ok(payment.includes("saving ? 'registrando...'"))
+  })
+
+  it('usa a competencia atual no demonstrativo', () => {
+    assert.ok(statement.includes("month: 'long', year: 'numeric'"))
+    assert.doesNotMatch(statement, /julho 2026/)
+  })
+})
+
 describe('erros nas operacoes financeiras manuais', () => {
   const finance = normalize(read('app/composables/useFinanceiro.ts'))
   const charges = normalize(read('app/components/financeiro/FinanceiroCharges.vue'))

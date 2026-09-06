@@ -106,14 +106,6 @@
               <td class="py-3 px-2 text-sm text-right text-light-text/80 dark:text-offwhite/80 group">
                 <div class="flex items-center justify-end gap-2">
                   <span>{{ formatCurrency(student.amountPerClass) }}</span>
-                  <button
-v-if="false"
-                    class="opacity-0 group-hover:opacity-100 p-1 text-primary hover:bg-primary/10 rounded transition-all"
-                    title="Ajustar Comissão"
-                    @click="openAdjustModal(student)"
-                  >
-                    <Edit2 class="w-3.5 h-3.5" />
-                  </button>
                 </div>
               </td>
               <td class="py-3 px-2 text-sm text-right font-bold text-light-text dark:text-offwhite">
@@ -137,7 +129,7 @@ v-if="false"
           @click="openStatementModal"
         >
           <FileText class="w-4 h-4" />
-          Gerar demonstrativo
+          Visualizar demonstrativo
         </button>
         <button 
           v-if="(activeTeacher?.totalToReceive || 0) > 0"
@@ -156,23 +148,20 @@ v-if="false"
       :is-open="isStatementModalOpen"
       :teacher="activeTeacher"
       @close="isStatementModalOpen = false"
-      @confirm="handleStatement"
     />
 
     <PayTeacherModal 
       :is-open="isPayModalOpen"
       :teacher="activeTeacher"
       :accounts="accounts"
+      :saving="isPayingTeacher"
       @close="isPayModalOpen = false"
       @confirm="handlePayment"
     />
 
-    <AdjustCommissionModal 
-      :is-open="isAdjustModalOpen"
-      :item="selectedStudentItem"
-      @close="isAdjustModalOpen = false"
-      @confirm="handleAdjust"
-    />
+    <div v-if="operationError" class="fixed bottom-6 left-1/2 z-[60] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 rounded-lg border border-red-500/40 bg-red-950 px-5 py-3 text-sm font-medium text-white shadow-xl" role="alert">
+      {{ operationError }}
+    </div>
 
     <!-- Toast flutuante -->
     <div 
@@ -187,12 +176,11 @@ v-if="false"
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { X, FileText, CheckCircle, Edit2, Users } from '@lucide/vue'
+import { X, FileText, CheckCircle, Users } from '@lucide/vue'
 import { useFinanceiro, type Teacher } from '../../composables/useFinanceiro'
 
 import TeacherStatementModal from '../modals/TeacherStatementModal.vue'
 import PayTeacherModal from '../modals/PayTeacherModal.vue'
-import AdjustCommissionModal from '../modals/AdjustCommissionModal.vue'
 
 const { teachers, accounts, fetchTeachers, fetchAccounts, payTeacher } = useFinanceiro()
 
@@ -233,8 +221,8 @@ const closeDrawer = () => {
 // Modais
 const isStatementModalOpen = ref(false)
 const isPayModalOpen = ref(false)
-const isAdjustModalOpen = ref(false)
-const selectedStudentItem = ref<any>(null)
+const isPayingTeacher = ref(false)
+const operationError = ref('')
 
 const openStatementModal = () => {
   isStatementModalOpen.value = true
@@ -244,19 +232,11 @@ const openPayModal = () => {
   isPayModalOpen.value = true
 }
 
-const openAdjustModal = (student: any) => {
-  selectedStudentItem.value = student
-  isAdjustModalOpen.value = true
-}
-
-// Funções dos Modais
-const handleStatement = (action: 'whatsapp' | 'pdf') => {
-  isStatementModalOpen.value = false
-  showToast(action === 'whatsapp' ? 'Demonstrativo enviado via WhatsApp.' : 'Download do PDF iniciado.')
-}
-
 const handlePayment = async (data: any) => {
-  if (activeTeacher.value) {
+  if (!activeTeacher.value || isPayingTeacher.value) return
+  isPayingTeacher.value = true
+  operationError.value = ''
+  try {
     await payTeacher(
       activeTeacher.value.id, 
       activeTeacher.value.totalToReceive, 
@@ -267,19 +247,10 @@ const handlePayment = async (data: any) => {
     isPayModalOpen.value = false
     closeDrawer()
     showToast(`Repasse pago! Lançamento de saída criado na conta ${data.account}.`)
-  }
-}
-
-const handleAdjust = (newRate: number) => {
-  if (selectedStudentItem.value && activeTeacher.value) {
-    selectedStudentItem.value.amountPerClass = newRate
-    selectedStudentItem.value.total = selectedStudentItem.value.classesGiven * newRate
-    activeTeacher.value.totalToReceive = activeTeacher.value.students.reduce(
-      (acc, s) => acc + s.total, 
-      0
-    )
-    isAdjustModalOpen.value = false
-    showToast('Comissão ajustada para este mês.')
+  } catch (error: any) {
+    operationError.value = `Não foi possível pagar o repasse. ${error.message || 'Tente novamente.'}`
+  } finally {
+    isPayingTeacher.value = false
   }
 }
 

@@ -1,7 +1,7 @@
 <template>
   <BaseModal 
     :is-open="isOpen" 
-    title="Gerar demonstrativo" 
+    title="Visualizar demonstrativo"
     max-width="2xl"
     @close="handleClose"
   >
@@ -13,7 +13,7 @@
         <div class="text-center mb-8 border-b border-gray-300 pb-6">
           <h2 class="text-2xl font-bold uppercase tracking-wider mb-2">{{ school.nome }}</h2>
           <p class="text-sm text-gray-600">CNPJ: {{ school.cnpj }}</p>
-          <p class="text-sm text-gray-600">Demonstrativo de Repasse - Julho 2026</p>
+          <p class="text-sm text-gray-600">Demonstrativo de Repasse — {{ currentMonth }}</p>
         </div>
 
         <!-- Dados do Professor -->
@@ -60,27 +60,13 @@
       </div>
 
       <!-- Ações -->
-      <div class="flex justify-between items-center mt-2">
+      <div class="flex justify-end items-center mt-2">
         <button 
           class="px-4 py-2 text-sm font-medium text-light-text/70 dark:text-offwhite/70 hover:bg-light-border/50 dark:hover:bg-dark-border/50 rounded-md transition-colors"
           @click="handleClose"
         >
           Fechar
         </button>
-        <div class="flex gap-3">
-          <button 
-            class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-bold rounded-md transition-colors flex items-center gap-2"
-            @click="confirm('whatsapp')"
-          >
-            Enviar por WhatsApp
-          </button>
-          <button 
-            class="px-6 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-bold rounded-md transition-colors shadow-sm flex items-center gap-2"
-            @click="confirm('pdf')"
-          >
-            Baixar PDF
-          </button>
-        </div>
       </div>
 
     </div>
@@ -97,13 +83,17 @@ defineProps<{
   teacher: Teacher | null
 }>()
 
-const emit = defineEmits(['close', 'confirm'])
+const emit = defineEmits(['close'])
 const { school, loadSchool } = useSchoolSettings()
 await loadSchool()
 
 const today = computed(() => {
   const d = new Date()
   return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`
+})
+const currentMonth = computed(() => {
+  const label = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+  return label.charAt(0).toUpperCase() + label.slice(1)
 })
 
 const formatCurrency = (value: number) => {
@@ -114,7 +104,4 @@ const handleClose = () => {
   emit('close')
 }
 
-const confirm = (action: 'whatsapp' | 'pdf') => {
-  emit('confirm', action)
-}
 </script>
