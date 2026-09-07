@@ -579,6 +579,23 @@ describe('exclusao definitiva do aluno', () => {
   })
 })
 
+describe('menu flutuante de acoes do aluno', () => {
+  const table = normalize(read('app/components/students/StudentsTable.vue'))
+
+  it('renderiza fora da tabela sem criar rolagem e reposiciona dentro da tela', () => {
+    assert.ok(table.includes('<teleport to="body">'))
+    assert.ok(table.includes('class="fixed w-52'))
+    assert.ok(table.includes('getboundingclientrect()'))
+    assert.ok(table.includes('window.innerheight'))
+    assert.doesNotMatch(table, /overflow-x-auto min-h-\[300px\] pb-16/)
+  })
+
+  it('fecha ao rolar ou redimensionar a pagina', () => {
+    assert.ok(table.includes("window.addeventlistener('resize', closemenu)"))
+    assert.ok(table.includes("window.addeventlistener('scroll', closemenu, true)"))
+  })
+})
+
 describe('pix e exclusao segura do professor', () => {
   const migration = normalize(read('supabase/migrations/202609070038_professor_pix_exclusao.sql'))
   const teachers = normalize(read('app/components/configuracoes/ConfigProfessores.vue'))

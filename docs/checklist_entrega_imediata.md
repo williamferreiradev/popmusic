@@ -6,7 +6,7 @@ Este documento contém somente o necessário para colocar a primeira versão em 
 
 - [x] Aplicação publicada em HTTPS na Vercel.
 - [x] Rota inicial redireciona para o login e a tela de login responde corretamente.
-- [x] Testes automatizados: 118 aprovados, nenhuma falha (07/09/2026).
+- [x] Testes automatizados: 120 aprovados, nenhuma falha (07/09/2026).
 - [x] TypeScript/typecheck sem erros (04/09/2026).
 - [x] ESLint sem erros (04/09/2026).
 - [x] Portal do aluno diferencia falha de carregamento de estado vazio e mantém tabelas financeiras utilizáveis no celular.
@@ -26,6 +26,7 @@ Este documento contém somente o necessário para colocar a primeira versão em 
 - [x] Professor aceita PIX e CPF opcional; exclusão remove turmas vazias, mas protege histórico de aulas e finanças.
 - [x] Modalidade sem turmas pode ser excluída; criar modalidade abre o cadastro de sala com seleção automática.
 - [x] Relatórios consultam dados reais, incluem contratos cancelados e exportam CSV UTF-8.
+- [x] Menu de ações dos alunos flutua fora da tabela, não cria rolagem e respeita os limites da tela.
 - [x] Frontend e servidor compilam; o empacotamento local para apenas no `EPERM readlink` do Windows/OneDrive.
 - [x] Build em ambiente externo confirmado pela implantação funcional da Vercel.
 

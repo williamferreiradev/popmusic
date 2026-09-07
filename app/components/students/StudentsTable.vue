@@ -1,6 +1,6 @@
 <template>
   <div class="bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-lg flex flex-col shadow-sm transition-colors duration-300">
-    <div class="overflow-x-auto min-h-[300px] pb-16">
+    <div class="overflow-x-auto min-h-[300px]">
       <table class="w-full text-left text-sm text-light-text dark:text-offwhite">
         <thead class="bg-light-bg/50 dark:bg-dark-bg/50 border-b border-light-border dark:border-dark-border text-light-text/70 dark:text-offwhite/70">
           <tr>
@@ -40,15 +40,21 @@
               <button
                 class="p-2 rounded-md text-light-text/50 dark:text-offwhite/50 hover:bg-light-bg dark:hover:bg-dark-bg hover:text-light-text dark:hover:text-offwhite transition-colors focus:outline-none focus:ring-2 focus:ring-gold"
                 :class="openMenuId === aluno.id ? 'bg-light-bg dark:bg-dark-bg text-light-text dark:text-offwhite' : ''"
-                @click.stop="toggleMenu(aluno.id)"
+                aria-haspopup="menu"
+                :aria-expanded="openMenuId === aluno.id"
+                @click.stop="toggleMenu(aluno.id, $event)"
               >
                 <MoreHorizontal class="w-4 h-4" />
               </button>
 
               <!-- Dropdown Menu -->
+              <Teleport to="body">
               <div
                 v-if="openMenuId === aluno.id"
-                class="absolute right-5 top-full mt-1 w-44 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-lg shadow-2xl overflow-hidden z-50 py-1.5 ring-1 ring-black/10"
+                :data-student-menu="aluno.id"
+                role="menu"
+                class="fixed w-52 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-lg shadow-2xl overflow-hidden z-[100] py-1.5 ring-1 ring-black/10"
+                :style="menuPosition"
                 @click.stop
               >
                 <button class="w-full text-left px-4 py-2.5 text-sm hover:bg-light-bg dark:hover:bg-dark-bg text-light-text dark:text-offwhite transition-colors flex items-center gap-2.5 font-medium" @click="openProfile(aluno)">
@@ -67,6 +73,7 @@
                   <Trash2 class="w-4 h-4" /> Excluir definitivamente
                 </button>
               </div>
+              </Teleport>
             </td>
           </tr>
         </tbody>
@@ -186,7 +193,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
 import { MoreHorizontal, Eye, Edit2, Trash2, FileText } from '@lucide/vue'
 import BaseBadge from '../BaseBadge.vue'
 import StudentProfileModal from '../modals/StudentProfileModal.vue'
@@ -230,6 +237,7 @@ const props = defineProps({
 
 // Controle do Menu de Ações e Perfil
 const openMenuId = ref<string | null>(null)
+const menuPosition = ref({ top: '0px', left: '0px' })
 const isProfileModalOpen = ref(false)
 const isEditModalOpen = ref(false)
 const isDeleteModalOpen = ref(false)
@@ -303,8 +311,32 @@ const openContract = async (aluno: any) => {
   }
 }
 
-const toggleMenu = (id: string) => {
-  openMenuId.value = openMenuId.value === id ? null : id
+const toggleMenu = async (id: string, event: MouseEvent) => {
+  if (openMenuId.value === id) {
+    closeMenu()
+    return
+  }
+
+  const trigger = event.currentTarget as HTMLElement
+  const rect = trigger.getBoundingClientRect()
+  const menuWidth = 208
+  const viewportGap = 8
+
+  openMenuId.value = id
+  menuPosition.value = {
+    top: `${rect.bottom + 6}px`,
+    left: `${Math.max(viewportGap, Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - viewportGap))}px`
+  }
+
+  await nextTick()
+  const menu = document.querySelector<HTMLElement>(`[data-student-menu="${id}"]`)
+  const menuHeight = menu?.offsetHeight || 0
+  if (rect.bottom + 6 + menuHeight > window.innerHeight - viewportGap) {
+    menuPosition.value = {
+      ...menuPosition.value,
+      top: `${Math.max(viewportGap, rect.top - menuHeight - 6)}px`
+    }
+  }
 }
 
 const closeMenu = () => {
@@ -430,10 +462,14 @@ const handleStudentDeleted = async (data: { id: string, reason: string }) => {
 
 onMounted(() => {
   window.addEventListener('click', closeMenu)
+  window.addEventListener('resize', closeMenu)
+  window.addEventListener('scroll', closeMenu, true)
 })
 
 onUnmounted(() => {
   window.removeEventListener('click', closeMenu)
+  window.removeEventListener('resize', closeMenu)
+  window.removeEventListener('scroll', closeMenu, true)
 })
 
 const totalPages = computed(() => Math.max(1, Math.ceil(props.totalCount / props.itemsPerPage)))
