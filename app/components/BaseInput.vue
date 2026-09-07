@@ -11,7 +11,7 @@
         :placeholder="placeholder"
         :max="max"
         :required="required"
-        class="w-full bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-md py-2 text-light-text dark:text-offwhite placeholder:text-light-text/40 dark:placeholder:text-offwhite/40 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors"
+        class="w-full bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-md py-2 text-light-text dark:text-offwhite placeholder:text-light-text/40 dark:placeholder:text-offwhite/40 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors [color-scheme:light] dark:[color-scheme:dark]"
         :class="[$slots.icon ? 'pl-10 pr-3' : 'px-3']"
         @input="handleInput"
       >

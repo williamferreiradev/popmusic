@@ -525,6 +525,28 @@ describe('proximas turmas reais do dashboard', () => {
   })
 })
 
+describe('turmas atualizadas e contraste na matricula', () => {
+  const create = normalize(read('app/components/modals/StudentCreateModal.vue'))
+  const input = normalize(read('app/components/BaseInput.vue'))
+  const select = normalize(read('app/components/BaseSelect.vue'))
+
+  it('recarrega modalidades e turmas sempre que o modal abre', () => {
+    assert.ok(create.includes('refresh: refreshmodalidades'))
+    assert.ok(create.includes('refresh: refreshturmas'))
+    assert.ok(create.includes('promise.all([refreshmodalidades(), refreshturmas()])'))
+  })
+
+  it('normaliza os identificadores usados pelo filtro', () => {
+    assert.ok(create.includes("modalidadeid: string(t.modalidade_id || t.modalidades?.id || '')"))
+    assert.ok(create.includes('opt.modalidadeid === string(selectedmodalityid.value)'))
+  })
+
+  it('aplica esquema de cor correto aos controles nativos', () => {
+    assert.ok(input.includes('[color-scheme:light] dark:[color-scheme:dark]'))
+    assert.ok(select.includes('[color-scheme:light] dark:[color-scheme:dark]'))
+  })
+})
+
 describe('erros nas operacoes financeiras manuais', () => {
   const finance = normalize(read('app/composables/useFinanceiro.ts'))
   const charges = normalize(read('app/components/financeiro/FinanceiroCharges.vue'))

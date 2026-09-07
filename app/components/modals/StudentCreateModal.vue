@@ -172,7 +172,7 @@
             </button>
           </div>
           <p v-else class="text-xs p-3 rounded-lg border border-dashed border-light-border dark:border-dark-border text-light-text/50 dark:text-offwhite/50">
-            Não há turmas ativas cadastradas para esta modalidade.
+            Não há turmas/horários ativos para esta modalidade. Uma sala cadastrada só aparecerá aqui depois que uma turma for criada com professor, dia e horário.
           </p>
         </div>
         <p v-else class="text-xs text-light-text/50 dark:text-offwhite/50">Escolha uma modalidade para visualizar seus dias e horários.</p>
@@ -268,7 +268,7 @@ const isMinor = computed(() => {
 
 const supabase = useSupabaseClient()
 
-const { data: modalidades } = await useAsyncData('modalidades_create_list', async () => {
+const { data: modalidades, refresh: refreshModalidades } = await useAsyncData('modalidades_create_list', async () => {
   const { data, error } = await supabase
     .from('modalidades')
     .select('id, nome')
@@ -283,7 +283,7 @@ const { data: modalidades } = await useAsyncData('modalidades_create_list', asyn
   return data || []
 })
 
-const { data: turmas } = await useAsyncData('turmas_create_list', async () => {
+const { data: turmas, refresh: refreshTurmas } = await useAsyncData('turmas_create_list', async () => {
   const { data, error } = await supabase.from('turmas').select(`
       id,
       dia_semana,
@@ -325,7 +325,7 @@ const classOptions = computed(() => {
     return { 
       label: `${modNome} (${dia} ${hora})`, 
       value: t.id,
-      modalidadeId: t.modalidade_id || t.modalidades?.id || '',
+      modalidadeId: String(t.modalidade_id || t.modalidades?.id || ''),
       valor: t.modalidades?.valor_padrao_mensalidade || 150,
       modNome,
       teacher: t.professores?.nome || 'Professor não informado',
@@ -339,7 +339,12 @@ const classOptions = computed(() => {
   }).sort((a, b) => a.schedule.localeCompare(b.schedule, 'pt-BR'))
 })
 
-const filteredClassOptions = computed(() => classOptions.value.filter(opt => opt.modalidadeId === selectedModalityId.value))
+const filteredClassOptions = computed(() => classOptions.value.filter(opt => opt.modalidadeId === String(selectedModalityId.value)))
+
+watch(() => props.isOpen, async isOpen => {
+  if (!isOpen) return
+  await Promise.all([refreshModalidades(), refreshTurmas()])
+})
 
 watch(selectedModalityId, (newId, oldId) => {
   if (!oldId || newId === oldId) return

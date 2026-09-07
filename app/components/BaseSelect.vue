@@ -4,7 +4,7 @@
     <div class="relative">
       <select
         :value="modelValue"
-        class="w-full bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-md px-3 py-2 pr-8 text-light-text dark:text-offwhite focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors appearance-none cursor-pointer"
+        class="w-full bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-md px-3 py-2 pr-8 text-light-text dark:text-offwhite focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors appearance-none cursor-pointer [color-scheme:light] dark:[color-scheme:dark]"
         :class="{'text-light-text/40 dark:text-offwhite/40': !modelValue}"
         @change="$emit('update:modelValue', ($event.target as HTMLSelectElement).value)"
       >
