@@ -505,6 +505,26 @@ describe('edicao transacional do aluno', () => {
   })
 })
 
+describe('proximas turmas reais do dashboard', () => {
+  const upcoming = normalize(read('app/components/dashboard/UpcomingClassesTable.vue'))
+
+  it('remove turmas sem alunos ativos', () => {
+    assert.ok(upcoming.includes('turma.students > 0'))
+    assert.ok(upcoming.includes('m.data_fim === null'))
+  })
+
+  it('remove aulas que ja terminaram no dia', () => {
+    assert.ok(upcoming.includes('turma.endtime >= currenttime'))
+    assert.ok(upcoming.includes("t.horario_fim.substring(0, 5)"))
+  })
+
+  it('diferencia erro de agenda vazia', () => {
+    assert.ok(upcoming.includes('error: loaderror'))
+    assert.ok(upcoming.includes('v-else-if="!pending && loaderror"'))
+    assert.ok(upcoming.includes('if (error) throw error'))
+  })
+})
+
 describe('erros nas operacoes financeiras manuais', () => {
   const finance = normalize(read('app/composables/useFinanceiro.ts'))
   const charges = normalize(read('app/components/financeiro/FinanceiroCharges.vue'))

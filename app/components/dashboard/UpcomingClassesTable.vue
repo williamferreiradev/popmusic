@@ -37,6 +37,9 @@
       </table>
 
       <!-- Empty State -->
+      <div v-else-if="!pending && loadError" class="flex flex-col items-center justify-center py-12 text-red-600 dark:text-red-400">
+        <p>Não foi possível carregar as próximas turmas.</p>
+      </div>
       <div v-else-if="!pending && (!turmas || turmas.length === 0)" class="flex flex-col items-center justify-center py-12 text-light-text/50 dark:text-offwhite/50">
         <p>Nenhuma turma agendada para hoje.</p>
       </div>
@@ -58,7 +61,7 @@
 <script setup lang="ts">
 const supabase = useSupabaseClient()
 
-const { data: turmas, pending } = await useAsyncData('upcomingClasses', async () => {
+const { data: turmas, pending, error: loadError } = await useAsyncData('upcomingClasses', async () => {
   const { data, error } = await supabase
     .from('turmas')
     .select(`
@@ -74,11 +77,10 @@ const { data: turmas, pending } = await useAsyncData('upcomingClasses', async ()
     .eq('ativo', true)
     .order('horario_inicio')
     
-  if (error) {
-    console.error(error)
-    return []
-  }
+  if (error) throw error
 
+  const now = new Date()
+  const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
   return data.map((t: any) => {
     // Conta apenas alunos que ainda estão matriculados (data_fim is null)
     const activeStudents = t.matriculas_turma?.filter((m: any) => m.data_fim === null).length || 0
@@ -90,8 +92,9 @@ const { data: turmas, pending } = await useAsyncData('upcomingClasses', async ()
       teacher: t.professores?.nome || 'Não definido',
       students: activeStudents,
       capacity: t.capacidade_maxima,
-      colorClass: t.modalidades?.cor_calendario || '#7A1F1F'
+      colorClass: t.modalidades?.cor_calendario || '#7A1F1F',
+      endTime: t.horario_fim.substring(0, 5)
     }
-  })
+  }).filter((turma: any) => turma.students > 0 && turma.endTime >= currentTime)
 })
 </script>
