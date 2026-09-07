@@ -11,9 +11,6 @@
       </div>
 
       <div class="flex flex-wrap items-center gap-6">
-        <BaseButton variant="primary" class="flex items-center gap-2" @click="openClassForm()">
-          <Plus class="w-4 h-4" /> Nova turma
-        </BaseButton>
         <!-- Legenda -->
         <div class="flex items-center gap-4 text-xs font-medium text-light-text dark:text-offwhite">
           <div class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-blue-500"/> Agendado</div>
@@ -61,15 +58,11 @@
     </div>
 
     <!-- Área da Agenda -->
-    <div v-if="feedback" class="rounded-lg border px-4 py-3 text-sm" :class="feedback.type === 'success' ? 'border-green-500/40 bg-green-500/10 text-green-700 dark:text-green-300' : 'border-red-500/40 bg-red-500/10 text-red-700 dark:text-red-300'" role="status">
-      {{ feedback.message }}
-    </div>
-
-    <div v-if="catalogsError || turmasError" class="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-6 text-center text-sm text-red-700 dark:text-red-300">
+    <div v-if="turmasError" class="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-6 text-center text-sm text-red-700 dark:text-red-300">
       Não foi possível carregar a agenda completa. Atualize a página e tente novamente.
     </div>
 
-    <div v-if="!catalogsError && !turmasError" class="flex-1 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-lg shadow-sm overflow-hidden flex flex-col">
+    <div v-if="!turmasError" class="flex-1 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-lg shadow-sm overflow-hidden flex flex-col">
       
       <!-- Cabeçalho dos Dias (Semana) -->
       <div v-if="view === 'Semana'" class="grid grid-cols-[60px_repeat(7,1fr)] border-b border-light-border dark:border-dark-border">
@@ -164,29 +157,15 @@
       :appointment="selectedAppointment"
       @close="isModalOpen = false"
       @update:status="handleStatusUpdate"
-      @edit="openClassForm"
-    />
-    <ClassFormModal
-      :is-open="isClassFormOpen"
-      :class-data="editingClass"
-      :modalities="catalogs?.modalities || []"
-      :teachers="catalogs?.teachers || []"
-      :rooms="catalogs?.rooms || []"
-      :existing-classes="rawTurmas || []"
-      :saving="isSavingClass"
-      @close="closeClassForm"
-      @save="saveClass"
-      @deactivate="deactivateClass"
+      @edit="openClassManager"
     />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus } from '@lucide/vue'
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from '@lucide/vue'
 import AgendaDetailModal from '~/components/modals/AgendaDetailModal.vue'
-import ClassFormModal from '~/components/modals/ClassFormModal.vue'
-import BaseButton from '~/components/BaseButton.vue'
 
 const supabase = useSupabaseClient()
 
@@ -195,30 +174,14 @@ const currentDate = ref(new Date())
 
 const isModalOpen = ref(false)
 const selectedAppointment = ref(null)
-const isClassFormOpen = ref(false)
-const editingClass = ref<any>(null)
-const isSavingClass = ref(false)
-const feedback = ref<{ type: 'success' | 'error', message: string } | null>(null)
 
 const hours = [
   '08:00', '09:00', '10:00', '11:00', '12:00', 
   '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00'
 ]
 
-const { data: catalogs, error: catalogsError } = await useAsyncData('agenda_catalogos', async () => {
-  const [modalities, teachers, rooms] = await Promise.all([
-    supabase.from('modalidades').select('id, nome').eq('ativo', true).order('nome'),
-    supabase.from('professores').select('id, nome').eq('ativo', true).order('nome'),
-    supabase.from('salas').select('id, nome, capacidade_padrao').eq('ativo', true).order('nome')
-  ])
-  if (modalities.error) throw modalities.error
-  if (teachers.error) throw teachers.error
-  if (rooms.error) throw rooms.error
-  return { modalities: modalities.data || [], teachers: teachers.data || [], rooms: rooms.data || [] }
-})
-
 // Carregamento de Turmas Reais do Supabase
-const { data: rawTurmas, error: turmasError, refresh: refreshTurmas } = await useAsyncData('agenda_turmas', async () => {
+const { data: rawTurmas, error: turmasError } = await useAsyncData('agenda_turmas', async () => {
   const { data, error } = await supabase
     .from('turmas')
     .select(`
@@ -437,58 +400,8 @@ const openAppointment = (apt: any) => {
   isModalOpen.value = true
 }
 
-const openClassForm = (appointment?: any) => {
-  editingClass.value = appointment?.raw || null
-  isModalOpen.value = false
-  isClassFormOpen.value = true
-}
-
-const closeClassForm = () => {
-  isClassFormOpen.value = false
-  editingClass.value = null
-}
-
-const saveClass = async (payload: any) => {
-  isSavingClass.value = true
-  feedback.value = null
-  try {
-    const { error } = await (supabase as any).rpc('salvar_turma', {
-      p_id: editingClass.value?.id || null,
-      p_modalidade_id: payload.modalidade_id,
-      p_professor_id: payload.professor_id,
-      p_sala_id: payload.sala_id,
-      p_dia_semana: payload.dia_semana,
-      p_horario_inicio: payload.horario_inicio,
-      p_horario_fim: payload.horario_fim,
-      p_capacidade_maxima: payload.capacidade_maxima
-    })
-    if (error) throw error
-    await refreshTurmas()
-    const wasEditing = Boolean(editingClass.value)
-    closeClassForm()
-    feedback.value = { type: 'success', message: `Turma ${wasEditing ? 'atualizada' : 'criada'} com sucesso.` }
-  } catch (error: any) {
-    feedback.value = { type: 'error', message: `Não foi possível salvar a turma. ${error.message || 'Tente novamente.'}` }
-  } finally {
-    isSavingClass.value = false
-  }
-}
-
-const deactivateClass = async (classData: any) => {
-  if (!classData?.id || !confirm('Desativar esta turma? Os históricos e matrículas serão preservados.')) return
-  isSavingClass.value = true
-  feedback.value = null
-  try {
-    const { error } = await (supabase as any).rpc('inativar_turma', { p_turma_id: classData.id })
-    if (error) throw error
-    await refreshTurmas()
-    closeClassForm()
-    feedback.value = { type: 'success', message: 'Turma desativada com sucesso.' }
-  } catch (error: any) {
-    feedback.value = { type: 'error', message: `Não foi possível desativar a turma. ${error.message || 'Tente novamente.'}` }
-  } finally {
-    isSavingClass.value = false
-  }
+const openClassManager = (appointment: any) => {
+  navigateTo({ path: '/dashboard/turmas', query: { editar: String(appointment.id) } })
 }
 
 const handleStatusUpdate = ({ id, studentId, status }: { id: string | number, studentId: string | number, status: string }) => {

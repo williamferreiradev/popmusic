@@ -56,6 +56,7 @@ describe('paginação da lista de alunos', () => {
 
 describe('detalhes reais da agenda', () => {
   const agenda = normalize(read('app/pages/dashboard/agenda.vue'))
+  const classes = normalize(read('app/components/configuracoes/ConfigTurmas.vue'))
   const modal = normalize(read('app/components/modals/AgendaDetailModal.vue'))
 
   it('carrega foto contratual e situação financeira dos alunos matriculados', () => {
@@ -85,7 +86,6 @@ describe('detalhes reais da agenda', () => {
   })
 
   it('mostra falhas reais e nao transforma erro do banco em agenda vazia', () => {
-    assert.ok(agenda.includes('error: catalogserror'))
     assert.ok(agenda.includes('error: turmaserror'))
     assert.ok(agenda.includes('if (error) throw error'))
     assert.doesNotMatch(agenda, /erro ao buscar turmas na agenda:[^}]+return \[\]/)
@@ -93,7 +93,7 @@ describe('detalhes reais da agenda', () => {
 
   it('valida a capacidade selecionada contra a capacidade da sala', () => {
     const form = normalize(read('app/components/modals/ClassFormModal.vue'))
-    assert.ok(agenda.includes('capacidade_padrao'))
+    assert.ok(classes.includes('capacidade_padrao'))
     assert.ok(form.includes('capacitymessage'))
     assert.ok(form.includes('number.isinteger(number(form.capacidade))'))
   })
@@ -593,6 +593,34 @@ describe('menu flutuante de acoes do aluno', () => {
   it('fecha ao rolar ou redimensionar a pagina', () => {
     assert.ok(table.includes("window.addeventlistener('resize', closemenu)"))
     assert.ok(table.includes("window.addeventlistener('scroll', closemenu, true)"))
+  })
+})
+
+describe('gestao separada de turmas e agenda', () => {
+  const sidebar = normalize(read('app/components/layout/LayoutDashboardSidebar.vue'))
+  const classes = normalize(read('app/components/configuracoes/ConfigTurmas.vue'))
+  const calendar = normalize(read('app/pages/dashboard/agenda.vue'))
+  const migration = normalize(read('supabase/migrations/202609070040_exclusao_turma.sql'))
+
+  it('separa salas, turmas e agenda no menu da gestao', () => {
+    assert.ok(sidebar.includes("label: 'salas', path: '/dashboard/salas'"))
+    assert.ok(sidebar.includes("label: 'turmas', path: '/dashboard/turmas'"))
+    assert.ok(sidebar.includes("label: 'agenda', path: '/dashboard/agenda'"))
+  })
+
+  it('centraliza cadastro edicao e exclusao na listagem de turmas', () => {
+    assert.ok(classes.includes("rpc('salvar_turma'"))
+    assert.ok(classes.includes("rpc('excluir_turma_definitivamente'"))
+    assert.ok(classes.includes('editar turma'))
+    assert.doesNotMatch(calendar, /<classformmodal/)
+  })
+
+  it('impede apagar turma com qualquer historico operacional', () => {
+    assert.ok(migration.includes('function public.excluir_turma_definitivamente'))
+    assert.ok(migration.includes('public.matriculas_turma'))
+    assert.ok(migration.includes('public.presencas'))
+    assert.ok(migration.includes('public.chamadas_aula'))
+    assert.ok(migration.includes('public.repasse_itens'))
   })
 })
 
