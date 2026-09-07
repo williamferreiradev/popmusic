@@ -1211,6 +1211,7 @@ export type Database = {
           criado_em: string
           id: string
           nome: string
+          onboarding_concluido: boolean
           papel: Database["public"]["Enums"]["papel_usuario"]
           telefone: string | null
           unidade: string | null
@@ -1221,6 +1222,7 @@ export type Database = {
           criado_em?: string
           id: string
           nome: string
+          onboarding_concluido?: boolean
           papel: Database["public"]["Enums"]["papel_usuario"]
           telefone?: string | null
           unidade?: string | null
@@ -1231,6 +1233,7 @@ export type Database = {
           criado_em?: string
           id?: string
           nome?: string
+          onboarding_concluido?: boolean
           papel?: Database["public"]["Enums"]["papel_usuario"]
           telefone?: string | null
           unidade?: string | null

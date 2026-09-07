@@ -48,6 +48,11 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
   const destination = roleDestination[role]
 
+  if (role === 'gestao') {
+    const { data: onboarding } = await supabase.from('usuarios').select('onboarding_concluido').eq('id', authenticatedUserId).maybeSingle()
+    if (onboarding && onboarding.onboarding_concluido === false && to.path !== '/onboarding') return navigateTo('/onboarding')
+  }
+
   if (isPublicRoute || to.path === '/') {
     return navigateTo(destination)
   }

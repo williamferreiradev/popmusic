@@ -82,6 +82,7 @@ import {
   FileText,
   BarChart3,
   Settings,
+  ListStart,
   GraduationCap,
   Music2,
   DoorOpen,
@@ -116,6 +117,7 @@ const handleLogout = async () => {
 
 const menuItems = [
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+  { label: 'Configuração inicial', path: '/onboarding', icon: ListStart },
   { label: 'Alunos', path: '/dashboard/alunos', icon: Users },
   { label: 'Professores', path: '/dashboard/professores', icon: GraduationCap },
   { label: 'Modalidades', path: '/dashboard/modalidades', icon: Music2 },

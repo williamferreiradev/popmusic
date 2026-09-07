@@ -1,5 +1,5 @@
 <template>
-  <div class="p-4 sm:p-8 w-full flex flex-col gap-6">
+  <div class="w-full flex flex-col gap-6">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
         <h1 class="text-2xl font-bold text-light-text dark:text-offwhite">Turmas</h1>

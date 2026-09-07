@@ -624,6 +624,30 @@ describe('gestao separada de turmas e agenda', () => {
   })
 })
 
+describe('onboarding inicial da gestao', () => {
+  const onboarding = normalize(read('app/pages/onboarding.vue'))
+  const middleware = normalize(read('app/middleware/auth.global.ts'))
+  const migration = normalize(read('supabase/migrations/202609070041_onboarding_gestao.sql'))
+
+  it('guia a configuracao na ordem operacional correta', () => {
+    for (const component of ['configcobrancacontrato', 'configmodalidades', 'configsalas', 'configprofessores', 'configturmas']) assert.ok(onboarding.includes(component))
+    assert.ok(onboarding.includes("title: 'escola'"))
+    assert.ok(onboarding.indexOf("title: 'modalidades'") < onboarding.indexOf("title: 'turmas'"))
+  })
+
+  it('exige dados reais no banco antes de avancar', () => {
+    assert.ok(onboarding.includes("{ count: 'exact', head: true }"))
+    assert.ok(onboarding.includes('cadastre pelo menos um item'))
+    assert.ok(onboarding.includes("rpc('concluir_onboarding'"))
+  })
+
+  it('redireciona apenas novas contas de gestao para o onboarding', () => {
+    assert.ok(migration.includes('set default false'))
+    assert.ok(migration.includes('set onboarding_concluido=true where onboarding_concluido is null'))
+    assert.ok(middleware.includes("to.path !== '/onboarding'"))
+  })
+})
+
 describe('pix e exclusao segura do professor', () => {
   const migration = normalize(read('supabase/migrations/202609070038_professor_pix_exclusao.sql'))
   const teachers = normalize(read('app/components/configuracoes/ConfigProfessores.vue'))

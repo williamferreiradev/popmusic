@@ -16,6 +16,7 @@ export const isPublicPath = (path: string): boolean => (
 
 export const canRoleAccessPath = (role: UserRole, path: string): boolean => {
   if (isPublicPath(path) || path === '/') return true
+  if (path === '/onboarding') return role === 'gestao'
   if (path === '/dashboard' || path.startsWith('/dashboard/')) return role === 'gestao'
   if (path === '/professor' || path.startsWith('/professor/')) return role === 'professor'
   if (path === '/aluno' || path.startsWith('/aluno/')) return role === 'aluno'

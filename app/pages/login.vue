@@ -116,7 +116,13 @@ async function redirectUser(userId?: string) {
       return navigateTo('/login?erro=acesso-invalido')
     }
     const papel = userProfile.papel
-    if (isUserRole(papel)) return navigateTo(roleDestination[papel])
+    if (isUserRole(papel)) {
+      if (papel === 'gestao') {
+        const { data: onboarding } = await supabase.from('usuarios').select('onboarding_concluido').eq('id', id).maybeSingle()
+        if (onboarding?.onboarding_concluido === false) return navigateTo('/onboarding')
+      }
+      return navigateTo(roleDestination[papel])
+    }
     await supabase.auth.signOut()
     return navigateTo('/login?erro=acesso-invalido')
   } catch {
