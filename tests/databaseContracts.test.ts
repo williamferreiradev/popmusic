@@ -573,6 +573,32 @@ describe('exclusao definitiva do aluno', () => {
   })
 })
 
+describe('pix e exclusao segura do professor', () => {
+  const migration = normalize(read('supabase/migrations/202609070038_professor_pix_exclusao.sql'))
+  const teachers = normalize(read('app/components/configuracoes/ConfigProfessores.vue'))
+
+  it('salva chave pix e permite cpf opcional sem validacao algoritmica', () => {
+    assert.ok(migration.includes('add column if not exists pix_chave'))
+    assert.doesNotMatch(migration, /cpf_valido\(v_cpf\)/)
+    assert.ok(teachers.includes('cpf (opcional)'))
+    assert.ok(teachers.includes('p_pix_chave: form.value.pixkey'))
+  })
+
+  it('bloqueia exclusao quando existe historico operacional', () => {
+    assert.ok(migration.includes('function public.excluir_professor_definitivamente'))
+    assert.ok(migration.includes('repasses_professor'))
+    assert.ok(migration.includes('matriculas_turma mt join public.turmas'))
+    assert.ok(migration.includes('presencas pr join public.turmas'))
+  })
+
+  it('remove turmas vazias, modalidades e acesso com confirmacao', () => {
+    assert.ok(migration.includes('delete from public.turmas where professor_id=p_professor_id'))
+    assert.ok(migration.includes('delete from public.professor_modalidades'))
+    assert.ok(migration.includes('delete from auth.users'))
+    assert.ok(teachers.includes('excluir professor'))
+  })
+})
+
 describe('erros nas operacoes financeiras manuais', () => {
   const finance = normalize(read('app/composables/useFinanceiro.ts'))
   const charges = normalize(read('app/components/financeiro/FinanceiroCharges.vue'))

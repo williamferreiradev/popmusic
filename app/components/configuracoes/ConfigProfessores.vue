@@ -83,6 +83,7 @@
                   <UserX v-if="teacher.active" class="w-4 h-4" />
                   <UserCheck v-else class="w-4 h-4" />
                 </button>
+                <button class="p-1.5 text-red-600 hover:text-red-500" title="Excluir definitivamente" @click="openDeleteTeacher(teacher)"><Trash2 class="w-4 h-4" /></button>
               </div>
             </td>
           </tr>
@@ -94,9 +95,10 @@
       <form class="p-5 flex flex-col gap-4" @submit.prevent="save">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <BaseInput v-model="form.name" label="Nome completo" placeholder="Ex: João da Silva" required />
-          <BaseInput v-model="form.cpf" label="CPF" placeholder="000.000.000-00" mask="cpf" required />
+          <BaseInput v-model="form.cpf" label="CPF (opcional)" placeholder="000.000.000-00" mask="cpf" />
           <BaseInput v-model="form.phone" label="Telefone / WhatsApp" placeholder="(61) 99999-9999" mask="phone" required />
           <BaseInput v-model="form.email" label="E-mail" type="email" placeholder="professor@email.com" required />
+          <BaseInput v-model="form.pixKey" label="Chave PIX (opcional)" placeholder="CPF, e-mail, telefone ou chave aleatória" />
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -130,17 +132,20 @@
         </div>
       </form>
     </BaseModal>
+
+    <ConfirmDeleteModal :is-open="isDeleteOpen" title="Excluir professor" :message="`Excluir ${teacherToDelete?.name || 'este professor'}?`" warning-text="Turmas vazias e o acesso serão apagados. Se houver matrículas, presenças ou repasses, a exclusão será bloqueada." confirm-text="Excluir professor" :is-loading="isDeleting" @close="isDeleteOpen = false" @confirm="deleteTeacher" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { Loader2, MailPlus, Pencil, Plus, UserCheck, UserX } from '@lucide/vue'
+import { Loader2, MailPlus, Pencil, Plus, Trash2, UserCheck, UserX } from '@lucide/vue'
 import BaseBadge from '../BaseBadge.vue'
 import BaseButton from '../BaseButton.vue'
 import BaseInput from '../BaseInput.vue'
 import BaseModal from '../BaseModal.vue'
 import BaseSelect from '../BaseSelect.vue'
+import ConfirmDeleteModal from '../modals/ConfirmDeleteModal.vue'
 
 type CommissionType = 'percentual' | 'valor_fixo'
 type TeacherView = {
@@ -155,6 +160,7 @@ type TeacherView = {
   commissionValue: number
   modalities: { id: string; name: string }[]
   classCount: number
+  pixKey: string | null
 }
 
 const supabase = useSupabaseClient()
@@ -162,7 +168,10 @@ const isModalOpen = ref(false)
 const isEditing = ref(false)
 const isSaving = ref(false)
 const isInvitingId = ref<string | null>(null)
-const emptyForm = () => ({ id: '', name: '', cpf: '', phone: '', email: '', commissionType: 'valor_fixo' as CommissionType, commissionValue: '', modalityIds: [] as string[] })
+const isDeleteOpen = ref(false)
+const isDeleting = ref(false)
+const teacherToDelete = ref<TeacherView | null>(null)
+const emptyForm = () => ({ id: '', name: '', cpf: '', phone: '', email: '', pixKey: '', commissionType: 'valor_fixo' as CommissionType, commissionValue: '', modalityIds: [] as string[] })
 const form = ref(emptyForm())
 
 const commissionOptions = [
@@ -188,7 +197,8 @@ const { data: pageData, pending, refresh } = await useAsyncData('gestao_professo
     commissionType: teacher.comissao_padrao_tipo,
     commissionValue: Number(teacher.comissao_padrao_valor || 0),
     modalities: (teacher.professor_modalidades || []).map((item: any) => item.modalidades).filter(Boolean),
-    classCount: teacher.turmas?.filter((turma: any) => turma.ativo).length || 0
+    classCount: teacher.turmas?.filter((turma: any) => turma.ativo).length || 0,
+    pixKey: teacher.pix_chave || null
   }))
   return { teachers, modalities: (modalityRows || []).map((item: any) => ({ id: item.id, name: item.nome })) }
 })
@@ -199,7 +209,6 @@ const activeCount = computed(() => teachers.value.filter(item => item.active).le
 const coveredModalities = computed(() => new Set(teachers.value.flatMap(item => item.modalities.map(modality => modality.id))).size)
 const totalClasses = computed(() => teachers.value.reduce((total, item) => total + item.classCount, 0))
 const isValid = computed(() => form.value.name.trim().length > 2
-  && form.value.cpf.replace(/\D/g, '').length === 11
   && form.value.phone.replace(/\D/g, '').length >= 10
   && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.value.email.trim())
   && Number(form.value.commissionValue) >= 0
@@ -218,6 +227,7 @@ const openModal = (teacher?: TeacherView) => {
     cpf: teacher.cpf || '',
     phone: teacher.phone || '',
     email: teacher.email || '',
+    pixKey: teacher.pixKey || '',
     commissionType: teacher.commissionType,
     commissionValue: teacher.commissionValue.toString(),
     modalityIds: teacher.modalities.map(item => item.id)
@@ -239,7 +249,7 @@ const save = async () => {
       p_id: isEditing.value ? form.value.id : null, p_nome: form.value.name,
       p_cpf: form.value.cpf, p_telefone: form.value.phone, p_email: form.value.email,
       p_comissao_tipo: form.value.commissionType, p_comissao_valor: Number(form.value.commissionValue),
-      p_modalidade_ids: form.value.modalityIds
+      p_modalidade_ids: form.value.modalityIds, p_pix_chave: form.value.pixKey
     })
     if (error) throw error
 
@@ -251,6 +261,25 @@ const save = async () => {
   } finally {
     isSaving.value = false
   }
+}
+
+const openDeleteTeacher = (teacher: TeacherView) => {
+  teacherToDelete.value = teacher
+  isDeleteOpen.value = true
+}
+
+const deleteTeacher = async () => {
+  if (!teacherToDelete.value || isDeleting.value) return
+  isDeleting.value = true
+  try {
+    const { error } = await (supabase as any).rpc('excluir_professor_definitivamente', { p_professor_id: teacherToDelete.value.id })
+    if (error) throw error
+    isDeleteOpen.value = false
+    teacherToDelete.value = null
+    await refresh()
+  } catch (error: any) {
+    alert(`Não foi possível excluir o professor. ${error.message || 'Tente desativá-lo.'}`)
+  } finally { isDeleting.value = false }
 }
 
 const toggleActive = async (teacher: TeacherView) => {
