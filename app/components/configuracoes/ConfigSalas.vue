@@ -87,7 +87,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { Plus, Pencil, UserCheck, UserX, Loader2 } from '@lucide/vue'
 import BaseButton from '../BaseButton.vue'
 import BaseModal from '../BaseModal.vue'
@@ -97,6 +97,7 @@ import BaseBadge from '../BaseBadge.vue'
 
 defineEmits(['unsaved-changes'])
 const supabase = useSupabaseClient()
+const route = useRoute()
 
 // Buscar modalidades para o dropdown
 const { data: modalidades, error: modalitiesError } = await useAsyncData('modalidades_salas', async () => {
@@ -163,6 +164,13 @@ const openModal = (room?: any) => {
   }
   isModalOpen.value = true
 }
+
+onMounted(() => {
+  if (route.query.nova !== '1') return
+  openModal()
+  const requestedModality = String(route.query.modalidade || '')
+  if (modalityOptions.value.some(option => option.value === requestedModality)) formData.value.defaultModality = requestedModality
+})
 
 const closeModal = () => {
   isModalOpen.value = false

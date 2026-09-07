@@ -599,6 +599,30 @@ describe('pix e exclusao segura do professor', () => {
   })
 })
 
+describe('exclusao de modalidade e criacao guiada de sala', () => {
+  const migration = normalize(read('supabase/migrations/202609070039_exclusao_modalidade.sql'))
+  const modalities = normalize(read('app/components/configuracoes/ConfigModalidades.vue'))
+  const rooms = normalize(read('app/components/configuracoes/ConfigSalas.vue'))
+
+  it('protege modalidades que possuem turmas historicas', () => {
+    assert.ok(migration.includes('function public.excluir_modalidade_definitivamente'))
+    assert.ok(migration.includes('exists(select 1 from public.turmas'))
+    assert.ok(migration.includes('update public.salas set modalidade_padrao_id=null'))
+  })
+
+  it('expoe exclusao confirmada na listagem', () => {
+    assert.ok(modalities.includes("rpc('excluir_modalidade_definitivamente'"))
+    assert.ok(modalities.includes('excluir modalidade'))
+  })
+
+  it('abre nova sala com a modalidade criada selecionada', () => {
+    assert.ok(modalities.includes("path: '/dashboard/salas'"))
+    assert.ok(modalities.includes("query: { nova: '1', modalidade: string(savedid) }"))
+    assert.ok(rooms.includes("route.query.nova !== '1'"))
+    assert.ok(rooms.includes('formdata.value.defaultmodality = requestedmodality'))
+  })
+})
+
 describe('erros nas operacoes financeiras manuais', () => {
   const finance = normalize(read('app/composables/useFinanceiro.ts'))
   const charges = normalize(read('app/components/financeiro/FinanceiroCharges.vue'))

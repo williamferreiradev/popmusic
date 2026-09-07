@@ -63,6 +63,7 @@
                 <button :disabled="statusLoadingId === mod.id" class="p-1.5 text-light-text/60 dark:text-offwhite/60 transition-colors disabled:opacity-40" :class="mod.active ? 'hover:text-red-500' : 'hover:text-green-500'" :title="mod.active ? 'Inativar' : 'Reativar'" @click="toggleActive(mod)">
                   <UserX v-if="mod.active" class="w-4 h-4" /><UserCheck v-else class="w-4 h-4" />
                 </button>
+                <button class="p-1.5 text-red-600 hover:text-red-500" title="Excluir definitivamente" @click="openDelete(mod)"><Trash2 class="w-4 h-4" /></button>
               </div>
             </td>
           </tr>
@@ -101,16 +102,19 @@
       </div>
     </BaseModal>
 
+    <ConfirmDeleteModal :is-open="isDeleteOpen" title="Excluir modalidade" :message="`Excluir ${modalityToDelete?.name || 'esta modalidade'}?`" warning-text="A exclusão será bloqueada se houver qualquer turma vinculada. Salas passarão para uso geral." confirm-text="Excluir modalidade" :is-loading="isDeleting" @close="isDeleteOpen = false" @confirm="deleteModality" />
+
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Plus, Pencil, UserCheck, UserX, Loader2 } from '@lucide/vue'
+import { Plus, Pencil, Trash2, UserCheck, UserX, Loader2 } from '@lucide/vue'
 import BaseButton from '../BaseButton.vue'
 import BaseModal from '../BaseModal.vue'
 import BaseInput from '../BaseInput.vue'
 import BaseBadge from '../BaseBadge.vue'
+import ConfirmDeleteModal from '../modals/ConfirmDeleteModal.vue'
 
 defineEmits(['unsaved-changes'])
 const supabase = useSupabaseClient()
@@ -155,6 +159,9 @@ const isEditing = ref(false)
 const isLoadingSave = ref(false)
 const statusLoadingId = ref('')
 const feedback = ref<{ type: 'success' | 'error', message: string } | null>(null)
+const isDeleteOpen = ref(false)
+const isDeleting = ref(false)
+const modalityToDelete = ref<any>(null)
 const formData = ref({ id: '', name: '', price: '', color: '' })
 
 const availableColors = ['#7A1F1F', '#C9A227', '#2563EB', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#6B7280']
@@ -187,7 +194,7 @@ const save = async () => {
   const price = parseFloat(formData.value.price)
 
   try {
-    const { error } = await (supabase as any).rpc('salvar_modalidade', {
+    const { data: savedId, error } = await (supabase as any).rpc('salvar_modalidade', {
       p_id: isEditing.value ? formData.value.id : null,
       p_nome: formData.value.name, p_valor: price, p_cor: formData.value.color
     })
@@ -195,12 +202,34 @@ const save = async () => {
     await refresh()
     closeModal()
     feedback.value = { type: 'success', message: `Modalidade ${isEditing.value ? 'atualizada' : 'criada'} com sucesso.` }
+    if (!isEditing.value && savedId) await navigateTo({ path: '/dashboard/salas', query: { nova: '1', modalidade: String(savedId) } })
   } catch (error: any) {
     console.error('Erro ao salvar modalidade:', error)
     feedback.value = { type: 'error', message: `Não foi possível salvar. ${error.message || 'Tente novamente.'}` }
   } finally {
     isLoadingSave.value = false
   }
+}
+
+const openDelete = (mod: any) => {
+  modalityToDelete.value = mod
+  isDeleteOpen.value = true
+}
+
+const deleteModality = async () => {
+  if (!modalityToDelete.value || isDeleting.value) return
+  isDeleting.value = true
+  feedback.value = null
+  try {
+    const { error } = await (supabase as any).rpc('excluir_modalidade_definitivamente', { p_modalidade_id: modalityToDelete.value.id })
+    if (error) throw error
+    isDeleteOpen.value = false
+    modalityToDelete.value = null
+    await refresh()
+    feedback.value = { type: 'success', message: 'Modalidade excluída com sucesso.' }
+  } catch (error: any) {
+    feedback.value = { type: 'error', message: `Não foi possível excluir. ${error.message || 'Tente novamente.'}` }
+  } finally { isDeleting.value = false }
 }
 
 const toggleActive = async (mod: any) => {

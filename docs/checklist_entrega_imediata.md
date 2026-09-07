@@ -6,7 +6,7 @@ Este documento contém somente o necessário para colocar a primeira versão em 
 
 - [x] Aplicação publicada em HTTPS na Vercel.
 - [x] Rota inicial redireciona para o login e a tela de login responde corretamente.
-- [x] Testes automatizados: 114 aprovados, nenhuma falha (07/09/2026).
+- [x] Testes automatizados: 117 aprovados, nenhuma falha (07/09/2026).
 - [x] TypeScript/typecheck sem erros (04/09/2026).
 - [x] ESLint sem erros (04/09/2026).
 - [x] Portal do aluno diferencia falha de carregamento de estado vazio e mantém tabelas financeiras utilizáveis no celular.
@@ -24,6 +24,7 @@ Este documento contém somente o necessário para colocar a primeira versão em 
 - [x] Nova matrícula atualiza turmas ao abrir, normaliza modalidade e explica a diferença entre sala e turma; inputs respeitam o tema.
 - [x] Aluno pode ser cancelado ou excluído definitivamente; a exclusão total é transacional, restrita à gestão e confirmada separadamente.
 - [x] Professor aceita PIX e CPF opcional; exclusão remove turmas vazias, mas protege histórico de aulas e finanças.
+- [x] Modalidade sem turmas pode ser excluída; criar modalidade abre o cadastro de sala com seleção automática.
 - [x] Frontend e servidor compilam; o empacotamento local para apenas no `EPERM readlink` do Windows/OneDrive.
 - [x] Build em ambiente externo confirmado pela implantação funcional da Vercel.
 
@@ -36,6 +37,7 @@ Este documento contém somente o necessário para colocar a primeira versão em 
 - [ ] Aplicar a migração `036`, que atualiza aluno e turmas em uma única transação.
 - [ ] Aplicar a migração `037`, que permite à gestão excluir definitivamente todo o grafo de um aluno.
 - [ ] Aplicar a migração `038`, que adiciona PIX, CPF opcional e exclusão segura de professor.
+- [ ] Aplicar a migração `039`, que permite excluir modalidade sem histórico.
 - [ ] Confirmar no Supabase as URLs de redirecionamento do domínio de produção.
 - [ ] Fazer backup do banco antes da homologação.
 - [x] Validar que o bucket `fotos_alunos` existe e não é público (confirmado pela auditoria).
