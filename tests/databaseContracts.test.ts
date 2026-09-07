@@ -547,6 +547,32 @@ describe('turmas atualizadas e contraste na matricula', () => {
   })
 })
 
+describe('exclusao definitiva do aluno', () => {
+  const migration = normalize(read('supabase/migrations/202609070037_exclusao_definitiva_aluno.sql'))
+  const students = normalize(read('app/components/students/StudentsTable.vue'))
+
+  it('apaga somente o grafo do aluno em uma funcao restrita', () => {
+    assert.ok(migration.includes('function public.excluir_aluno_definitivamente'))
+    assert.ok(migration.includes("public.meu_papel() <> 'gestao'"))
+    assert.ok(migration.includes('where aluno_id=p_aluno_id'))
+  })
+
+  it('remove dependencias antes do aluno e seu acesso', () => {
+    for (const table of ['repasse_itens', 'presencas', 'recibos', 'cobrancas', 'contratos', 'matriculas_turma']) {
+      assert.ok(migration.includes(`delete from public.${table}`))
+    }
+    assert.ok(migration.indexOf('delete from public.alunos') > migration.indexOf('delete from public.contratos'))
+    assert.ok(migration.includes('delete from auth.users'))
+  })
+
+  it('separa cancelamento de exclusao irreversivel na interface', () => {
+    assert.ok(students.includes('cancelar matrícula'))
+    assert.ok(students.includes('excluir definitivamente'))
+    assert.ok(students.includes("rpc('excluir_aluno_definitivamente'"))
+    assert.ok(students.includes('esta ação não pode ser desfeita'))
+  })
+})
+
 describe('erros nas operacoes financeiras manuais', () => {
   const finance = normalize(read('app/composables/useFinanceiro.ts'))
   const charges = normalize(read('app/components/financeiro/FinanceiroCharges.vue'))

@@ -63,6 +63,9 @@
                 <button class="w-full text-left px-4 py-2.5 text-sm hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-[#ff8a8a] transition-colors flex items-center gap-2.5 font-medium" @click="openDelete(aluno)">
                   <Trash2 class="w-4 h-4" /> Cancelar matrícula
                 </button>
+                <button class="w-full text-left px-4 py-2.5 text-sm hover:bg-red-100 dark:hover:bg-red-950/40 text-red-700 dark:text-red-300 transition-colors flex items-center gap-2.5 font-bold" @click="openPermanentDelete(aluno)">
+                  <Trash2 class="w-4 h-4" /> Excluir definitivamente
+                </button>
               </div>
             </td>
           </tr>
@@ -144,6 +147,19 @@
       @confirm="handleStudentDeleted"
     />
 
+    <ConfirmDeleteModal
+      :is-open="isPermanentDeleteOpen"
+      title="Excluir aluno definitivamente"
+      :message="`Excluir ${selectedStudent?.name || 'este aluno'} e todos os dados vinculados?`"
+      warning-text="Contratos, parcelas, recibos, presenças, agenda e acesso serão apagados. Esta ação não pode ser desfeita."
+      confirm-text="Excluir tudo"
+      :is-loading="isPurging"
+      @close="closePermanentDelete"
+      @confirm="purgeStudent"
+    />
+
+    <p v-if="purgeError" class="fixed bottom-6 left-1/2 z-[70] -translate-x-1/2 rounded-lg border border-red-500/40 bg-red-950 px-5 py-3 text-sm text-white" role="alert">{{ purgeError }}</p>
+
     <!-- Modais de Trancamento -->
     <LockStudentModal
       :is-open="isLockModalOpen"
@@ -179,6 +195,7 @@ import CancelStudentModal from '../modals/CancelStudentModal.vue'
 import LockStudentModal from '../modals/LockStudentModal.vue'
 import UnlockStudentModal from '../modals/UnlockStudentModal.vue'
 import PreviewContractModal from '../modals/PreviewContractModal.vue'
+import ConfirmDeleteModal from '../modals/ConfirmDeleteModal.vue'
 import { buildPopMusicContractData } from '~/utils/contractFormatter'
 import type { PopMusicContractData, SignedContractInfo } from '../contratos/PopMusicContractDocument.vue'
 
@@ -216,8 +233,11 @@ const openMenuId = ref<string | null>(null)
 const isProfileModalOpen = ref(false)
 const isEditModalOpen = ref(false)
 const isDeleteModalOpen = ref(false)
+const isPermanentDeleteOpen = ref(false)
 const isCancelling = ref(false)
+const isPurging = ref(false)
 const cancelError = ref('')
+const purgeError = ref('')
 const isLockModalOpen = ref(false)
 const isUnlockModalOpen = ref(false)
 const isContractModalOpen = ref(false)
@@ -308,6 +328,34 @@ const openDelete = (aluno: any) => {
   cancelError.value = ''
   isDeleteModalOpen.value = true
   closeMenu()
+}
+
+const openPermanentDelete = (aluno: any) => {
+  selectedStudent.value = aluno
+  purgeError.value = ''
+  isPermanentDeleteOpen.value = true
+  closeMenu()
+}
+
+const closePermanentDelete = () => {
+  if (!isPurging.value) isPermanentDeleteOpen.value = false
+}
+
+const purgeStudent = async () => {
+  if (!selectedStudent.value?.id || isPurging.value) return
+  isPurging.value = true
+  purgeError.value = ''
+  try {
+    const { error } = await (supabase as any).rpc('excluir_aluno_definitivamente', { p_aluno_id: selectedStudent.value.id })
+    if (error) throw error
+    isPermanentDeleteOpen.value = false
+    selectedStudent.value = null
+    emit('refresh')
+  } catch (error: any) {
+    purgeError.value = `Não foi possível excluir o aluno. ${error.message || 'Tente novamente.'}`
+  } finally {
+    isPurging.value = false
+  }
 }
 
 const closeCancelModal = () => {
