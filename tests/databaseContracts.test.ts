@@ -474,9 +474,15 @@ describe('dados verdadeiros nos relatorios', () => {
   })
 
   it('verifica erros do supabase e informa a falha na tela', () => {
-    assert.ok((reports.match(/if \(error\) throw error/g) || []).length >= 4)
+    assert.ok((reports.match(/if \(error\) throw error/g) || []).length >= 5)
     assert.ok(reports.includes("reporterror.value = 'não foi possível gerar o relatório."))
     assert.ok(reports.includes('role="alert"'))
+  })
+
+  it('lista contratos cancelados usando dados reais', () => {
+    assert.ok(reports.includes("id: 'contratos_cancelados'"))
+    assert.ok(reports.includes(".eq('status', 'cancelado')"))
+    assert.ok(reports.includes("status: 'cancelado'"))
   })
 })
 

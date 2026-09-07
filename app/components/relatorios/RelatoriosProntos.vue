@@ -106,7 +106,7 @@
 import { ref, computed, nextTick } from 'vue'
 import { 
   Search, UserCheck, AlertCircle,
-  Gift, FileSignature, Send, RefreshCw
+  Gift, FileSignature, Send, RefreshCw, FileX2
 } from '@lucide/vue'
 import BaseButton from '../BaseButton.vue'
 import RelatoriosResultTable, { type TableColumn } from './RelatoriosResultTable.vue'
@@ -182,6 +182,18 @@ const reports: ReportConfig[] = [
       { key: 'name', label: 'Nome' },
       { key: 'date', label: 'Data de envio' },
       { key: 'days', label: 'Dias aguardando' }
+    ]
+  },
+  {
+    id: 'contratos_cancelados',
+    title: 'Contratos cancelados',
+    description: 'Histórico de contratos encerrados por cancelamento.',
+    icon: FileX2,
+    columns: [
+      { key: 'name', label: 'Nome' },
+      { key: 'date', label: 'Data do contrato' },
+      { key: 'amount', label: 'Mensalidade' },
+      { key: 'status', label: 'Status', type: 'badge' }
     ]
   }
 ]
@@ -308,6 +320,23 @@ const generateReport = async (report: ReportConfig) => {
           days: `${diffDays} dias`
         }
       })
+    } else if (report.id === 'contratos_cancelados') {
+      const { data: contratos, error } = await supabase
+        .from('contratos')
+        .select(`
+          id, criado_em, valor_mensalidade, status,
+          alunos (nome)
+        `)
+        .eq('status', 'cancelado')
+        .order('criado_em', { ascending: false })
+      if (error) throw error
+
+      activeReportData.value = (contratos || []).map((c: any) => ({
+        name: c.alunos?.nome || 'Aluno removido',
+        date: c.criado_em ? new Date(c.criado_em).toLocaleDateString('pt-BR') : '-',
+        amount: formatCurrency(Number(c.valor_mensalidade || 0)),
+        status: 'Cancelado'
+      }))
     } else if (report.id === 'aniversariantes') {
       const currentMonth = (new Date().getMonth() + 1).toString().padStart(2, '0')
       const { data: alunos, error } = await supabase

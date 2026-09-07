@@ -112,21 +112,20 @@ const getBadgeVariant = (value: string) => {
 
 const exportCSV = () => {
   if (props.data.length === 0) return
-  
-  const headers = props.columns.map(c => c.label).join(';')
+
+  const escapeCell = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`
+  const headers = props.columns.map(c => escapeCell(c.label)).join(';')
   
   const rows = props.data.map(row => {
     return props.columns.map(c => {
-      let cell = row[c.key] || ''
-      cell = String(cell).replace(/"/g, '""')
-      return `"${cell}"`
+      return escapeCell(row[c.key])
     }).join(';')
   })
-  
-  const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + headers + "\n" + rows.join("\n")
-  const encodedUri = encodeURI(csvContent)
+  const csvContent = `\uFEFF${headers}\r\n${rows.join('\r\n')}`
+  const file = new Blob([csvContent], { type: 'text/csv;charset=utf-8' })
+  const objectUrl = URL.createObjectURL(file)
   const link = document.createElement("a")
-  link.setAttribute("href", encodedUri)
+  link.setAttribute("href", objectUrl)
   
   const dateStr = new Date().toISOString().split('T')[0]
   const safeName = props.title.toLowerCase().replace(/[^a-z0-9]/g, '_')
@@ -135,5 +134,6 @@ const exportCSV = () => {
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
+  URL.revokeObjectURL(objectUrl)
 }
 </script>
