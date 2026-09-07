@@ -51,6 +51,13 @@ const steps = [
   { title: 'Turmas', description: 'Combine modalidade, professor, sala, dia e horário.' }
 ]
 
+const user = useSupabaseUser()
+const currentUserId = user.value?.id || (user.value as any)?.sub
+if (currentUserId) {
+  const { data: profile } = await supabase.from('usuarios').select('onboarding_concluido').eq('id', currentUserId).maybeSingle()
+  if (profile?.onboarding_concluido) await navigateTo('/dashboard')
+}
+
 const validateStep = async () => {
   if (step.value === 0) {
     const { data, error } = await supabase.from('configuracoes').select('valor').eq('chave', 'escola').maybeSingle()

@@ -1,10 +1,10 @@
 <template>
-  <div class="min-h-screen bg-light-bg dark:bg-dark-bg text-light-text dark:text-offwhite flex font-sans transition-colors duration-300">
+  <div class="min-h-screen bg-light-bg dark:bg-dark-bg text-light-text dark:text-offwhite font-sans transition-colors duration-300">
     <!-- Sidebar Fixa de Gestão -->
     <LayoutDashboardSidebar />
 
     <!-- Conteúdo Principal -->
-    <main class="flex-1 min-w-0 min-h-screen ml-[72px] transition-[margin] duration-300" :class="sidebarCollapsed ? 'md:ml-[72px]' : 'md:ml-[220px]'">
+    <main class="w-full min-w-0 min-h-screen pl-[72px] transition-[padding] duration-300" :class="sidebarCollapsed ? 'md:pl-[72px]' : 'md:pl-[220px]'">
       <slot />
     </main>
   </div>

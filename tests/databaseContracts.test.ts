@@ -645,6 +645,25 @@ describe('onboarding inicial da gestao', () => {
     assert.ok(migration.includes('set default false'))
     assert.ok(migration.includes('set onboarding_concluido=true where onboarding_concluido is null'))
     assert.ok(middleware.includes("to.path !== '/onboarding'"))
+    assert.ok(onboarding.includes("if (profile?.onboarding_concluido) await navigateto('/dashboard')"))
+  })
+
+  it('nao publica o onboarding no menu administrativo', () => {
+    const sidebar = normalize(read('app/components/layout/LayoutDashboardSidebar.vue'))
+    assert.doesNotMatch(sidebar, /configura[cç][aã]o inicial/)
+    assert.doesNotMatch(sidebar, /path: '\/onboarding'/)
+  })
+})
+
+describe('largura do painel administrativo', () => {
+  const layout = normalize(read('app/layouts/dashboard.vue'))
+  const classesPage = normalize(read('app/pages/dashboard/turmas.vue'))
+
+  it('reserva a sidebar uma unica vez e estica o conteudo restante', () => {
+    assert.ok(layout.includes('class="w-full min-w-0 min-h-screen pl-[72px]'))
+    assert.ok(layout.includes("'md:pl-[220px]'"))
+    assert.doesNotMatch(layout, /md:ml-\[220px\]/)
+    assert.ok(classesPage.includes('w-full min-h-screen'))
   })
 })
 
