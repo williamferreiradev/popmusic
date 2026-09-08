@@ -699,6 +699,24 @@ describe('pix e exclusao segura do professor', () => {
   })
 })
 
+describe('acesso manual do professor sem smtp', () => {
+  const invite = normalize(read('server/api/admin/invite-user.post.ts'))
+  const resend = normalize(read('server/api/admin/resend-access.post.ts'))
+  const teachers = normalize(read('app/components/configuracoes/ConfigProfessores.vue'))
+
+  it('cria o auth user e devolve o link sem tentar enviar email', () => {
+    assert.ok(invite.includes("type: 'invite'"))
+    assert.ok(invite.includes('const activationlink = invitation.properties?.action_link'))
+    assert.doesNotMatch(invite, /inviteuserbyemail/)
+  })
+
+  it('gera novo link e permite copiar no cadastro do professor', () => {
+    assert.ok(resend.includes("type: 'recovery'"))
+    assert.ok(teachers.includes('copiar link'))
+    assert.ok(teachers.includes('navigator.clipboard.writetext'))
+  })
+})
+
 describe('exclusao de modalidade e criacao guiada de sala', () => {
   const migration = normalize(read('supabase/migrations/202609070039_exclusao_modalidade.sql'))
   const modalities = normalize(read('app/components/configuracoes/ConfigModalidades.vue'))

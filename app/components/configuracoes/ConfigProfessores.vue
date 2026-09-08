@@ -71,13 +71,13 @@
                   v-if="!teacher.userId"
                   :disabled="isInvitingId === teacher.id || !teacher.email || !teacher.active"
                   class="p-1.5 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
-                  :title="teacher.email ? 'Enviar convite de acesso' : 'Informe o e-mail para convidar'"
+                  :title="teacher.email ? 'Criar conta e gerar link de acesso' : 'Informe o e-mail para gerar o acesso'"
                   @click="inviteTeacher(teacher)"
                 >
                   <Loader2 v-if="isInvitingId === teacher.id" class="w-4 h-4 animate-spin" />
                   <MailPlus v-else class="w-4 h-4" />
                 </button>
-                <button v-else :disabled="isInvitingId === teacher.id || !teacher.active" class="text-[10px] font-bold text-green-600 dark:text-green-400 hover:underline disabled:opacity-40" title="Reenviar acesso/recuperação" @click="resendTeacherAccess(teacher)">REENVIAR ACESSO</button>
+                <button v-else :disabled="isInvitingId === teacher.id || !teacher.active" class="text-[10px] font-bold text-green-600 dark:text-green-400 hover:underline disabled:opacity-40" title="Gerar um novo link de acesso" @click="resendTeacherAccess(teacher)">GERAR NOVO LINK</button>
                 <button class="p-1.5 hover:text-primary" title="Editar" @click="openModal(teacher)"><Pencil class="w-4 h-4" /></button>
                 <button class="p-1.5" :class="teacher.active ? 'hover:text-red-500' : 'hover:text-green-500'" :title="teacher.active ? 'Desativar' : 'Ativar'" @click="toggleActive(teacher)">
                   <UserX v-if="teacher.active" class="w-4 h-4" />
@@ -134,6 +134,17 @@
     </BaseModal>
 
     <ConfirmDeleteModal :is-open="isDeleteOpen" title="Excluir professor" :message="`Excluir ${teacherToDelete?.name || 'este professor'}?`" warning-text="Turmas vazias e o acesso serão apagados. Se houver matrículas, presenças ou repasses, a exclusão será bloqueada." confirm-text="Excluir professor" :is-loading="isDeleting" @close="isDeleteOpen = false" @confirm="deleteTeacher" />
+
+    <BaseModal :is-open="isAccessLinkOpen" title="Link de acesso do professor" @close="closeAccessLink">
+      <div class="p-5 flex flex-col gap-4">
+        <p class="text-sm text-light-text/70 dark:text-offwhite/70">Copie e envie este link diretamente ao professor. Ele será usado para definir a senha e acessar o painel.</p>
+        <input :value="accessLink" readonly class="w-full rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg px-3 py-2 text-sm text-light-text dark:text-offwhite" @focus="($event.target as HTMLInputElement).select()">
+        <div class="flex justify-end gap-3">
+          <BaseButton variant="outline" @click="closeAccessLink">Fechar</BaseButton>
+          <BaseButton variant="primary" @click="copyAccessLink">{{ linkCopied ? 'Link copiado!' : 'Copiar link' }}</BaseButton>
+        </div>
+      </div>
+    </BaseModal>
   </div>
 </template>
 
@@ -171,6 +182,9 @@ const isInvitingId = ref<string | null>(null)
 const isDeleteOpen = ref(false)
 const isDeleting = ref(false)
 const teacherToDelete = ref<TeacherView | null>(null)
+const isAccessLinkOpen = ref(false)
+const accessLink = ref('')
+const linkCopied = ref(false)
 const emptyForm = () => ({ id: '', name: '', cpf: '', phone: '', email: '', pixKey: '', commissionType: 'valor_fixo' as CommissionType, commissionValue: '', modalityIds: [] as string[] })
 const form = ref(emptyForm())
 
@@ -244,20 +258,36 @@ const closeModal = () => {
 const save = async () => {
   if (!isValid.value || isSaving.value) return
   isSaving.value = true
+  let professorSaved = false
   try {
-    const { error } = await (supabase as any).rpc('salvar_professor', {
+    const { data: professorId, error } = await (supabase as any).rpc('salvar_professor', {
       p_id: isEditing.value ? form.value.id : null, p_nome: form.value.name,
       p_cpf: form.value.cpf, p_telefone: form.value.phone, p_email: form.value.email,
       p_comissao_tipo: form.value.commissionType, p_comissao_valor: Number(form.value.commissionValue),
       p_modalidade_ids: form.value.modalityIds, p_pix_chave: form.value.pixKey
     })
     if (error) throw error
+    professorSaved = true
+
+    if (!isEditing.value) {
+      const result = await $fetch<{ activationLink: string }>('/api/admin/invite-user', {
+        method: 'POST',
+        body: { nome: form.value.name, email: form.value.email, papel: 'professor', professorId }
+      })
+      showAccessLink(result.activationLink)
+    }
 
     await refresh()
     closeModal()
   } catch (error: any) {
     console.error('Erro ao salvar professor:', error)
-    alert(`Não foi possível salvar o professor. ${error.message || 'Tente novamente.'}`)
+    if (professorSaved) {
+      await refresh()
+      closeModal()
+      alert(`Professor salvo, mas não foi possível gerar o acesso. Use o botão de criar acesso na listagem. ${error.message || ''}`)
+    } else {
+      alert(`Não foi possível salvar o professor. ${error.message || 'Tente novamente.'}`)
+    }
   } finally {
     isSaving.value = false
   }
@@ -295,11 +325,11 @@ const toggleActive = async (teacher: TeacherView) => {
 
 const inviteTeacher = async (teacher: TeacherView) => {
   if (!teacher.email || teacher.userId || isInvitingId.value) return
-  if (!confirm(`Enviar convite de acesso para ${teacher.email}?`)) return
+  if (!confirm(`Criar a conta e gerar o link de acesso de ${teacher.email}?`)) return
 
   isInvitingId.value = teacher.id
   try {
-    await $fetch('/api/admin/invite-user', {
+    const result = await $fetch<{ activationLink: string }>('/api/admin/invite-user', {
       method: 'POST',
       body: {
         nome: teacher.name,
@@ -309,10 +339,10 @@ const inviteTeacher = async (teacher: TeacherView) => {
       }
     })
     await refresh()
-    alert(`Convite enviado para ${teacher.email}.`)
+    showAccessLink(result.activationLink)
   } catch (error: any) {
     console.error('Erro ao convidar professor:', error)
-    alert(`Não foi possível enviar o convite. ${error.message || 'Tente novamente.'}`)
+    alert(`Não foi possível criar o acesso. ${error.message || 'Tente novamente.'}`)
   } finally {
     isInvitingId.value = null
   }
@@ -320,15 +350,32 @@ const inviteTeacher = async (teacher: TeacherView) => {
 
 const resendTeacherAccess = async (teacher: TeacherView) => {
   if (!teacher.email || !teacher.userId || isInvitingId.value) return
-  if (!confirm(`Reenviar o acesso para ${teacher.email}?`)) return
+  if (!confirm(`Gerar um novo link de acesso para ${teacher.email}?`)) return
   isInvitingId.value = teacher.id
   try {
-    await $fetch('/api/admin/resend-access', { method: 'POST', body: {
+    const result = await $fetch<{ activationLink: string }>('/api/admin/resend-access', { method: 'POST', body: {
       userId: teacher.userId, professorId: teacher.id
     } })
-    alert(`Link de acesso enviado para ${teacher.email}.`)
+    showAccessLink(result.activationLink)
   } catch (error: any) {
-    alert(`Não foi possível reenviar o acesso. ${error.message || 'Tente novamente.'}`)
+    alert(`Não foi possível gerar o novo link. ${error.message || 'Tente novamente.'}`)
   } finally { isInvitingId.value = null }
+}
+
+const showAccessLink = (link: string) => {
+  accessLink.value = link
+  linkCopied.value = false
+  isAccessLinkOpen.value = true
+}
+
+const closeAccessLink = () => {
+  isAccessLinkOpen.value = false
+  accessLink.value = ''
+  linkCopied.value = false
+}
+
+const copyAccessLink = async () => {
+  await navigator.clipboard.writeText(accessLink.value)
+  linkCopied.value = true
 }
 </script>

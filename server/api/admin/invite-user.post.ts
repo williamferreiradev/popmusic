@@ -25,23 +25,18 @@ export default defineEventHandler(async (event) => {
     }
 
     const appUrl = String(useRuntimeConfig(event).public.appUrl || getRequestURL(event).origin).replace(/\/$/, '')
-    const { data: invitation, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
-      redirectTo: `${appUrl}/confirm?mode=invite`,
-      data: { nome }
+    const { data: invitation, error: inviteError } = await admin.auth.admin.generateLink({
+      type: 'invite',
+      email,
+      options: { redirectTo: `${appUrl}/confirm?mode=invite`, data: { nome } }
     })
     if (inviteError || !invitation?.user) {
       const code = String(inviteError?.code || '')
       const message = String(inviteError?.message || '').toLowerCase()
-      if (code === 'email_address_not_authorized' || message.includes('not authorized')) {
-        throw createError({ statusCode: 503, statusMessage: 'O Supabase bloqueou o destinatário. Configure um SMTP próprio em Authentication > Emails > SMTP Settings.' })
-      }
-      if (code === 'over_email_send_rate_limit' || message.includes('rate limit')) {
-        throw createError({ statusCode: 429, statusMessage: 'O limite de envio de e-mails foi atingido. Configure um SMTP próprio ou tente mais tarde.' })
-      }
       if (code === 'email_exists' || code === 'user_already_exists' || message.includes('already')) {
-        throw createError({ statusCode: 409, statusMessage: 'Este e-mail já possui acesso. Use a opção de reenvio/recuperação.' })
+        throw createError({ statusCode: 409, statusMessage: 'Este e-mail já possui acesso. Gere um novo link de acesso.' })
       }
-      throw createError({ statusCode: 502, statusMessage: 'O Supabase não conseguiu enviar o convite. Consulte Authentication > Logs e verifique o SMTP.' })
+      throw createError({ statusCode: 502, statusMessage: 'O Supabase não conseguiu gerar o link de acesso.' })
     }
     createdUserId = invitation.user.id
 
@@ -60,12 +55,14 @@ export default defineEventHandler(async (event) => {
     }
 
     const { error: auditError } = await admin.from('auditoria').insert({
-      tabela: 'usuarios', registro_id: createdUserId, acao: 'convite_enviado', usuario_id: authUser.id,
+      tabela: 'usuarios', registro_id: createdUserId, acao: 'link_acesso_gerado', usuario_id: authUser.id,
       dados_depois: { papel, professor_id: professorId }
     })
     if (auditError) throw new Error('Não foi possível registrar a auditoria do convite.')
 
-    return { success: true }
+    const activationLink = invitation.properties?.action_link
+    if (!activationLink) throw new Error('Link de ativação não retornado pelo Supabase.')
+    return { success: true, activationLink }
   } catch (error: any) {
     if (createdUserId) {
       try {

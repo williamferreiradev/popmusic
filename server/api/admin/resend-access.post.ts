@@ -20,24 +20,16 @@ export default defineEventHandler(async (event) => {
     const email = data?.user?.email
     if (userError || !email) throw createError({ statusCode: 404, statusMessage: 'E-mail de acesso não encontrado.' })
     const appUrl = String(useRuntimeConfig(event).public.appUrl || getRequestURL(event).origin).replace(/\/$/, '')
-    const { error } = await admin.auth.resetPasswordForEmail(email, { redirectTo: `${appUrl}/confirm?mode=recovery` })
-    if (error) {
-      const code = String(error.code || '')
-      const message = String(error.message || '').toLowerCase()
-      if (code === 'email_address_not_authorized' || message.includes('not authorized')) {
-        throw createError({ statusCode: 503, statusMessage: 'O Supabase bloqueou o destinatário. Configure um SMTP próprio em Authentication > Emails > SMTP Settings.' })
-      }
-      if (code === 'over_email_send_rate_limit' || message.includes('rate limit')) {
-        throw createError({ statusCode: 429, statusMessage: 'O limite de envio de e-mails foi atingido. Configure um SMTP próprio ou tente mais tarde.' })
-      }
-      throw createError({ statusCode: 502, statusMessage: 'Não foi possível enviar o e-mail. Consulte Authentication > Logs e verifique o SMTP.' })
-    }
+    const { data: generated, error } = await admin.auth.admin.generateLink({
+      type: 'recovery', email, options: { redirectTo: `${appUrl}/confirm?mode=recovery` }
+    })
+    if (error || !generated.properties?.action_link) throw createError({ statusCode: 502, statusMessage: 'Não foi possível gerar um novo link de acesso.' })
     const { error: auditError } = await admin.from('auditoria').insert({
-      tabela: 'usuarios', registro_id: userId, acao: 'acesso_reenviado', usuario_id: authUser.id,
+      tabela: 'usuarios', registro_id: userId, acao: 'link_acesso_regenerado', usuario_id: authUser.id,
       dados_depois: { papel: profile.papel, professor_id: professorId }
     })
-    if (auditError) throw createError({ statusCode: 500, statusMessage: 'O acesso foi enviado, mas a auditoria falhou.' })
-    return { success: true }
+    if (auditError) throw createError({ statusCode: 500, statusMessage: 'O link foi gerado, mas a auditoria falhou.' })
+    return { success: true, activationLink: generated.properties.action_link }
   } catch (error: any) {
     safeServerError('auth:resend', error)
     throw error
