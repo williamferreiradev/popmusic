@@ -21,7 +21,17 @@ export default defineEventHandler(async (event) => {
     if (userError || !email) throw createError({ statusCode: 404, statusMessage: 'E-mail de acesso não encontrado.' })
     const appUrl = String(useRuntimeConfig(event).public.appUrl || getRequestURL(event).origin).replace(/\/$/, '')
     const { error } = await admin.auth.resetPasswordForEmail(email, { redirectTo: `${appUrl}/confirm?mode=recovery` })
-    if (error) throw createError({ statusCode: 502, statusMessage: 'Não foi possível enviar o e-mail de acesso.' })
+    if (error) {
+      const code = String(error.code || '')
+      const message = String(error.message || '').toLowerCase()
+      if (code === 'email_address_not_authorized' || message.includes('not authorized')) {
+        throw createError({ statusCode: 503, statusMessage: 'O Supabase bloqueou o destinatário. Configure um SMTP próprio em Authentication > Emails > SMTP Settings.' })
+      }
+      if (code === 'over_email_send_rate_limit' || message.includes('rate limit')) {
+        throw createError({ statusCode: 429, statusMessage: 'O limite de envio de e-mails foi atingido. Configure um SMTP próprio ou tente mais tarde.' })
+      }
+      throw createError({ statusCode: 502, statusMessage: 'Não foi possível enviar o e-mail. Consulte Authentication > Logs e verifique o SMTP.' })
+    }
     const { error: auditError } = await admin.from('auditoria').insert({
       tabela: 'usuarios', registro_id: userId, acao: 'acesso_reenviado', usuario_id: authUser.id,
       dados_depois: { papel: profile.papel, professor_id: professorId }

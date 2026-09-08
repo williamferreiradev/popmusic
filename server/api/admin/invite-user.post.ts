@@ -30,7 +30,18 @@ export default defineEventHandler(async (event) => {
       data: { nome }
     })
     if (inviteError || !invitation?.user) {
-      throw createError({ statusCode: 409, statusMessage: 'Este e-mail já possui acesso. Use a opção de reenvio/recuperação.' })
+      const code = String(inviteError?.code || '')
+      const message = String(inviteError?.message || '').toLowerCase()
+      if (code === 'email_address_not_authorized' || message.includes('not authorized')) {
+        throw createError({ statusCode: 503, statusMessage: 'O Supabase bloqueou o destinatário. Configure um SMTP próprio em Authentication > Emails > SMTP Settings.' })
+      }
+      if (code === 'over_email_send_rate_limit' || message.includes('rate limit')) {
+        throw createError({ statusCode: 429, statusMessage: 'O limite de envio de e-mails foi atingido. Configure um SMTP próprio ou tente mais tarde.' })
+      }
+      if (code === 'email_exists' || code === 'user_already_exists' || message.includes('already')) {
+        throw createError({ statusCode: 409, statusMessage: 'Este e-mail já possui acesso. Use a opção de reenvio/recuperação.' })
+      }
+      throw createError({ statusCode: 502, statusMessage: 'O Supabase não conseguiu enviar o convite. Consulte Authentication > Logs e verifique o SMTP.' })
     }
     createdUserId = invitation.user.id
 
