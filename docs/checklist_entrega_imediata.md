@@ -31,6 +31,7 @@ Este documento contém somente o necessário para colocar a primeira versão em 
 - [x] Novas contas de gestão passam por onboarding validado: escola, modalidades, salas, professores e turmas.
 - [x] Onboarding não aparece no painel e não reabre após concluído; conteúdo administrativo ocupa toda a largura após a sidebar.
 - [x] Listagem de Turmas ocupa também toda a altura útil, sem deixar fundo vazio abaixo da tabela.
+- [x] Layout não reserva faixa fantasma à esquerda: sidebar e conteúdo dividem a largura real da tela.
 - [x] Frontend e servidor compilam; o empacotamento local para apenas no `EPERM readlink` do Windows/OneDrive.
 - [x] Build em ambiente externo confirmado pela implantação funcional da Vercel.
 

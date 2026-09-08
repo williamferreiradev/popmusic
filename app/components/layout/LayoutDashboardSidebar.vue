@@ -1,5 +1,5 @@
 <template>
-  <aside class="h-screen w-[72px] bg-light-surface dark:bg-dark-surface border-r border-light-border dark:border-dark-border fixed left-0 top-0 flex flex-col font-sans shrink-0 transition-all duration-300 z-40" :class="sidebarCollapsed ? 'md:w-[72px]' : 'md:w-[220px]'">
+  <aside class="sticky left-0 top-0 h-screen w-[72px] bg-light-surface dark:bg-dark-surface border-r border-light-border dark:border-dark-border flex flex-col font-sans shrink-0 transition-all duration-300 z-40" :class="sidebarCollapsed ? 'md:w-[72px]' : 'md:w-[220px]'">
     <!-- Logo ou nome da escola -->
     <div class="h-16 flex items-center border-b border-light-border dark:border-dark-border" :class="sidebarCollapsed ? 'justify-center px-2' : 'justify-between px-4'">
       <h1 v-if="!sidebarCollapsed" class="hidden md:block text-lg font-bold text-light-text dark:text-offwhite">Pop Music</h1>
