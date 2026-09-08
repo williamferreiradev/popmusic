@@ -660,18 +660,16 @@ describe('largura do painel administrativo', () => {
   const classesPage = normalize(read('app/pages/dashboard/turmas.vue'))
 
   it('reserva a sidebar uma unica vez e estica o conteudo restante', () => {
-    const sidebar = normalize(read('app/components/layout/LayoutDashboardSidebar.vue'))
-    assert.ok(layout.includes('class="flex-1 min-w-0 min-h-screen"'))
-    assert.ok(sidebar.includes('sticky left-0 top-0'))
-    assert.doesNotMatch(layout, /(?:pl|ml)-\[72px\]|md:(?:pl|ml)-\[220px\]/)
+    assert.ok(layout.includes('class="w-full min-w-0 min-h-screen pl-[72px]'))
+    assert.ok(layout.includes("'md:pl-[220px]'"))
     assert.ok(classesPage.includes('w-full min-h-screen'))
   })
 
-  it('estica a listagem de turmas ate o final da area util', () => {
-    const classes = normalize(read('app/components/configuracoes/ConfigTurmas.vue'))
-    assert.ok(classes.includes('w-full flex flex-1 flex-col'))
-    assert.ok(classes.includes('shadow-sm flex-1 min-h-[420px]'))
-    assert.ok(classesPage.includes('min-h-screen flex flex-col'))
+  it('usa em turmas exatamente o mesmo wrapper externo de modalidades', () => {
+    const modalitiesPage = normalize(read('app/pages/dashboard/modalidades.vue'))
+    assert.ok(classesPage.includes('class="p-4 sm:p-8 w-full min-h-screen"'))
+    assert.ok(modalitiesPage.includes('class="p-4 sm:p-8 w-full min-h-screen"'))
+    assert.doesNotMatch(classesPage, /definepagemeta\(\{ layout: 'dashboard'/)
   })
 })
 

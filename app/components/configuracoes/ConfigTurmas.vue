@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full flex flex-1 flex-col gap-6 min-h-0">
+  <div class="w-full flex flex-col gap-6">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
         <h1 class="text-2xl font-bold text-light-text dark:text-offwhite">Turmas</h1>
@@ -10,7 +10,7 @@
 
     <div v-if="feedback" class="rounded-lg border px-4 py-3 text-sm" :class="feedback.type === 'success' ? 'border-green-500/40 bg-green-500/10 text-green-700 dark:text-green-300' : 'border-red-500/40 bg-red-500/10 text-red-700 dark:text-red-300'" role="status">{{ feedback.message }}</div>
 
-    <div class="overflow-x-auto rounded-lg border border-light-border dark:border-dark-border bg-light-surface dark:bg-dark-surface shadow-sm flex-1 min-h-[420px]">
+    <div class="overflow-x-auto rounded-lg border border-light-border dark:border-dark-border bg-light-surface dark:bg-dark-surface shadow-sm">
       <table class="w-full min-w-[850px] text-left text-sm text-light-text dark:text-offwhite">
         <thead class="bg-light-bg/50 dark:bg-dark-bg/50 border-b border-light-border dark:border-dark-border text-light-text/70 dark:text-offwhite/70">
           <tr><th class="p-4">Modalidade</th><th class="p-4">Professor</th><th class="p-4">Sala</th><th class="p-4">Dia e horário</th><th class="p-4 text-center">Alunos</th><th class="p-4 text-center">Status</th><th class="p-4 text-right">Ações</th></tr>
