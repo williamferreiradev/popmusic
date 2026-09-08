@@ -102,23 +102,27 @@
                 <div 
                   v-for="apt in getAppointmentsForDayIndex(i - 1)" 
                   :key="apt.id"
-                  class="absolute left-1 right-1 rounded-md p-2 text-xs border border-blue-500/30 cursor-pointer hover:brightness-110 transition-all flex flex-col gap-1 overflow-hidden"
-                  :style="getStyleForAppointment(apt)"
+                  class="group absolute rounded-md border p-2 text-xs cursor-pointer transition-[filter,transform,box-shadow] duration-150 flex flex-col gap-1 overflow-hidden shadow-sm hover:z-30 hover:-translate-y-px hover:brightness-110 hover:shadow-lg focus-visible:z-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  :style="getStyleForAppointment(apt, i - 1)"
                   :class="getBgColorClass(apt.status)"
+                  :title="`${apt.time}–${apt.endTime} · ${apt.className} · ${apt.teacherName}`"
+                  tabindex="0"
                   @click="openAppointment(apt)"
+                  @keydown.enter="openAppointment(apt)"
+                  @keydown.space.prevent="openAppointment(apt)"
                 >
-                  <div class="flex items-center justify-between font-bold text-blue-900 dark:text-blue-100">
-                    <span class="flex items-center gap-1.5 truncate">
+                  <div class="flex min-w-0 items-start justify-between gap-1 font-bold text-blue-900 dark:text-blue-100">
+                    <span class="flex min-w-0 items-center gap-1 truncate">
                       <span class="w-1.5 h-1.5 rounded-full shrink-0" :class="getDotColorClass(apt.status)"/>
                       <span class="truncate">{{ apt.className }}</span>
                     </span>
-                    <span class="text-[10px] bg-black/10 dark:bg-white/10 px-1.5 py-0.5 rounded shrink-0">{{ apt.capacity === 1 ? 'Individual' : `${apt.students.length}/${apt.capacity}` }}</span>
+                    <span class="text-[9px] bg-black/10 dark:bg-white/10 px-1 py-0.5 rounded shrink-0">{{ apt.capacity === 1 ? '1:1' : `${apt.students.length}/${apt.capacity}` }}</span>
                   </div>
-                  <div class="text-blue-800/80 dark:text-blue-200/80 leading-tight">
-                    Prof: {{ apt.teacherName }}
+                  <div class="truncate text-[11px] text-blue-800/80 dark:text-blue-200/80 leading-tight">
+                    {{ apt.teacherName }}
                   </div>
-                  <div class="text-blue-800/60 dark:text-blue-200/60 mt-auto">
-                    {{ apt.time }} - {{ apt.duration }}
+                  <div class="truncate text-[10px] font-medium text-blue-800/60 dark:text-blue-200/60 mt-auto">
+                    {{ apt.time }}–{{ apt.endTime }}
                   </div>
                 </div>
 
@@ -255,6 +259,7 @@ const appointments = computed(() => {
       capacity: t.capacidade_maxima || 5,
       dateOffset,
       time: startH,
+      endTime: endH,
       duration: `${durationHours}h`,
       durationHours,
       status: 'agendado',
@@ -358,7 +363,12 @@ const getAppointmentsForDayIndex = (index: number) => {
   return appointments.value.filter(a => a.dateOffset === index)
 }
 
-const getStyleForAppointment = (apt: any) => {
+const minutesFromTime = (time: string) => {
+  const [hour, minute] = time.split(':').map(Number)
+  return hour * 60 + minute
+}
+
+const getStyleForAppointment = (apt: any, dayIndex: number) => {
   const [h, m] = apt.time.split(':').map(Number)
   const startHour = 8 // nosso calendário começa às 08:00
   const rowHeight = 80 // 5rem = 80px (h-20 do tailwind)
@@ -367,10 +377,22 @@ const getStyleForAppointment = (apt: any) => {
   const top = offsetHours * rowHeight
   
   const height = apt.durationHours * rowHeight
+
+  // Eventos que disputam o mesmo intervalo são divididos em colunas.
+  const start = minutesFromTime(apt.time)
+  const end = minutesFromTime(apt.endTime)
+  const simultaneous = getAppointmentsForDayIndex(dayIndex)
+    .filter(item => minutesFromTime(item.time) < end && minutesFromTime(item.endTime) > start)
+    .sort((a, b) => a.time.localeCompare(b.time) || String(a.id).localeCompare(String(b.id)))
+  const column = Math.max(0, simultaneous.findIndex(item => item.id === apt.id))
+  const columns = Math.max(1, simultaneous.length)
+  const gap = 3
   
   return {
     top: `${top}px`,
-    height: `${height}px`
+    height: `${Math.max(height, 44)}px`,
+    left: `calc(${(column / columns) * 100}% + ${gap}px)`,
+    width: `calc(${100 / columns}% - ${gap * 2}px)`
   }
 }
 
