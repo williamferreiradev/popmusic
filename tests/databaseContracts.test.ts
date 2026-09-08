@@ -665,6 +665,13 @@ describe('largura do painel administrativo', () => {
     assert.doesNotMatch(layout, /md:ml-\[220px\]/)
     assert.ok(classesPage.includes('w-full min-h-screen'))
   })
+
+  it('estica a listagem de turmas ate o final da area util', () => {
+    const classes = normalize(read('app/components/configuracoes/ConfigTurmas.vue'))
+    assert.ok(classes.includes('w-full flex flex-1 flex-col'))
+    assert.ok(classes.includes('shadow-sm flex-1 min-h-[420px]'))
+    assert.ok(classesPage.includes('min-h-screen flex flex-col'))
+  })
 })
 
 describe('pix e exclusao segura do professor', () => {
