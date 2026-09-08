@@ -715,6 +715,12 @@ describe('acesso manual do professor sem smtp', () => {
     assert.ok(teachers.includes('copiar link'))
     assert.ok(teachers.includes('navigator.clipboard.writetext'))
   })
+
+  it('normaliza id e sub da identidade validada no servidor', () => {
+    const management = normalize(read('server/utils/requireManagement.ts'))
+    assert.ok(management.includes('authuser.id || authuser.sub'))
+    assert.ok(management.includes(".eq('id', authuserid)"))
+  })
 })
 
 describe('exclusao de modalidade e criacao guiada de sala', () => {

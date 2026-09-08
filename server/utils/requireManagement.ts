@@ -14,11 +14,13 @@ export async function requireManagement(event: any) {
     authUser = await serverSupabaseUser(event)
   }
   if (!authUser) throw createError({ statusCode: 401, statusMessage: 'Autenticação obrigatória.' })
+  const authUserId = String(authUser.id || authUser.sub || '')
+  if (!/^[0-9a-f-]{36}$/i.test(authUserId)) throw createError({ statusCode: 401, statusMessage: 'Identificador da sessão inválido. Entre novamente.' })
 
   const { data: profile, error } = await admin
     .from('usuarios')
     .select('papel, ativo')
-    .eq('id', authUser.id)
+    .eq('id', authUserId)
     .maybeSingle()
 
   if (error) {
@@ -29,5 +31,5 @@ export async function requireManagement(event: any) {
     throw createError({ statusCode: 403, statusMessage: 'Apenas a gestão pode executar esta operação.' })
   }
 
-  return { admin, authUser }
+  return { admin, authUser: { ...authUser, id: authUserId } }
 }
