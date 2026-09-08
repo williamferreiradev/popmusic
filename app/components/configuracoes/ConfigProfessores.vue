@@ -233,6 +233,12 @@ const formatCommission = (teacher: TeacherView) => teacher.commissionType === 'p
   ? `${teacher.commissionValue.toFixed(2).replace('.', ',')}% por aluno`
   : `${teacher.commissionValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} por aluno`
 
+const managementHeaders = async () => {
+  const { data } = await supabase.auth.getSession()
+  if (!data.session?.access_token) throw new Error('Sua sessão expirou. Entre novamente.')
+  return { Authorization: `Bearer ${data.session.access_token}` }
+}
+
 const openModal = (teacher?: TeacherView) => {
   isEditing.value = Boolean(teacher)
   form.value = teacher ? {
@@ -272,6 +278,7 @@ const save = async () => {
     if (!isEditing.value) {
       const result = await $fetch<{ activationLink: string }>('/api/admin/invite-user', {
         method: 'POST',
+        headers: await managementHeaders(),
         body: { nome: form.value.name, email: form.value.email, papel: 'professor', professorId }
       })
       showAccessLink(result.activationLink)
@@ -331,6 +338,7 @@ const inviteTeacher = async (teacher: TeacherView) => {
   try {
     const result = await $fetch<{ activationLink: string }>('/api/admin/invite-user', {
       method: 'POST',
+      headers: await managementHeaders(),
       body: {
         nome: teacher.name,
         email: teacher.email,
@@ -353,7 +361,7 @@ const resendTeacherAccess = async (teacher: TeacherView) => {
   if (!confirm(`Gerar um novo link de acesso para ${teacher.email}?`)) return
   isInvitingId.value = teacher.id
   try {
-    const result = await $fetch<{ activationLink: string }>('/api/admin/resend-access', { method: 'POST', body: {
+    const result = await $fetch<{ activationLink: string }>('/api/admin/resend-access', { method: 'POST', headers: await managementHeaders(), body: {
       userId: teacher.userId, professorId: teacher.id
     } })
     showAccessLink(result.activationLink)

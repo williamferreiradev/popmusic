@@ -129,6 +129,12 @@ const isFormValid = computed(() => {
   return formData.value.name.trim() !== '' && isEmailValid.value
 })
 
+const managementHeaders = async () => {
+  const { data } = await supabase.auth.getSession()
+  if (!data.session?.access_token) throw new Error('Sua sessão expirou. Entre novamente.')
+  return { Authorization: `Bearer ${data.session.access_token}` }
+}
+
 const openModal = (member?: any) => {
   if (member) {
     isEditing.value = true
@@ -160,6 +166,7 @@ const save = async () => {
     } else {
       await $fetch('/api/admin/invite-user', {
         method: 'POST',
+        headers: await managementHeaders(),
         body: {
           nome: formData.value.name,
           email: formData.value.email,

@@ -1,10 +1,20 @@
 import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 
 export async function requireManagement(event: any) {
-  const authUser = await serverSupabaseUser(event)
+  const admin = serverSupabaseServiceRole(event) as any
+  const authorization = String(getHeader(event, 'authorization') || '')
+  const accessToken = authorization.startsWith('Bearer ') ? authorization.slice(7).trim() : ''
+  let authUser: any
+
+  if (accessToken) {
+    const { data, error } = await admin.auth.getUser(accessToken)
+    if (error || !data.user) throw createError({ statusCode: 401, statusMessage: 'Sessão inválida ou expirada. Entre novamente.' })
+    authUser = data.user
+  } else {
+    authUser = await serverSupabaseUser(event)
+  }
   if (!authUser) throw createError({ statusCode: 401, statusMessage: 'Autenticação obrigatória.' })
 
-  const admin = serverSupabaseServiceRole(event) as any
   const { data: profile, error } = await admin
     .from('usuarios')
     .select('papel, ativo')
