@@ -36,6 +36,9 @@ export default defineEventHandler(async (event) => {
       if (code === 'email_exists' || code === 'user_already_exists' || message.includes('already')) {
         throw createError({ statusCode: 409, statusMessage: 'Este e-mail já possui acesso. Gere um novo link de acesso.' })
       }
+      if (Number(inviteError?.status) === 401 || Number(inviteError?.status) === 403) {
+        throw createError({ statusCode: 503, statusMessage: 'O Supabase recusou a criação administrativa. Confira NUXT_SUPABASE_SECRET_KEY na Vercel e faça um novo deploy.' })
+      }
       throw createError({ statusCode: 502, statusMessage: 'O Supabase não conseguiu gerar o link de acesso.' })
     }
     createdUserId = invitation.user.id

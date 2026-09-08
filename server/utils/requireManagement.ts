@@ -11,7 +11,11 @@ export async function requireManagement(event: any) {
     .eq('id', authUser.id)
     .maybeSingle()
 
-  if (error || !profile?.ativo || profile.papel !== 'gestao') {
+  if (error) {
+    throw createError({ statusCode: 503, statusMessage: 'O servidor não conseguiu validar a gestão no Supabase. Confira NUXT_SUPABASE_SECRET_KEY na Vercel e faça um novo deploy.' })
+  }
+
+  if (!profile?.ativo || profile.papel !== 'gestao') {
     throw createError({ statusCode: 403, statusMessage: 'Apenas a gestão pode executar esta operação.' })
   }
 
