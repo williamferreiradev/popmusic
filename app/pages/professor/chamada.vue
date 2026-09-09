@@ -222,13 +222,12 @@
           </div>
 
           <!-- Ações da Chamada -->
-          <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            
-            <div class="flex bg-light-bg dark:bg-dark-bg rounded-lg p-1 border border-light-border dark:border-dark-border shrink-0">
+          <div class="grid w-full grid-cols-1 gap-2 sm:grid-cols-3 lg:w-auto">
+            <div class="contents">
               <!-- Presente -->
               <button 
                 :disabled="isFinalized"
-                class="px-4 py-1.5 rounded-md text-xs font-bold transition-all w-14 text-center cursor-pointer"
+                class="min-h-11 w-full min-w-28 whitespace-nowrap rounded-lg border px-4 py-2 text-center text-xs font-bold transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
                 :class="student.attendance === 'presente' ? 'bg-green-500 text-white shadow-sm' : 'text-light-text/50 dark:text-offwhite/50 hover:bg-green-500/10 hover:text-green-500 border border-transparent'"
                 title="Marcar Presente"
                 @click="markAttendance(student, 'presente')"
@@ -239,7 +238,7 @@
               <!-- Falta -->
               <button 
                 :disabled="isFinalized"
-                class="px-4 py-1.5 rounded-md text-xs font-bold transition-all w-14 text-center cursor-pointer"
+                class="min-h-11 w-full min-w-28 whitespace-nowrap rounded-lg border px-4 py-2 text-center text-xs font-bold transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
                 :class="student.attendance === 'falta' ? 'bg-red-500 text-white shadow-sm' : 'text-light-text/50 dark:text-offwhite/50 hover:bg-red-500/10 hover:text-red-500 border border-transparent'"
                 title="Marcar Falta"
                 @click="markAttendance(student, 'falta')"
@@ -251,7 +250,7 @@
             <!-- Justificar -->
             <button 
               :disabled="isFinalized"
-              class="px-3 py-1.5 rounded-md text-xs font-semibold border border-light-border dark:border-dark-border hover:bg-light-border/30 dark:hover:bg-dark-border/30 transition-colors shrink-0 flex items-center gap-1.5 cursor-pointer"
+              class="flex min-h-11 w-full min-w-36 items-center justify-center whitespace-nowrap rounded-lg border px-4 py-2 text-xs font-semibold transition-colors cursor-pointer hover:bg-light-border/30 disabled:cursor-not-allowed disabled:opacity-50 dark:border-dark-border dark:hover:bg-dark-border/30"
               :class="student.attendance === 'falta_justificada' ? 'border-amber-500 text-amber-500 bg-amber-500/10' : 'text-light-text/70 dark:text-offwhite/70'"
               @click="openJustifyModal(student)"
             >

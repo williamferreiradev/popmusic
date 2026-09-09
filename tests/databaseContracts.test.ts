@@ -866,3 +866,26 @@ describe('confirmacao integral do lote de turmas', () => {
     assert.ok(classes.includes('data.length !== total'))
   })
 })
+
+describe('controles responsivos da chamada', () => {
+  const pages = [
+    normalize(read('app/pages/dashboard/frequencia.vue')),
+    normalize(read('app/pages/professor/chamada.vue'))
+  ]
+
+  it('separa os tres estados sem texto sobreposto', () => {
+    for (const page of pages) {
+      assert.ok(page.includes('sm:grid-cols-3'))
+      assert.ok(page.includes('min-w-28 whitespace-nowrap'))
+      assert.ok(page.includes('min-w-36'))
+      assert.doesNotMatch(page, /transition-all w-14 text-center/)
+    }
+  })
+
+  it('mantem area de toque confortavel e estado desabilitado visivel', () => {
+    for (const page of pages) {
+      assert.ok(page.includes('min-h-11'))
+      assert.ok(page.includes('disabled:cursor-not-allowed'))
+    }
+  })
+})
