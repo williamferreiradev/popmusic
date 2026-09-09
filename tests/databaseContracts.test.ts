@@ -823,3 +823,29 @@ describe('crud seguro de modalidades e salas', () => {
     assert.ok(catalogMigration.includes('a sala possui turma ativa'))
   })
 })
+
+describe('cadastro de turmas em lote', () => {
+  const form = normalize(read('app/components/modals/ClassFormModal.vue'))
+  const classes = normalize(read('app/components/configuracoes/ConfigTurmas.vue'))
+  const migration = normalize(read('supabase/migrations/202609080042_turmas_em_lote.sql'))
+
+  it('permite selecionar varios dias somente ao criar', () => {
+    assert.ok(form.includes('form.diassemana'))
+    assert.ok(form.includes('toggleday'))
+    assert.ok(form.includes('v-if="classdata"'))
+    assert.ok(form.includes('dias_semana: props.classdata ? undefined : selecteddays.value'))
+  })
+
+  it('usa uma unica operacao transacional para criar o lote', () => {
+    assert.ok(classes.includes("rpc('salvar_turmas_em_lote'"))
+    assert.ok(migration.includes('function public.salvar_turmas_em_lote'))
+    assert.ok(migration.includes('from unnest(p_dias_semana)'))
+    assert.ok(migration.includes('insert into public.turmas'))
+    assert.ok(migration.includes('array_agg(distinct dia order by dia)'))
+  })
+
+  it('mantem a edicao de uma turma individual', () => {
+    assert.ok(classes.includes("rpc('salvar_turma'"))
+    assert.ok(form.includes("if (props.classdata) return 'salvar alterações'"))
+  })
+})

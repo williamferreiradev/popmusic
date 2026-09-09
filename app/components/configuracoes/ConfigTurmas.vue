@@ -85,9 +85,13 @@ const saveClass = async (payload: any) => {
   saving.value = true; feedback.value = null
   try {
     const wasEditing = Boolean(editingClass.value)
-    const { error } = await (supabase as any).rpc('salvar_turma', { p_id: editingClass.value?.id || null, p_modalidade_id: payload.modalidade_id, p_professor_id: payload.professor_id, p_sala_id: payload.sala_id, p_dia_semana: payload.dia_semana, p_horario_inicio: payload.horario_inicio, p_horario_fim: payload.horario_fim, p_capacidade_maxima: payload.capacidade_maxima })
+    const request = wasEditing
+      ? (supabase as any).rpc('salvar_turma', { p_id: editingClass.value.id, p_modalidade_id: payload.modalidade_id, p_professor_id: payload.professor_id, p_sala_id: payload.sala_id, p_dia_semana: payload.dia_semana, p_horario_inicio: payload.horario_inicio, p_horario_fim: payload.horario_fim, p_capacidade_maxima: payload.capacidade_maxima })
+      : (supabase as any).rpc('salvar_turmas_em_lote', { p_modalidade_id: payload.modalidade_id, p_professor_id: payload.professor_id, p_sala_id: payload.sala_id, p_dias_semana: payload.dias_semana, p_horario_inicio: payload.horario_inicio, p_horario_fim: payload.horario_fim, p_capacidade_maxima: payload.capacidade_maxima })
+    const { error } = await request
     if (error) throw error
-    await refresh(); closeForm(true); feedback.value = { type: 'success', message: `Turma ${wasEditing ? 'atualizada' : 'criada'} com sucesso.` }
+    const total = payload.dias_semana?.length || 1
+    await refresh(); closeForm(true); feedback.value = { type: 'success', message: wasEditing ? 'Turma atualizada com sucesso.' : `${total} ${total === 1 ? 'turma criada' : 'turmas criadas'} com sucesso.` }
   } catch (error: any) { feedback.value = { type: 'error', message: `Não foi possível salvar a turma. ${error.message || 'Tente novamente.'}` } }
   finally { saving.value = false }
 }

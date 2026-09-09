@@ -56,6 +56,8 @@ Este documento contém somente o necessário para colocar a primeira versão em 
 
 ## Homologação rápida — administrador
 
+- [x] Permitir criar várias turmas da mesma modalidade em dias diferentes numa única operação.
+- [ ] Validar em produção a criação em lote e a rejeição integral quando existir conflito em um dos dias.
 - [ ] Entrar com uma conta administrativa real.
 - [ ] Criar um aluno maior, escolher modalidade/turma e concluir a matrícula.
 - [ ] Confirmar contrato e 12 cobranças sem duplicidade.
