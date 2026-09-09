@@ -849,3 +849,20 @@ describe('cadastro de turmas em lote', () => {
     assert.ok(form.includes("if (props.classdata) return 'salvar alterações'"))
   })
 })
+
+describe('confirmacao integral do lote de turmas', () => {
+  const form = normalize(read('app/components/modals/ClassFormModal.vue'))
+  const classes = normalize(read('app/components/configuracoes/ConfigTurmas.vue'))
+  const migration = normalize(read('supabase/migrations/202609080043_correcao_turmas_em_lote.sql'))
+
+  it('mostra previamente todos os dias selecionados', () => {
+    assert.ok(form.includes('selecteddaynames'))
+    assert.ok(form.includes('serão criadas {{ selecteddays.length }} turmas'))
+  })
+
+  it('insere cada dia no banco e valida a resposta integral', () => {
+    assert.ok(migration.includes('foreach v_dia in array v_dias loop'))
+    assert.ok(migration.includes('array_append(v_ids, v_id)'))
+    assert.ok(classes.includes('data.length !== total'))
+  })
+})

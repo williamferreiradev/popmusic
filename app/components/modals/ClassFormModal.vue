@@ -28,6 +28,9 @@
             </button>
           </div>
           <p class="mt-2 text-xs text-light-text/60 dark:text-offwhite/60">As mesmas configurações serão usadas em todos os dias selecionados.</p>
+          <p v-if="selectedDays.length" class="mt-2 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm text-light-text dark:text-offwhite">
+            Serão criadas {{ selectedDays.length }} turmas: <strong>{{ selectedDayNames }}</strong>.
+          </p>
         </fieldset>
 
         <BaseInput v-model="form.horarioInicio" label="Horário inicial" type="time" required />
@@ -109,6 +112,10 @@ const submitLabel = computed(() => {
   if (props.classData) return 'Salvar alterações'
   return selectedDays.value.length > 1 ? `Criar ${selectedDays.value.length} turmas` : 'Criar turma'
 })
+const selectedDayNames = computed(() => selectedDays.value
+  .map(day => dayOptions.find(option => Number(option.value) === day)?.label)
+  .filter(Boolean)
+  .join(', '))
 const close = () => !props.saving && emit('close')
 const save = () => isValid.value && emit('save', {
   modalidade_id: form.modalidadeId, professor_id: form.professorId, sala_id: form.salaId,
