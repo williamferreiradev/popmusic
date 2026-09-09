@@ -915,3 +915,21 @@ describe('matricula com varias modalidades', () => {
     assert.ok(transaction.includes('v_valor + m.valor_padrao_mensalidade'))
   })
 })
+
+describe('hotfix da exclusao definitiva do aluno', () => {
+  const migration = normalize(read('supabase/migrations/202609090044_hotfix_excluir_aluno.sql'))
+
+  it('recria a assinatura consumida pela interface e atualiza o cache da api', () => {
+    assert.ok(migration.includes('function public.excluir_aluno_definitivamente(p_aluno_id uuid)'))
+    assert.ok(migration.includes("public.meu_papel() <> 'gestao'::public.papel_usuario"))
+    assert.ok(migration.includes("notify pgrst, 'reload schema'"))
+    assert.ok(migration.includes('grant execute on function public.excluir_aluno_definitivamente(uuid) to authenticated'))
+  })
+
+  it('remove dependencias antes do cadastro e do acesso', () => {
+    const dependencies = ['repasse_itens', 'comissoes_professor_aluno', 'presencas', 'recibos', 'fluxo_caixa', 'cobrancas', 'contratos', 'matriculas_turma']
+    for (const table of dependencies) assert.ok(migration.includes(`delete from public.${table}`))
+    assert.ok(migration.indexOf('delete from public.matriculas_turma') < migration.indexOf('delete from public.alunos'))
+    assert.ok(migration.includes('delete from auth.users'))
+  })
+})
