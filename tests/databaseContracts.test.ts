@@ -575,7 +575,7 @@ describe('exclusao definitiva do aluno', () => {
   it('separa cancelamento de exclusao irreversivel na interface', () => {
     assert.ok(students.includes('cancelar matrícula'))
     assert.ok(students.includes('excluir definitivamente'))
-    assert.ok(students.includes("rpc('excluir_aluno_definitivamente'"))
+    assert.ok(students.includes("$fetch('/api/admin/delete-student'"))
     assert.ok(students.includes('esta ação não pode ser desfeita'))
   })
 })
@@ -931,5 +931,30 @@ describe('hotfix da exclusao definitiva do aluno', () => {
     for (const table of dependencies) assert.ok(migration.includes(`delete from public.${table}`))
     assert.ok(migration.indexOf('delete from public.matriculas_turma') < migration.indexOf('delete from public.alunos'))
     assert.ok(migration.includes('delete from auth.users'))
+  })
+})
+
+describe('exclusao administrativa do aluno sem dependencia de rpc', () => {
+  const table = normalize(read('app/components/students/StudentsTable.vue'))
+  const endpoint = normalize(read('server/api/admin/delete-student.post.ts'))
+
+  it('envia a sessao autenticada para a rota administrativa', () => {
+    assert.ok(table.includes("$fetch('/api/admin/delete-student'"))
+    assert.ok(table.includes('authorization: `bearer ${accesstoken}`'))
+    assert.doesNotMatch(table, /rpc\('excluir_aluno_definitivamente'/)
+  })
+
+  it('revalida a gestao no servidor e nao expoe a chave privada', () => {
+    assert.ok(endpoint.includes('requiremanagement(event)'))
+    assert.ok(endpoint.includes("from('alunos')"))
+    assert.ok(endpoint.includes('admin.auth.admin.deleteuser'))
+    assert.doesNotMatch(table, /supabase_secret|service_role/)
+  })
+
+  it('remove o grafo operacional e registra auditoria', () => {
+    for (const tableName of ['repasse_itens', 'comissoes_professor_aluno', 'presencas', 'recibos', 'fluxo_caixa', 'cobrancas', 'contratos', 'matriculas_turma']) {
+      assert.ok(endpoint.includes(`'${tableName}'`))
+    }
+    assert.ok(endpoint.includes("acao: 'exclusao_definitiva'"))
   })
 })

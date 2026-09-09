@@ -378,8 +378,14 @@ const purgeStudent = async () => {
   isPurging.value = true
   purgeError.value = ''
   try {
-    const { error } = await (supabase as any).rpc('excluir_aluno_definitivamente', { p_aluno_id: selectedStudent.value.id })
-    if (error) throw error
+    const { data: sessionData } = await supabase.auth.getSession()
+    const accessToken = sessionData.session?.access_token
+    if (!accessToken) throw new Error('Sua sessão expirou. Entre novamente.')
+    await $fetch('/api/admin/delete-student', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${accessToken}` },
+      body: { alunoId: selectedStudent.value.id }
+    })
     isPermanentDeleteOpen.value = false
     selectedStudent.value = null
     emit('refresh')
