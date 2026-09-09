@@ -721,6 +721,29 @@ describe('acesso manual do professor sem smtp', () => {
     const management = normalize(read('server/utils/requireManagement.ts'))
     assert.ok(management.includes('authuser.id || authuser.sub'))
     assert.ok(management.includes(".eq('id', authuserid)"))
+    assert.ok(management.includes("const { data: profile, error } = await admin"))
+    assert.doesNotMatch(management, /serversupabaseclient/)
+  })
+
+  it('reaproveita conta existente e gera link de recuperação', () => {
+    assert.ok(invite.includes("type: 'recovery'"))
+    assert.ok(invite.includes('existingaccount = true'))
+    assert.ok(invite.includes('invitation = recovery'))
+    assert.ok(invite.includes('shoulddeletecreateduser = !existingaccount'))
+    assert.ok(invite.includes('createduserid && shoulddeletecreateduser'))
+  })
+})
+
+describe('dashboard operacional do professor', () => {
+  const dashboard = normalize(read('app/pages/professor/index.vue'))
+
+  it('exibe agenda, alunos, chamadas, frequência e repasses reais', () => {
+    for (const source of ['vw_professor_agenda', 'vw_professor_alunos', 'vw_professor_meu_repasse', 'presencas', 'chamadas_aula']) {
+      assert.ok(dashboard.includes(source))
+    }
+    for (const label of ['alunos hoje', 'aulas hoje', 'próxima aula', 'frequência no mês', 'pendente']) {
+      assert.ok(dashboard.includes(label))
+    }
   })
 })
 

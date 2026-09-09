@@ -67,7 +67,7 @@
 import { useRoute } from 'vue-router'
 import { useColorMode } from '#imports'
 import {
-  CalendarDays,
+  LayoutDashboard,
   Users,
   CheckSquare,
   Wallet,
@@ -97,7 +97,7 @@ const handleLogout = async () => {
 }
 
 const menuItems = [
-  { label: 'Minha Agenda', path: '/professor', icon: CalendarDays },
+  { label: 'Dashboard', path: '/professor', icon: LayoutDashboard },
   { label: 'Meus Alunos', path: '/professor/alunos', icon: Users },
   { label: 'Chamada', path: '/professor/chamada', icon: CheckSquare },
   { label: 'Meu Repasse', path: '/professor/repasse', icon: Wallet },

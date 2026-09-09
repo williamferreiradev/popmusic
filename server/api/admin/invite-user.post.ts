@@ -5,6 +5,7 @@ type InviteBody = { nome?: unknown; email?: unknown; papel?: unknown; professorI
 
 export default defineEventHandler(async (event) => {
   let createdUserId: string | null = null
+  let shouldDeleteCreatedUser = false
   try {
     const { admin, authUser } = await requireManagement(event)
     const body = await readBody<InviteBody>(event)
@@ -25,23 +26,33 @@ export default defineEventHandler(async (event) => {
     }
 
     const appUrl = String(useRuntimeConfig(event).public.appUrl || getRequestURL(event).origin).replace(/\/$/, '')
-    const { data: invitation, error: inviteError } = await admin.auth.admin.generateLink({
+    let { data: invitation, error: inviteError } = await admin.auth.admin.generateLink({
       type: 'invite',
       email,
       options: { redirectTo: `${appUrl}/confirm?mode=invite`, data: { nome } }
     })
+    let existingAccount = false
     if (inviteError || !invitation?.user) {
       const code = String(inviteError?.code || '')
       const message = String(inviteError?.message || '').toLowerCase()
       if (code === 'email_exists' || code === 'user_already_exists' || message.includes('already')) {
-        throw createError({ statusCode: 409, statusMessage: 'Este e-mail já possui acesso. Gere um novo link de acesso.' })
+        const { data: recovery, error: recoveryError } = await admin.auth.admin.generateLink({
+          type: 'recovery', email, options: { redirectTo: `${appUrl}/confirm?mode=recovery` }
+        })
+        if (recoveryError || !recovery?.user || !recovery.properties?.action_link) {
+          throw createError({ statusCode: 409, statusMessage: 'Este e-mail já possui acesso, mas não foi possível gerar um novo link.' })
+        }
+        invitation = recovery
+        inviteError = null
+        existingAccount = true
       }
       if (Number(inviteError?.status) === 401 || Number(inviteError?.status) === 403) {
-        throw createError({ statusCode: 503, statusMessage: 'O Supabase recusou a criação administrativa. Confira NUXT_SUPABASE_SECRET_KEY na Vercel e faça um novo deploy.' })
+        throw createError({ statusCode: 503, statusMessage: 'O Supabase recusou a criação administrativa. Confira SUPABASE_SECRET_KEY na Vercel e faça um novo deploy.' })
       }
       throw createError({ statusCode: 502, statusMessage: 'O Supabase não conseguiu gerar o link de acesso.' })
     }
     createdUserId = invitation.user.id
+    shouldDeleteCreatedUser = !existingAccount
 
     const { error: profileError } = await admin.from('usuarios').upsert({ id: createdUserId, nome, papel, ativo: true }, { onConflict: 'id' })
     if (profileError) throw profileError
@@ -65,9 +76,9 @@ export default defineEventHandler(async (event) => {
 
     const activationLink = invitation.properties?.action_link
     if (!activationLink) throw new Error('Link de ativação não retornado pelo Supabase.')
-    return { success: true, activationLink }
+    return { success: true, activationLink, existingAccount }
   } catch (error: any) {
-    if (createdUserId) {
+    if (createdUserId && shouldDeleteCreatedUser) {
       try {
         const { admin } = await requireManagement(event)
         await admin.auth.admin.deleteUser(createdUserId)

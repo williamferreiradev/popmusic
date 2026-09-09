@@ -1,4 +1,4 @@
-import { serverSupabaseClient, serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 
 export async function requireManagement(event: any) {
   const admin = serverSupabaseServiceRole(event) as any
@@ -19,8 +19,7 @@ export async function requireManagement(event: any) {
 
   // Verifica o papel no contexto da sessão, usando as mesmas políticas RLS
   // que já autorizam o usuário a acessar o dashboard.
-  const sessionClient = await serverSupabaseClient(event) as any
-  const { data: profile, error } = await sessionClient
+  const { data: profile, error } = await admin
     .from('usuarios')
     .select('papel, ativo')
     .eq('id', authUserId)
