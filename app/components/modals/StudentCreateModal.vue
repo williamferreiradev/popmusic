@@ -139,44 +139,73 @@
           max="28"
           required
         />
-        <BaseSelect
-          v-model="selectedModalityId"
-          label="Modalidade"
-          :options="modalityOptions"
-          placeholder="Selecione uma modalidade"
-        />
-
-        <div v-if="selectedModalityId" class="flex flex-col gap-2">
-          <label class="text-sm font-medium text-light-text dark:text-offwhite">Turmas disponíveis</label>
-          <div v-if="filteredClassOptions.length > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <button
-              v-for="opt in filteredClassOptions"
-              :key="opt.value"
-              type="button"
-              :disabled="opt.isFull && !formData.instruments.includes(opt.value)"
-              class="w-full p-3 rounded-lg text-left transition-all border flex items-center justify-between gap-3 disabled:cursor-not-allowed disabled:opacity-60"
-              :class="formData.instruments.includes(opt.value) ? 'bg-primary/10 text-primary dark:text-offwhite border-primary ring-1 ring-primary' : 'bg-light-surface dark:bg-dark-surface text-light-text dark:text-offwhite border-light-border dark:border-dark-border hover:border-primary/60'"
-              @click="toggleInstrument(opt.value)"
-            >
-              <span>
-                <span class="block text-sm font-bold">{{ opt.modNome }}</span>
-                <span class="block text-xs opacity-70 mt-0.5">{{ opt.schedule }}</span>
-                <span class="block text-xs opacity-70 mt-1">{{ opt.teacher }} · {{ opt.room }}</span>
-                <span class="block text-xs mt-1" :class="opt.isFull ? 'text-red-500 font-bold' : 'text-green-600 dark:text-green-400'">
-                  {{ opt.isFull ? 'Turma lotada' : `${opt.available} vaga${opt.available === 1 ? '' : 's'} disponível(is)` }}
+        <div class="flex flex-col gap-2">
+          <label class="text-sm font-medium text-light-text dark:text-offwhite">Modalidades</label>
+          <details class="group relative">
+            <summary class="flex min-h-12 cursor-pointer list-none items-center justify-between rounded-lg border border-light-border bg-light-surface px-4 py-3 text-sm text-light-text marker:hidden dark:border-dark-border dark:bg-dark-surface dark:text-offwhite">
+              <span>{{ modalitySelectionLabel }}</span>
+              <span class="transition-transform group-open:rotate-180" aria-hidden="true">⌄</span>
+            </summary>
+            <div class="absolute z-30 mt-2 grid max-h-64 w-full grid-cols-1 gap-2 overflow-y-auto rounded-xl border border-light-border bg-light-surface p-3 shadow-xl dark:border-dark-border dark:bg-dark-surface sm:grid-cols-2">
+              <button
+                v-for="modality in modalityOptions"
+                :key="modality.value"
+                type="button"
+                class="flex min-h-11 items-center justify-between gap-3 rounded-lg border px-3 py-2 text-left text-sm transition-colors"
+                :class="selectedModalityIds.includes(String(modality.value)) ? 'border-primary bg-primary/10 text-primary dark:text-offwhite' : 'border-light-border text-light-text hover:border-primary/60 dark:border-dark-border dark:text-offwhite'"
+                :aria-pressed="selectedModalityIds.includes(String(modality.value))"
+                @click="toggleModality(String(modality.value))"
+              >
+                <span class="font-semibold">{{ modality.label }}</span>
+                <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded border" :class="selectedModalityIds.includes(String(modality.value)) ? 'border-primary bg-primary text-white' : 'border-current/30'">
+                  <Check v-if="selectedModalityIds.includes(String(modality.value))" class="h-3 w-3" />
                 </span>
-              </span>
-              <span class="w-5 h-5 rounded-full border flex items-center justify-center shrink-0" :class="formData.instruments.includes(opt.value) ? 'border-primary bg-primary text-white' : 'border-light-border dark:border-dark-border'">
-                <Check v-if="formData.instruments.includes(opt.value)" class="w-3 h-3" />
-              </span>
+              </button>
+            </div>
+          </details>
+          <div v-if="selectedModalityIds.length" class="flex flex-wrap gap-2">
+            <button v-for="modality in selectedModalities" :key="modality.value" type="button" class="rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary dark:text-red-300" :title="`Remover ${modality.label}`" @click="toggleModality(String(modality.value))">
+              {{ modality.label }} ×
             </button>
           </div>
-          <p v-else class="text-xs p-3 rounded-lg border border-dashed border-light-border dark:border-dark-border text-light-text/50 dark:text-offwhite/50">
-            Não há turmas/horários ativos para esta modalidade. Uma sala cadastrada só aparecerá aqui depois que uma turma for criada com professor, dia e horário.
-          </p>
         </div>
-        <p v-else class="text-xs text-light-text/50 dark:text-offwhite/50">Escolha uma modalidade para visualizar seus dias e horários.</p>
-        <p v-if="selectedModalityId && formData.instruments.length === 0" class="text-xs text-red-500">Selecione pelo menos uma turma.</p>
+
+        <div v-if="selectedModalityIds.length" class="flex flex-col gap-4">
+          <section v-for="group in selectedModalityGroups" :key="group.id" class="rounded-xl border border-light-border p-3 dark:border-dark-border">
+            <div class="mb-3 flex items-center justify-between gap-3">
+              <div>
+                <h4 class="text-sm font-bold text-light-text dark:text-offwhite">{{ group.name }}</h4>
+                <p class="text-xs text-light-text/60 dark:text-offwhite/60">Escolha uma aula semanal</p>
+              </div>
+              <CheckCircle2 v-if="group.selectedClassId" class="h-5 w-5 shrink-0 text-green-500" />
+            </div>
+            <div v-if="group.classes.length" class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <button
+                v-for="opt in group.classes"
+                :key="opt.value"
+                type="button"
+                :disabled="opt.isFull && !formData.instruments.includes(opt.value)"
+                class="flex w-full items-center justify-between gap-3 rounded-lg border p-3 text-left transition-all disabled:cursor-not-allowed disabled:opacity-60"
+                :class="formData.instruments.includes(opt.value) ? 'border-primary bg-primary/10 text-primary ring-1 ring-primary dark:text-offwhite' : 'border-light-border bg-light-surface text-light-text hover:border-primary/60 dark:border-dark-border dark:bg-dark-surface dark:text-offwhite'"
+                @click="selectClassForModality(group.id, opt.value)"
+              >
+                <span>
+                  <span class="block text-sm font-bold">{{ opt.schedule }}</span>
+                  <span class="mt-1 block text-xs opacity-70">{{ opt.teacher }} · {{ opt.room }}</span>
+                  <span class="mt-1 block text-xs" :class="opt.isFull ? 'font-bold text-red-500' : 'text-green-600 dark:text-green-400'">
+                    {{ opt.isFull ? 'Turma lotada' : `${opt.available} vaga${opt.available === 1 ? '' : 's'} disponível(is)` }}
+                  </span>
+                </span>
+                <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border" :class="formData.instruments.includes(opt.value) ? 'border-primary bg-primary text-white' : 'border-light-border dark:border-dark-border'">
+                  <Check v-if="formData.instruments.includes(opt.value)" class="h-3 w-3" />
+                </span>
+              </button>
+            </div>
+            <p v-else class="rounded-lg border border-dashed border-light-border p-3 text-xs text-red-500 dark:border-dark-border">Não há turmas ativas com vagas para esta modalidade.</p>
+            <p v-if="group.classes.length && !group.selectedClassId" class="mt-2 text-xs text-red-500">Selecione uma turma de {{ group.name }}.</p>
+          </section>
+        </div>
+        <p v-else class="text-xs text-light-text/50 dark:text-offwhite/50">Selecione uma ou mais modalidades e depois escolha uma turma para cada uma.</p>
       </div>
 
       <!-- Espaçamento extra pro footer -->
@@ -194,7 +223,7 @@
         <button 
           type="submit"
           class="px-4 py-2 rounded-md font-medium text-white bg-primary hover:bg-primary-hover transition-colors shadow-sm flex items-center gap-2"
-          :disabled="isLoading || formData.instruments.length === 0"
+          :disabled="isLoading || !isEnrollmentSelectionComplete"
         >
           <Loader2 v-if="isLoading" class="w-4 h-4 animate-spin" />
           Concluir Matrícula e Gerar Contrato
@@ -209,7 +238,6 @@ import { ref, reactive, computed, watch } from 'vue'
 import { Loader2, User, CheckCircle2, Copy, MessageCircle, Mail, ExternalLink, Check } from '@lucide/vue'
 import BaseModal from '../BaseModal.vue'
 import BaseInput from '../BaseInput.vue'
-import BaseSelect from '../BaseSelect.vue'
 
 import { buildPopMusicContractData } from '~/utils/contractFormatter'
 import { useContratos } from '~/composables/useContratos'
@@ -226,7 +254,7 @@ const emit = defineEmits(['close', 'saved'])
 const isLoading = ref(false)
 const formError = ref('')
 const copied = ref(false)
-const selectedModalityId = ref('')
+const selectedModalityIds = ref<string[]>([])
 const createdContractData = ref<{ studentName: string, token: string, phone: string, email: string, emailSent: boolean } | null>(null)
 
 watch(() => props.isOpen, (newVal) => {
@@ -339,17 +367,21 @@ const classOptions = computed(() => {
   }).sort((a, b) => a.schedule.localeCompare(b.schedule, 'pt-BR'))
 })
 
-const filteredClassOptions = computed(() => classOptions.value.filter(opt => opt.modalidadeId === String(selectedModalityId.value)))
+const selectedModalities = computed(() => modalityOptions.value.filter(modality => selectedModalityIds.value.includes(String(modality.value))))
+const selectedModalityGroups = computed(() => selectedModalities.value.map(modality => {
+  const id = String(modality.value)
+  const classes = classOptions.value.filter(option => option.modalidadeId === id)
+  return { id, name: modality.label, classes, selectedClassId: classes.find(option => formData.instruments.includes(option.value))?.value || '' }
+}))
+const modalitySelectionLabel = computed(() => selectedModalityIds.value.length
+  ? `${selectedModalityIds.value.length} ${selectedModalityIds.value.length === 1 ? 'modalidade selecionada' : 'modalidades selecionadas'}`
+  : 'Selecione as modalidades')
+const isEnrollmentSelectionComplete = computed(() => selectedModalityIds.value.length > 0 &&
+  selectedModalityGroups.value.every(group => Boolean(group.selectedClassId)))
 
 watch(() => props.isOpen, async isOpen => {
   if (!isOpen) return
   await Promise.all([refreshModalidades(), refreshTurmas()])
-})
-
-watch(selectedModalityId, (newId, oldId) => {
-  if (!oldId || newId === oldId) return
-  const visibleIds = new Set(filteredClassOptions.value.map(opt => opt.value))
-  formData.instruments = formData.instruments.filter(id => visibleIds.has(id))
 })
 
 const contractSignUrl = computed(() => {
@@ -383,7 +415,7 @@ const resetForm = () => {
   formData.email = ''
   formData.dueDay = 10
   formData.instruments = []
-  selectedModalityId.value = ''
+  selectedModalityIds.value = []
   formData.guardianName = ''
   formData.guardianCpf = ''
   formData.guardianPhone = ''
@@ -395,22 +427,31 @@ const handleClose = () => {
   emit('close')
 }
 
-const toggleInstrument = (val: string) => {
-  const option = classOptions.value.find(item => item.value === val)
-  if (option?.isFull && !formData.instruments.includes(val)) return
-  const index = formData.instruments.indexOf(val)
-  if (index === -1) {
-    formData.instruments.push(val)
-  } else {
-    formData.instruments.splice(index, 1)
-  }
+const toggleModality = (modalityId: string) => {
+  const index = selectedModalityIds.value.indexOf(modalityId)
+  if (index >= 0) {
+    selectedModalityIds.value.splice(index, 1)
+    const classIds = new Set(classOptions.value.filter(option => option.modalidadeId === modalityId).map(option => option.value))
+    formData.instruments = formData.instruments.filter(classId => !classIds.has(classId))
+  } else selectedModalityIds.value.push(modalityId)
+}
+
+const selectClassForModality = (modalityId: string, classId: string) => {
+  const option = classOptions.value.find(item => item.value === classId)
+  if (!option || (option.isFull && !formData.instruments.includes(classId))) return
+  const modalityClassIds = new Set(classOptions.value.filter(item => item.modalidadeId === modalityId).map(item => item.value))
+  formData.instruments = formData.instruments.filter(id => !modalityClassIds.has(id))
+  formData.instruments.push(classId)
 }
 
 const { contractModel, fetchModel } = useContratos()
 
 const handleSubmit = async () => {
   formError.value = ''
-  if (formData.instruments.length === 0) return
+  if (!isEnrollmentSelectionComplete.value) {
+    formError.value = 'Escolha uma turma para cada modalidade selecionada.'
+    return
+  }
   const dueDay = Number(formData.dueDay)
   if (!Number.isInteger(dueDay) || dueDay < 1 || dueDay > 28) {
     formError.value = 'Informe um dia de vencimento entre 1 e 28.'

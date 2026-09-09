@@ -544,7 +544,8 @@ describe('turmas atualizadas e contraste na matricula', () => {
 
   it('normaliza os identificadores usados pelo filtro', () => {
     assert.ok(create.includes("modalidadeid: string(t.modalidade_id || t.modalidades?.id || '')"))
-    assert.ok(create.includes('opt.modalidadeid === string(selectedmodalityid.value)'))
+    assert.ok(create.includes('option.modalidadeid === id'))
+    assert.ok(create.includes('selectedmodalityids.value.includes(string(modality.value))'))
   })
 
   it('aplica esquema de cor correto aos controles nativos', () => {
@@ -887,5 +888,30 @@ describe('controles responsivos da chamada', () => {
       assert.ok(page.includes('min-h-11'))
       assert.ok(page.includes('disabled:cursor-not-allowed'))
     }
+  })
+})
+
+describe('matricula com varias modalidades', () => {
+  const createModal = normalize(read('app/components/modals/StudentCreateModal.vue'))
+  const transaction = normalize(read('supabase/migrations/202608310008_matricula_transacional.sql'))
+
+  it('seleciona varias modalidades sem apagar escolhas anteriores', () => {
+    assert.ok(createModal.includes('selectedmodalityids'))
+    assert.ok(createModal.includes('selectedmodalitygroups'))
+    assert.ok(createModal.includes('selectclassformodality'))
+    assert.doesNotMatch(createModal, /watch\(selectedmodalityid/)
+  })
+
+  it('exige exatamente uma turma para cada modalidade escolhida', () => {
+    assert.ok(createModal.includes('isenrollmentselectioncomplete'))
+    assert.ok(createModal.includes('formdata.instruments = formdata.instruments.filter(id => !modalityclassids.has(id))'))
+    assert.ok(createModal.includes('escolha uma turma para cada modalidade selecionada'))
+  })
+
+  it('envia todas as turmas e soma as mensalidades no contrato', () => {
+    assert.ok(createModal.includes('p_turma_ids: formdata.instruments'))
+    assert.ok(createModal.includes('selectedclasses.reduce'))
+    assert.ok(transaction.includes('foreach v_turma_id in array'))
+    assert.ok(transaction.includes('v_valor + m.valor_padrao_mensalidade'))
   })
 })
