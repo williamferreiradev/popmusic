@@ -135,13 +135,15 @@
 
     <ConfirmDeleteModal :is-open="isDeleteOpen" title="Excluir professor" :message="`Excluir ${teacherToDelete?.name || 'este professor'}?`" warning-text="Turmas vazias e o acesso serão apagados. Se houver matrículas, presenças ou repasses, a exclusão será bloqueada." confirm-text="Excluir professor" :is-loading="isDeleting" @close="isDeleteOpen = false" @confirm="deleteTeacher" />
 
-    <BaseModal :is-open="isAccessLinkOpen" title="Link de acesso do professor" @close="closeAccessLink">
+    <BaseModal :is-open="isAccessLinkOpen" title="Acesso do professor" @close="closeAccessLink">
       <div class="p-5 flex flex-col gap-4">
-        <p class="text-sm text-light-text/70 dark:text-offwhite/70">Copie e envie este link diretamente ao professor. Ele será usado para definir a senha e acessar o painel.</p>
-        <input :value="accessLink" readonly class="w-full rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg px-3 py-2 text-sm text-light-text dark:text-offwhite" @focus="($event.target as HTMLInputElement).select()">
+        <p class="text-sm text-light-text/70 dark:text-offwhite/70">Copie e envie estas credenciais ao professor. A senha temporária deverá ser alterada no primeiro acesso.</p>
+        <div><label class="text-xs font-bold">Login</label><input :value="accessEmail" readonly class="mt-1 w-full rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg px-3 py-2 text-sm text-light-text dark:text-offwhite"></div>
+        <div v-if="temporaryPassword"><label class="text-xs font-bold">Senha temporária</label><input :value="temporaryPassword" readonly class="mt-1 w-full rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg px-3 py-2 text-sm text-light-text dark:text-offwhite"></div>
+        <div><label class="text-xs font-bold">Link</label><input :value="accessLink" readonly class="mt-1 w-full rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg px-3 py-2 text-sm text-light-text dark:text-offwhite" @focus="($event.target as HTMLInputElement).select()"></div>
         <div class="flex justify-end gap-3">
           <BaseButton variant="outline" @click="closeAccessLink">Fechar</BaseButton>
-          <BaseButton variant="primary" @click="copyAccessLink">{{ linkCopied ? 'Link copiado!' : 'Copiar link' }}</BaseButton>
+          <BaseButton variant="primary" @click="copyAccessLink">{{ linkCopied ? 'Acesso copiado!' : 'Copiar acesso' }}</BaseButton>
         </div>
       </div>
     </BaseModal>
@@ -184,6 +186,8 @@ const isDeleting = ref(false)
 const teacherToDelete = ref<TeacherView | null>(null)
 const isAccessLinkOpen = ref(false)
 const accessLink = ref('')
+const accessEmail = ref('')
+const temporaryPassword = ref<string | null>(null)
 const linkCopied = ref(false)
 const emptyForm = () => ({ id: '', name: '', cpf: '', phone: '', email: '', pixKey: '', commissionType: 'valor_fixo' as CommissionType, commissionValue: '', modalityIds: [] as string[] })
 const form = ref(emptyForm())
@@ -276,12 +280,12 @@ const save = async () => {
     professorSaved = true
 
     if (!isEditing.value) {
-      const result = await $fetch<{ activationLink: string }>('/api/admin/invite-user', {
+      const result = await $fetch<{ activationLink: string; temporaryPassword: string | null }>('/api/admin/invite-user', {
         method: 'POST',
         headers: await managementHeaders(),
         body: { nome: form.value.name, email: form.value.email, papel: 'professor', professorId }
       })
-      showAccessLink(result.activationLink)
+      showAccessLink(result.activationLink, form.value.email, result.temporaryPassword)
     }
 
     await refresh()
@@ -336,7 +340,7 @@ const inviteTeacher = async (teacher: TeacherView) => {
 
   isInvitingId.value = teacher.id
   try {
-    const result = await $fetch<{ activationLink: string }>('/api/admin/invite-user', {
+    const result = await $fetch<{ activationLink: string; temporaryPassword: string | null }>('/api/admin/invite-user', {
       method: 'POST',
       headers: await managementHeaders(),
       body: {
@@ -347,7 +351,7 @@ const inviteTeacher = async (teacher: TeacherView) => {
       }
     })
     await refresh()
-    showAccessLink(result.activationLink)
+    showAccessLink(result.activationLink, teacher.email, result.temporaryPassword)
   } catch (error: any) {
     console.error('Erro ao convidar professor:', error)
     alert(`Não foi possível criar o acesso. ${error.message || 'Tente novamente.'}`)
@@ -364,14 +368,16 @@ const resendTeacherAccess = async (teacher: TeacherView) => {
     const result = await $fetch<{ activationLink: string }>('/api/admin/resend-access', { method: 'POST', headers: await managementHeaders(), body: {
       userId: teacher.userId, professorId: teacher.id
     } })
-    showAccessLink(result.activationLink)
+    showAccessLink(result.activationLink, teacher.email)
   } catch (error: any) {
     alert(`Não foi possível gerar o novo link. ${error.message || 'Tente novamente.'}`)
   } finally { isInvitingId.value = null }
 }
 
-const showAccessLink = (link: string) => {
+const showAccessLink = (link: string, email = '', password: string | null = null) => {
   accessLink.value = link
+  accessEmail.value = email
+  temporaryPassword.value = password
   linkCopied.value = false
   isAccessLinkOpen.value = true
 }
@@ -379,11 +385,16 @@ const showAccessLink = (link: string) => {
 const closeAccessLink = () => {
   isAccessLinkOpen.value = false
   accessLink.value = ''
+  accessEmail.value = ''
+  temporaryPassword.value = null
   linkCopied.value = false
 }
 
 const copyAccessLink = async () => {
-  await navigator.clipboard.writeText(accessLink.value)
+  const credentials = temporaryPassword.value
+    ? `Acesso Pop Music\nLogin: ${accessEmail.value}\nSenha temporária: ${temporaryPassword.value}\nLink: ${accessLink.value}\nAltere a senha no primeiro acesso.`
+    : `Acesso Pop Music\nLogin: ${accessEmail.value}\nLink para redefinir a senha: ${accessLink.value}`
+  await navigator.clipboard.writeText(credentials)
   linkCopied.value = true
 }
 </script>

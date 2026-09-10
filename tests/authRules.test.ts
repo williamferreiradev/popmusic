@@ -4,6 +4,7 @@ import { describe, it } from 'node:test'
 import { isStrongPassword, isValidAuthEmail, normalizeAuthEmail } from '../app/utils/authRules.ts'
 
 const confirmationPage = readFileSync(new URL('../app/pages/confirm.vue', import.meta.url), 'utf8')
+const middleware = readFileSync(new URL('../app/middleware/auth.global.ts', import.meta.url), 'utf8')
 
 describe('regras de autenticação', () => {
   it('exige senha com oito caracteres, maiúscula, minúscula e número', () => {
@@ -18,6 +19,11 @@ describe('regras de autenticação', () => {
     assert.equal(normalizeAuthEmail('  Aluno@Email.COM '), 'aluno@email.com')
     assert.equal(isValidAuthEmail('  Aluno@Email.COM '), true)
     assert.equal(isValidAuthEmail('email-inválido'), false)
+  })
+  it('obriga a troca da senha temporaria antes de abrir o painel', () => {
+    assert.match(middleware, /must_change_password === true/)
+    assert.match(middleware, /confirm\?mode=temporary/)
+    assert.match(confirmationPage, /must_change_password: false/)
   })
 })
 

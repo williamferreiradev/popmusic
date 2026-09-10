@@ -26,15 +26,20 @@ export default defineEventHandler(async (event) => {
     }
 
     const appUrl = String(useRuntimeConfig(event).public.appUrl || getRequestURL(event).origin).replace(/\/$/, '')
-    let { data: invitation, error: inviteError } = await admin.auth.admin.generateLink({
-      type: 'invite',
+    const temporaryPassword = 'PopMusic1234@'
+    const { data: created, error: createUserError } = await admin.auth.admin.createUser({
       email,
-      options: { redirectTo: `${appUrl}/confirm?mode=invite`, data: { nome } }
+      password: temporaryPassword,
+      email_confirm: true,
+      user_metadata: { nome, must_change_password: true }
     })
+
+    let accessUser = created?.user || null
+    let activationLink = `${appUrl}/login`
     let existingAccount = false
-    if (inviteError || !invitation?.user) {
-      const code = String(inviteError?.code || '')
-      const message = String(inviteError?.message || '').toLowerCase()
+    if (createUserError || !accessUser) {
+      const code = String(createUserError?.code || '')
+      const message = String(createUserError?.message || '').toLowerCase()
       if (code === 'email_exists' || code === 'user_already_exists' || message.includes('already')) {
         const { data: recovery, error: recoveryError } = await admin.auth.admin.generateLink({
           type: 'recovery', email, options: { redirectTo: `${appUrl}/confirm?mode=recovery` }
@@ -42,18 +47,28 @@ export default defineEventHandler(async (event) => {
         if (recoveryError || !recovery?.user || !recovery.properties?.action_link) {
           throw createError({ statusCode: 409, statusMessage: 'Este e-mail já possui acesso, mas não foi possível gerar um novo link.' })
         }
-        invitation = recovery
-        inviteError = null
+        accessUser = recovery.user
+        activationLink = recovery.properties.action_link
         existingAccount = true
-      }
-      if (Number(inviteError?.status) === 401 || Number(inviteError?.status) === 403) {
+      } else if (Number(createUserError?.status) === 401 || Number(createUserError?.status) === 403) {
         throw createError({ statusCode: 503, statusMessage: 'O Supabase recusou a criação administrativa. Confira SUPABASE_SECRET_KEY na Vercel e faça um novo deploy.' })
+      } else {
+        throw createError({ statusCode: 502, statusMessage: 'O Supabase não conseguiu criar a conta de acesso.' })
       }
-      throw createError({ statusCode: 502, statusMessage: 'O Supabase não conseguiu gerar o link de acesso.' })
     }
-    createdUserId = invitation.user.id
-    shouldDeleteCreatedUser = !existingAccount
 
+    createdUserId = accessUser.id
+    shouldDeleteCreatedUser = !existingAccount
+    if (existingAccount) {
+      const { data: existingProfile } = await admin.from('usuarios').select('papel').eq('id', createdUserId).maybeSingle()
+      if (existingProfile && existingProfile.papel !== papel) {
+        throw createError({ statusCode: 409, statusMessage: 'Este e-mail já pertence a outro tipo de acesso.' })
+      }
+      if (professorId) {
+        const { data: otherLink } = await admin.from('professores').select('id').eq('usuario_id', createdUserId).neq('id', professorId).maybeSingle()
+        if (otherLink) throw createError({ statusCode: 409, statusMessage: 'Este e-mail já está vinculado a outro professor.' })
+      }
+    }
     const { error: profileError } = await admin.from('usuarios').upsert({ id: createdUserId, nome, papel, ativo: true }, { onConflict: 'id' })
     if (profileError) throw profileError
 
@@ -69,14 +84,12 @@ export default defineEventHandler(async (event) => {
     }
 
     const { error: auditError } = await admin.from('auditoria').insert({
-      tabela: 'usuarios', registro_id: createdUserId, acao: 'link_acesso_gerado', usuario_id: authUser.id,
-      dados_depois: { papel, professor_id: professorId }
+      tabela: 'usuarios', registro_id: createdUserId, acao: 'acesso_criado', usuario_id: authUser.id,
+      dados_depois: { papel, professor_id: professorId, senha_temporaria: !existingAccount }
     })
-    if (auditError) throw new Error('Não foi possível registrar a auditoria do convite.')
+    if (auditError) throw new Error('Não foi possível registrar a auditoria do acesso.')
 
-    const activationLink = invitation.properties?.action_link
-    if (!activationLink) throw new Error('Link de ativação não retornado pelo Supabase.')
-    return { success: true, activationLink, existingAccount }
+    return { success: true, activationLink, temporaryPassword: existingAccount ? null : temporaryPassword, existingAccount }
   } catch (error: any) {
     if (createdUserId && shouldDeleteCreatedUser) {
       try {

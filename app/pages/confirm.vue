@@ -65,7 +65,7 @@ const savePassword = async () => {
     errorMsg.value = 'A senha não atende aos requisitos mínimos.'; return
   }
   saving.value = true
-  const { error } = await supabase.auth.updateUser({ password: password.value })
+  const { error } = await supabase.auth.updateUser({ password: password.value, data: { must_change_password: false } })
   if (error) { errorMsg.value = error.message; saving.value = false; return }
   await navigateTo(await destination(confirmedUserId.value))
 }

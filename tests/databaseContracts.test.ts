@@ -705,15 +705,17 @@ describe('acesso manual do professor sem smtp', () => {
   const resend = normalize(read('server/api/admin/resend-access.post.ts'))
   const teachers = normalize(read('app/components/configuracoes/ConfigProfessores.vue'))
 
-  it('cria o auth user e devolve o link sem tentar enviar email', () => {
-    assert.ok(invite.includes("type: 'invite'"))
-    assert.ok(invite.includes('const activationlink = invitation.properties?.action_link'))
+  it('cria o auth user confirmado com senha temporaria sem tentar enviar email', () => {
+    assert.ok(invite.includes('auth.admin.createuser'))
+    assert.ok(invite.includes('password: temporarypassword'))
+    assert.ok(invite.includes('email_confirm: true'))
+    assert.ok(invite.includes('must_change_password: true'))
     assert.doesNotMatch(invite, /inviteuserbyemail/)
   })
 
   it('gera novo link e permite copiar no cadastro do professor', () => {
     assert.ok(resend.includes("type: 'recovery'"))
-    assert.ok(teachers.includes('copiar link'))
+    assert.ok(teachers.includes('copiar acesso'))
     assert.ok(teachers.includes('navigator.clipboard.writetext'))
   })
 
@@ -728,7 +730,7 @@ describe('acesso manual do professor sem smtp', () => {
   it('reaproveita conta existente e gera link de recuperação', () => {
     assert.ok(invite.includes("type: 'recovery'"))
     assert.ok(invite.includes('existingaccount = true'))
-    assert.ok(invite.includes('invitation = recovery'))
+    assert.ok(invite.includes('accessuser = recovery.user'))
     assert.ok(invite.includes('shoulddeletecreateduser = !existingaccount'))
     assert.ok(invite.includes('createduserid && shoulddeletecreateduser'))
   })

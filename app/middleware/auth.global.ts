@@ -27,6 +27,10 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return
   }
 
+  if (authenticated.user?.user_metadata?.must_change_password === true && to.path !== '/confirm') {
+    return navigateTo('/confirm?mode=temporary')
+  }
+
   const { data: profile, error } = await supabase
     .from('usuarios')
     .select('papel, ativo')
