@@ -753,7 +753,7 @@ describe('acesso manual do professor sem smtp', () => {
     assert.ok(provisioning.includes('findauthuserbyemail'))
     assert.ok(provisioning.includes('isdatabaseprovisioned'))
     assert.doesNotMatch(invite, /auth\.admin\.deleteuser/)
-    assert.ok(teachers.includes('reparar / novo link'))
+    assert.ok(teachers.includes('redefinir senha'))
   })
 
   it('faz perfil e vinculo em uma rpc transacional restrita ao service role', () => {

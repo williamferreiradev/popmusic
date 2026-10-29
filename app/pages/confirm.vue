@@ -25,6 +25,8 @@ import { isUserRole, roleDestination } from '~/utils/accessControl'
 
 definePageMeta({ layout: false })
 const supabase = useSupabaseClient()
+const route = useRoute()
+const router = useRouter()
 const checking = ref(true)
 const invalidLink = ref(false)
 const confirmedUserId = ref<string | null>(null)
@@ -34,6 +36,20 @@ const confirmation = ref('')
 const errorMsg = ref('')
 
 onMounted(async () => {
+  const fragment = new URLSearchParams(window.location.hash.slice(1))
+  const tokenHash = fragment.get('token_hash') || (typeof route.query.token_hash === 'string' ? route.query.token_hash : null)
+  if (tokenHash) {
+    const type = fragment.get('type') || route.query.type
+    await router.replace({ path: '/confirm', query: { mode: 'recovery' }, hash: '' })
+    if (type !== 'recovery' || !/^[a-zA-Z0-9_-]{32,256}$/.test(tokenHash)) {
+      invalidLink.value = true; checking.value = false; return
+    }
+    const { data, error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: 'recovery' })
+    if (error || !data.user) { invalidLink.value = true; checking.value = false; return }
+    confirmedUserId.value = data.user.id
+    checking.value = false
+    return
+  }
   // O callback pode levar alguns segundos em redes móveis. `getUser` confirma o
   // token no servidor e evita aceitar uma sessão expirada mantida no navegador.
   for (let attempt = 0; attempt < 20; attempt++) {

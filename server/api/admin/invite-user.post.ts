@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto'
 import { requireManagement } from '../../utils/requireManagement'
 import { safeServerError } from '../../utils/safeLog'
+import { recoveryLink } from '../../utils/recoveryLink'
 import {
   AccessProvisioningError,
   provisionAccess,
@@ -145,7 +146,7 @@ export default defineEventHandler(async (event) => {
             email: data.user.email,
             appRole: String(data.user.app_metadata?.papel || '') || null
           } : null,
-          actionLink: data?.properties?.action_link || null,
+          actionLink: data?.properties?.hashed_token ? recoveryLink(redirectTo, data.properties.hashed_token) : null,
           error
         }
       },

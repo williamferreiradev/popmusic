@@ -1,5 +1,6 @@
 import { requireManagement } from '../../utils/requireManagement'
 import { safeServerError } from '../../utils/safeLog'
+import { recoveryLink } from '../../utils/recoveryLink'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -23,13 +24,13 @@ export default defineEventHandler(async (event) => {
     const { data: generated, error } = await admin.auth.admin.generateLink({
       type: 'recovery', email, options: { redirectTo: `${appUrl}/confirm?mode=recovery` }
     })
-    if (error || !generated.properties?.action_link) throw createError({ statusCode: 502, statusMessage: 'Não foi possível gerar um novo link de acesso.' })
+    if (error || !generated.properties?.hashed_token) throw createError({ statusCode: 502, statusMessage: 'Não foi possível gerar um novo link de acesso.' })
     const { error: auditError } = await admin.from('auditoria').insert({
       tabela: 'usuarios', registro_id: userId, acao: 'link_acesso_regenerado', usuario_id: authUser.id,
       dados_depois: { papel: profile.papel, professor_id: professorId }
     })
     if (auditError) throw createError({ statusCode: 500, statusMessage: 'O link foi gerado, mas a auditoria falhou.' })
-    return { success: true, activationLink: generated.properties.action_link }
+    return { success: true, activationLink: recoveryLink(`${appUrl}/confirm`, generated.properties.hashed_token) }
   } catch (error: any) {
     safeServerError('auth:resend', error)
     throw error
