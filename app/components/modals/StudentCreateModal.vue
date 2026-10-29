@@ -175,10 +175,12 @@
             <div class="mb-3 flex items-center justify-between gap-3">
               <div>
                 <h4 class="text-sm font-bold text-light-text dark:text-offwhite">{{ group.name }}</h4>
-                <p class="text-xs text-light-text/60 dark:text-offwhite/60">Escolha uma aula semanal</p>
+                <p class="text-xs text-light-text/60 dark:text-offwhite/60">Escolha o professor e o horário da aula semanal</p>
               </div>
               <CheckCircle2 v-if="group.selectedClassId" class="h-5 w-5 shrink-0 text-green-500" />
             </div>
+            <BaseSelect :model-value="group.teacherId" :label="`Professor de ${group.name}`" :options="group.teachers" placeholder="Escolha o professor" class="mb-3" @update:model-value="selectTeacherForModality(group.id, $event)" />
+            <p v-if="!group.teacherId && group.teachers.length" class="mb-3 text-xs opacity-70">Há mais de um professor. Escolha quem receberá este aluno para ver os horários.</p>
             <div v-if="group.classes.length" class="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <button
                 v-for="opt in group.classes"
@@ -190,8 +192,9 @@
                 @click="selectClassForModality(group.id, opt.value)"
               >
                 <span>
-                  <span class="block text-sm font-bold">{{ opt.schedule }}</span>
-                  <span class="mt-1 block text-xs opacity-70">{{ opt.teacher }} · {{ opt.room }}</span>
+                  <span class="block text-sm font-bold">Prof. {{ opt.teacher }}</span>
+                  <span class="mt-1 block text-sm font-semibold">{{ opt.schedule }}</span>
+                  <span class="mt-1 block text-xs opacity-70">{{ opt.room }}</span>
                   <span class="mt-1 block text-xs" :class="opt.isFull ? 'font-bold text-red-500' : 'text-green-600 dark:text-green-400'">
                     {{ opt.isFull ? 'Turma lotada' : `${opt.available} vaga${opt.available === 1 ? '' : 's'} disponível(is)` }}
                   </span>
@@ -201,11 +204,16 @@
                 </span>
               </button>
             </div>
-            <p v-else class="rounded-lg border border-dashed border-light-border p-3 text-xs text-red-500 dark:border-dark-border">Não há turmas ativas com vagas para esta modalidade.</p>
+            <p v-else-if="group.teacherId" class="rounded-lg border border-dashed border-light-border p-3 text-xs text-red-500 dark:border-dark-border">Não há horários ativos para este professor nesta modalidade.</p>
             <p v-if="group.classes.length && !group.selectedClassId" class="mt-2 text-xs text-red-500">Selecione uma turma de {{ group.name }}.</p>
           </section>
         </div>
         <p v-else class="text-xs text-light-text/50 dark:text-offwhite/50">Selecione uma ou mais modalidades e depois escolha uma turma para cada uma.</p>
+        <div v-if="selectedClassesSummary.length" class="rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm text-light-text dark:text-offwhite">
+          <p class="font-bold">O aluno ficará vinculado a:</p>
+          <p v-for="item in selectedClassesSummary" :key="item.value" class="mt-1">{{ item.modNome }} · Prof. {{ item.teacher }} · {{ item.schedule }}</p>
+          <p class="mt-2 text-xs opacity-70">Ao salvar, o aluno aparecerá automaticamente para o professor da turma escolhida.</p>
+        </div>
       </div>
 
       <!-- Espaçamento extra pro footer -->
@@ -238,6 +246,7 @@ import { ref, reactive, computed, watch } from 'vue'
 import { Loader2, User, CheckCircle2, Copy, MessageCircle, Mail, ExternalLink, Check } from '@lucide/vue'
 import BaseModal from '../BaseModal.vue'
 import BaseInput from '../BaseInput.vue'
+import BaseSelect from '../BaseSelect.vue'
 
 import { buildPopMusicContractData } from '~/utils/contractFormatter'
 import { useContratos } from '~/composables/useContratos'
@@ -255,6 +264,7 @@ const isLoading = ref(false)
 const formError = ref('')
 const copied = ref(false)
 const selectedModalityIds = ref<string[]>([])
+const selectedTeacherIds = ref<Record<string, string>>({})
 const createdContractData = ref<{ studentName: string, token: string, phone: string, email: string, emailSent: boolean } | null>(null)
 
 watch(() => props.isOpen, (newVal) => {
@@ -357,6 +367,7 @@ const classOptions = computed(() => {
       valor: t.modalidades?.valor_padrao_mensalidade || 150,
       modNome,
       teacher: t.professores?.nome || 'Professor não informado',
+      teacherId: String(t.professores?.id || ''),
       room: t.salas?.nome || 'Sala não informada',
       occupied,
       capacity,
@@ -368,10 +379,14 @@ const classOptions = computed(() => {
 })
 
 const selectedModalities = computed(() => modalityOptions.value.filter(modality => selectedModalityIds.value.includes(String(modality.value))))
+const selectedClassesSummary = computed(() => classOptions.value.filter(option => formData.instruments.includes(option.value)))
 const selectedModalityGroups = computed(() => selectedModalities.value.map(modality => {
   const id = String(modality.value)
-  const classes = classOptions.value.filter(option => option.modalidadeId === id)
-  return { id, name: modality.label, classes, selectedClassId: classes.find(option => formData.instruments.includes(option.value))?.value || '' }
+  const allClasses = classOptions.value.filter(option => option.modalidadeId === id)
+  const teachers = Array.from(new Map(allClasses.filter(option => option.teacherId).map(option => [option.teacherId, { value: option.teacherId, label: option.teacher }])).values())
+  const teacherId = selectedTeacherIds.value[id] || (teachers.length === 1 ? teachers[0]!.value : '')
+  const classes = allClasses.filter(option => option.teacherId === teacherId)
+  return { id, name: modality.label, classes, teachers, teacherId, selectedClassId: classes.find(option => formData.instruments.includes(option.value))?.value || '' }
 }))
 const modalitySelectionLabel = computed(() => selectedModalityIds.value.length
   ? `${selectedModalityIds.value.length} ${selectedModalityIds.value.length === 1 ? 'modalidade selecionada' : 'modalidades selecionadas'}`
@@ -416,6 +431,7 @@ const resetForm = () => {
   formData.dueDay = 10
   formData.instruments = []
   selectedModalityIds.value = []
+  selectedTeacherIds.value = {}
   formData.guardianName = ''
   formData.guardianCpf = ''
   formData.guardianPhone = ''
@@ -431,9 +447,16 @@ const toggleModality = (modalityId: string) => {
   const index = selectedModalityIds.value.indexOf(modalityId)
   if (index >= 0) {
     selectedModalityIds.value.splice(index, 1)
+    selectedTeacherIds.value = Object.fromEntries(Object.entries(selectedTeacherIds.value).filter(([id]) => id !== modalityId))
     const classIds = new Set(classOptions.value.filter(option => option.modalidadeId === modalityId).map(option => option.value))
     formData.instruments = formData.instruments.filter(classId => !classIds.has(classId))
   } else selectedModalityIds.value.push(modalityId)
+}
+
+const selectTeacherForModality = (modalityId: string, teacherId: string) => {
+  selectedTeacherIds.value[modalityId] = teacherId
+  const otherClasses = new Set(classOptions.value.filter(item => item.modalidadeId === modalityId && item.teacherId !== teacherId).map(item => item.value))
+  formData.instruments = formData.instruments.filter(id => !otherClasses.has(id))
 }
 
 const selectClassForModality = (modalityId: string, classId: string) => {

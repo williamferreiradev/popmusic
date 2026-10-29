@@ -82,6 +82,7 @@ const { data, pending, error, refresh } = await useAsyncData('professor_calendar
   return result.data
 })
 const classes = computed(() => (data.value || []).filter(item => item.turma_id && item.dia_semana !== null))
+useProfessorRefresh(refresh)
 const days = computed(() => calendarDays(currentDate.value, view.value))
 const classesFor = (day: Date) => classes.value.filter(item => item.dia_semana === day.getDay())
 const todayCount = computed(() => classesFor(new Date()).length)

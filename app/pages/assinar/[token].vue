@@ -221,6 +221,7 @@ import { useRoute } from 'vue-router'
 import { Music, CheckCircle2, Clock, AlertCircle, Download, Check, Printer, Copy, Mail } from '@lucide/vue'
 import BaseModal from '~/components/BaseModal.vue'
 import PopMusicContractDocument from '~/components/contratos/PopMusicContractDocument.vue'
+import { printContract } from '~/utils/printContract'
 import FaceCaptureSection from '~/components/contratos/FaceCaptureSection.vue'
 import { buildPopMusicContractData, formatCPF } from '~/utils/contractFormatter'
 
@@ -315,10 +316,11 @@ const signedInfoData = computed(() => {
   }
 })
 
-const triggerPrint = () => {
-  if (typeof window !== 'undefined') {
-    window.print()
-  }
+const triggerPrint = async () => {
+  const element = document.getElementById('printable-popmusic-contract')
+  if (!element) return
+  try { await printContract(element) }
+  catch (error) { alert(error instanceof Error ? error.message : 'Não foi possível preparar a impressão.') }
 }
 
 const handleAccept = async () => {

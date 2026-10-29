@@ -37,6 +37,38 @@ describe('recuperação da estrutura em PostgreSQL descartável',()=>{
   assert.equal((await db.query('select count(*)::int as n from public.cobrancas')).rows[0].n,0)
  })
 })
+
+describe('vínculo automático e troca de professor',()=>{
+ it('cria o aluno na turma escolhida e transfere o acesso preservando o histórico',async()=>{
+  await db.exec('begin')
+  try {
+   const otherUser=uuid(),otherTeacher=uuid(),otherClass=uuid()
+   await db.query("insert into auth.users(id,email,raw_app_meta_data,raw_user_meta_data) values($1,'destino@example.invalid','{\"papel\":\"professor\"}','{\"nome\":\"Professor destino\"}')",[otherUser])
+   await db.query("update public.usuarios set ativo=true where id=$1",[otherUser])
+   await db.query("insert into public.professores(id,usuario_id,nome,email,comissao_padrao_tipo,comissao_padrao_valor) values($1,$2,'Professor destino','destino@example.invalid','valor_fixo',50)",[otherTeacher,otherUser])
+   await db.query("insert into public.turmas(id,modalidade_id,professor_id,sala_id,dia_semana,horario_inicio,horario_fim,capacidade_maxima) values($1,$2,$3,$4,5,'15:00','16:00',20)",[otherClass,modality,otherTeacher,room])
+   await db.query("select set_config('request.jwt.claim.sub',$1,true)",[actor])
+   const created=(await db.query("select public.criar_matricula_com_contrato('Aluno vínculo teste','98765432100','2000-01-01','11999990000','vinculo@example.invalid',$1::uuid[],null,null,null,'Contrato original',10) as result",[[classId]])).rows[0].result
+   const id=created.aluno_id
+   assert.equal((await db.query('select status from public.alunos where id=$1',[id])).rows[0].status,'ativo')
+   await db.query("insert into public.presencas(aluno_id,turma_id,data_aula,status,tipo_aula,origem) values($1,$2,current_date,'presente','normal','manual')",[id,classId])
+   await db.query("update public.contratos set status='aceito',data_aceite=now() where id=$1",[created.contrato_id])
+   const visible=async(userId)=>{
+    await db.query("select set_config('request.jwt.claim.sub',$1,true)",[userId]);await db.exec('set local role authenticated')
+    try{return(await db.query('select count(*)::int as n from public.alunos where id=$1',[id])).rows[0].n}finally{await db.exec('reset role')}
+   }
+   assert.equal(await visible(teacherUser),1)
+   assert.equal(await visible(otherUser),0)
+   await db.query("select set_config('request.jwt.claim.sub',$1,true)",[actor])
+   await db.query("select public.salvar_aluno_com_turmas($1,'Aluno vínculo teste','98765432100','2000-01-01','11999990000','vinculo@example.invalid',$2::uuid[])",[id,[otherClass]])
+   assert.equal(await visible(teacherUser),0)
+   assert.equal(await visible(otherUser),1)
+   assert.equal((await db.query('select count(*)::int as n from public.presencas where aluno_id=$1 and turma_id=$2',[id,classId])).rows[0].n,1)
+   assert.equal((await db.query('select texto_gerado,status from public.contratos where id=$1',[created.contrato_id])).rows[0].status,'aceito')
+   assert.equal((await db.query('select texto_gerado from public.contratos where id=$1',[created.contrato_id])).rows[0].texto_gerado,'Contrato original')
+  } finally {await db.exec('rollback')}
+ })
+})
 describe('exclusão transacional real',()=>{
  it('desfaz todas as remoções quando uma dependência não prevista falha no final',async()=>{
   const s=await student()

@@ -230,12 +230,14 @@
       </div>
 
       <!-- Carimbo de Assinatura Eletrônica com Foto Facial (Se assinado digitalmente) -->
-      <div v-if="signedInfo" class="mt-3 p-2.5 bg-green-50 border border-green-300 rounded text-[9.5px] text-green-900 leading-tight flex items-center gap-3">
+      <div v-if="signedInfo" class="contract-signature-evidence mt-3 p-2.5 bg-green-50 border border-green-300 rounded text-[9.5px] text-green-900 leading-tight flex items-center gap-3">
         <!-- Foto Facial de Comprovação -->
-        <div v-if="signedInfo.signerPhoto" class="shrink-0 flex flex-col items-center">
-          <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-md border-2 border-green-600 overflow-hidden shadow-sm bg-white">
-            <img :src="signedInfo.signerPhoto" alt="Foto facial do signatário" class="w-full h-full object-cover" >
+        <div v-if="signedInfo.signerPhoto" :data-contract-photo-state="photoState" class="shrink-0 flex flex-col items-center">
+          <div class="contract-photo-frame w-14 h-14 sm:w-16 sm:h-16 rounded-md border-2 border-green-600 overflow-hidden shadow-sm bg-white">
+            <img v-if="resolvedPhoto && photoState !== 'error'" :src="resolvedPhoto" alt="Foto facial do signatário" class="contract-signer-photo w-full h-full object-contain" width="72" height="72" @load="photoState = 'ready'" @error="photoState = 'error'" >
+            <span v-else class="block p-1 text-center text-[8px]">{{ photoState === 'loading' ? 'Carregando foto...' : 'Foto indisponível' }}</span>
           </div>
+          <button v-if="photoState === 'error'" class="print:hidden mt-1 text-[9px] underline" @click="loadPhoto">Tentar carregar foto</button>
           <span class="text-[7.5px] text-green-800 font-bold mt-0.5 uppercase tracking-tighter">Foto do signatário</span>
         </div>
 
@@ -269,7 +271,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { resolveContractPhoto } from '~/utils/contractPhoto'
+import { printContract } from '~/utils/printContract'
 
 export interface PopMusicContractData {
   escola_nome?: string
@@ -337,88 +341,28 @@ const contractData = computed(() => {
   return props.data || {}
 })
 
-const triggerPrint = () => {
-  if (typeof window === 'undefined') return
+const supabase = useSupabaseClient()
+const resolvedPhoto = ref('')
+const photoState = ref<'loading' | 'ready' | 'error'>('loading')
+let photoRequest = 0
+const loadPhoto = async () => {
+  const request = ++photoRequest
+  const source = props.signedInfo?.signerPhoto
+  resolvedPhoto.value = ''
+  if (!source) { photoState.value = 'ready'; return }
+  photoState.value = 'loading'
+  try {
+    const url = await resolveContractPhoto(source, path => supabase.storage.from('fotos_alunos').createSignedUrl(path, 300))
+    if (request === photoRequest) resolvedPhoto.value = url
+  } catch { if (request === photoRequest) photoState.value = 'error' }
+}
+watch(() => props.signedInfo?.signerPhoto, loadPhoto, { immediate: true })
 
-  const elem = document.getElementById('printable-popmusic-contract')
-  if (!elem) {
-    window.print()
-    return
-  }
-
-  const iframe = document.createElement('iframe')
-  iframe.style.position = 'fixed'
-  iframe.style.right = '0'
-  iframe.style.bottom = '0'
-  iframe.style.width = '0'
-  iframe.style.height = '0'
-  iframe.style.border = '0'
-  document.body.appendChild(iframe)
-
-  const doc = iframe.contentWindow?.document
-  if (doc) {
-    doc.open()
-    doc.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <title>Contrato Oficial - Pop Music</title>
-          <style>
-            @page { size: A4 portrait; margin: 8mm 10mm; }
-            * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            body { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: white; color: black; margin: 0; padding: 0; }
-            .popmusic-contract-container { width: 100%; max-width: 210mm; margin: 0 auto; background: white; }
-            .contract-page { padding: 15px; background: white; color: black; line-height: 1.35; font-size: 11px; }
-            .border { border-width: 1px; border-color: #000; }
-            .border-t { border-top-width: 1px; border-color: #000; }
-            .border-b { border-bottom-width: 1px; border-color: #000; }
-            .border-green-300 { border-color: #86efac !important; }
-            .border-green-600 { border-color: #16a34a !important; }
-            .bg-green-50 { background-color: #f0fdf4 !important; }
-            .text-green-900 { color: #14532d !important; }
-            .text-green-800 { color: #166534 !important; }
-            .text-green-600 { color: #16a34a !important; }
-            .font-bold { font-weight: bold; }
-            .font-mono { font-family: monospace; }
-            .text-center { text-align: center; }
-            .text-justify { text-align: justify; }
-            .grid { display: grid; }
-            .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-            .flex { display: flex; }
-            .items-center { align-items: center; }
-            .justify-between { justify-content: space-between; }
-            .gap-3 { gap: 0.75rem; }
-            .gap-1 { gap: 0.25rem; }
-            .rounded-md { border-radius: 0.375rem; }
-            .rounded { border-radius: 0.25rem; }
-            .object-cover { object-fit: cover; }
-            .w-16 { width: 4rem; }
-            .h-16 { height: 4rem; }
-            .w-full { width: 100%; }
-            .h-full { height: 100%; }
-            .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-          </style>
-          <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
-        </head>
-        <body>
-          <div class="popmusic-contract-container">
-            ${elem.innerHTML}
-          </div>
-        </body>
-      </html>
-    `)
-    doc.close()
-    iframe.contentWindow?.focus()
-    setTimeout(() => {
-      iframe.contentWindow?.print()
-      setTimeout(() => {
-        if (document.body.contains(iframe)) {
-          document.body.removeChild(iframe)
-        }
-      }, 1500)
-    }, 400)
-  }
+const triggerPrint = async () => {
+  const element = document.getElementById('printable-popmusic-contract')
+  if (!element) return
+  try { await printContract(element) }
+  catch (error) { alert(error instanceof Error ? error.message : 'Não foi possível preparar a impressão.') }
 }
 </script>
 

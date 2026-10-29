@@ -61,10 +61,16 @@
       </div>
 
       <div class="flex flex-col gap-1.5 w-full">
-        <label class="text-sm font-medium text-light-text dark:text-offwhite">Instrumentos / Turmas</label>
+        <label class="text-sm font-medium text-light-text dark:text-offwhite">Professor e turma do aluno</label>
+        <BaseSelect v-model="teacherFilter" label="Filtrar horários por professor" :options="teacherOptions" placeholder="Todos os professores" />
+        <div class="my-2 rounded-lg border border-light-border p-3 text-xs dark:border-dark-border">
+          <p class="font-bold">Vínculos que serão salvos:</p>
+          <p v-for="item in selectedClasses" :key="item.value" class="mt-1">{{ item.label }}</p>
+          <p class="mt-2 opacity-70">Escolher outra turma da mesma modalidade substitui o vínculo atual. A mudança vale para as próximas aulas; presenças anteriores e o contrato assinado são preservados.</p>
+        </div>
         <div class="flex flex-wrap gap-2">
           <button 
-            v-for="opt in classOptions" 
+            v-for="opt in filteredClassOptions"
             :key="opt.value"
             type="button"
             class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors border"
@@ -109,6 +115,7 @@ import { ref, reactive, watch, computed } from 'vue'
 import { Loader2, User } from '@lucide/vue'
 import BaseModal from '../BaseModal.vue'
 import BaseInput from '../BaseInput.vue'
+import BaseSelect from '../BaseSelect.vue'
 
 const props = defineProps({
   isOpen: {
@@ -126,6 +133,7 @@ const emit = defineEmits(['close', 'saved'])
 const supabase = useSupabaseClient()
 const isLoading = ref(false)
 const formError = ref('')
+const teacherFilter = ref('')
 const todayDate = new Date().toISOString().split('T')[0]
 
 const formData = reactive({
@@ -156,11 +164,14 @@ const isMinor = computed(() => {
   return age < 18
 })
 
-const { data: turmas } = await useAsyncData('turmas_edit_list', async () => {
+const { data: turmas, refresh: refreshTurmas } = await useAsyncData('turmas_edit_list', async () => {
   const { data } = await supabase.from('turmas').select(`
     id,
     dia_semana,
     horario_inicio,
+    horario_fim,
+    modalidade_id,
+    professores (id, nome),
     modalidades (id, nome)
   `).eq('ativo', true)
   return data || []
@@ -174,11 +185,18 @@ const classOptions = computed(() => {
     const dia = dayNames[t.dia_semana] || ''
     const hora = t.horario_inicio ? t.horario_inicio.substring(0, 5) : ''
     return { 
-      label: `${modNome} (${dia} ${hora})`, 
-      value: t.id 
+      label: `${modNome} · Prof. ${t.professores?.nome || 'Não informado'} · ${dia} ${hora}–${t.horario_fim?.slice(0, 5) || ''}`,
+      value: t.id,
+      modalityId: t.modalidade_id,
+      teacherId: t.professores?.id || '',
+      teacherName: t.professores?.nome || 'Não informado'
     }
   })
 })
+const teacherOptions = computed(() => [{ value: '', label: 'Todos os professores' }, ...Array.from(new Map(classOptions.value.filter(item => item.teacherId).map(item => [item.teacherId, { value: item.teacherId, label: item.teacherName }])).values())])
+const filteredClassOptions = computed(() => classOptions.value.filter(item => !teacherFilter.value || item.teacherId === teacherFilter.value))
+const selectedClasses = computed(() => classOptions.value.filter(item => formData.instruments.includes(item.value)))
+watch(() => props.isOpen, async open => { if (open) { formError.value = ''; teacherFilter.value = ''; await refreshTurmas() } })
 
 // Popula os dados quando o modal abre com um aluno
 watch(() => props.student, (newStudent) => {
@@ -209,6 +227,9 @@ const handleClose = () => {
 const toggleInstrument = (val: string) => {
   const index = formData.instruments.indexOf(val)
   if (index === -1) {
+    const modalityId = classOptions.value.find(item => item.value === val)?.modalityId
+    const sameModality = new Set(classOptions.value.filter(item => item.modalityId === modalityId).map(item => item.value))
+    formData.instruments = formData.instruments.filter(id => !sameModality.has(id))
     formData.instruments.push(val)
   } else {
     formData.instruments.splice(index, 1)
@@ -231,7 +252,7 @@ const handleSubmit = async () => {
     if (error) throw error
 
     emit('saved', { id: props.student.id, ...formData })
-    handleClose()
+    emit('close')
   } catch (error: any) {
     console.error('Erro ao atualizar aluno:', error)
     formError.value = `Não foi possível salvar. ${error.message || 'Verifique os dados digitados.'}`

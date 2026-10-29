@@ -97,7 +97,7 @@ const monthStart = `${todayIso.slice(0, 7)}-01`
 const dayNames: Record<number, string> = { 0: 'Domingo', 1: 'Segunda', 2: 'Terça', 3: 'Quarta', 4: 'Quinta', 5: 'Sexta', 6: 'Sábado' }
 const currentDateFormatted = computed(() => new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }).format(now))
 
-const { data: dashboard, pending, error: loadError } = await useAsyncData('professor_dashboard', async () => {
+const { data: dashboard, pending, error: loadError, refresh } = await useAsyncData('professor_dashboard', async () => {
   const [{ data: agenda, error: agendaError }, { data: students, error: studentsError }, { data: repasses, error: repassesError }, { data: presences, error: presencesError }] = await Promise.all([
     supabase.from('vw_professor_agenda').select('*').order('dia_semana').order('horario_inicio'),
     supabase.from('vw_professor_alunos').select('id,nome'),
@@ -116,6 +116,7 @@ const { data: dashboard, pending, error: loadError } = await useAsyncData('profe
   return { agenda: agenda || [], students: students || [], repasses: repasses || [], presences: presences || [], todayClasses, closed }
 })
 
+useProfessorRefresh(refresh)
 const weekAgenda = computed<any[]>(() => dashboard.value?.agenda || [])
 const todayClasses = computed<any[]>(() => dashboard.value?.todayClasses || [])
 const pendingCalls = computed(() => Math.max(0, todayClasses.value.length - (dashboard.value?.closed.length || 0)))

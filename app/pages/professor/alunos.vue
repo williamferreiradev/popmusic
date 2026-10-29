@@ -1,8 +1,11 @@
 <template>
   <div class="p-8 w-full flex flex-col gap-6">
-    <header>
+    <header class="flex flex-wrap items-start justify-between gap-3">
+      <div>
       <h1 class="text-2xl font-bold text-light-text dark:text-offwhite">Meus Alunos</h1>
       <p class="text-sm text-light-text/60 dark:text-offwhite/50 mt-1">Lista de todos os alunos matriculados nas suas turmas.</p>
+      </div>
+      <BaseButton variant="outline" :disabled="pending" @click="refresh()">Atualizar alunos</BaseButton>
     </header>
 
     <div v-if="pending" class="flex justify-center py-12">
@@ -59,7 +62,7 @@ import { Loader2 } from '@lucide/vue'
 const supabase = useSupabaseClient()
 
 const dias = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
-const { data: alunos, pending, error: loadError } = await useAsyncData('professor_alunos', async () => {
+const { data: alunos, pending, error: loadError, refresh } = await useAsyncData('professor_alunos', async () => {
   const { data, error } = await supabase
     .from('matriculas_turma')
     .select('id,alunos(id,nome,status),turmas(id,dia_semana,horario_inicio,modalidades(nome),salas(nome))')
@@ -77,4 +80,5 @@ const { data: alunos, pending, error: loadError } = await useAsyncData('professo
     horario: m.turmas?.horario_inicio?.slice(0, 5) || 'Horário não definido'
   })).sort((a: any, b: any) => a.nome.localeCompare(b.nome, 'pt-BR'))
 })
+useProfessorRefresh(refresh)
 </script>

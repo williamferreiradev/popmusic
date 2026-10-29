@@ -85,6 +85,7 @@ import BaseSelect from '~/components/BaseSelect.vue'
 import StudentsTable from '~/components/students/StudentsTable.vue'
 import StudentCreateModal from '~/components/modals/StudentCreateModal.vue'
 import StudentDeletionQueue from '~/components/students/StudentDeletionQueue.vue'
+import { resolveContractPhoto } from '~/utils/contractPhoto'
 
 const supabase = useSupabaseClient()
 const cleanupVersion = ref(0)
@@ -136,6 +137,8 @@ const { data: studentsResult, pending, error: studentsError, refresh } = await u
       data_inicio,
       data_fim,
       ${classRelation} (
+        id, modalidade_id, dia_semana, horario_inicio, horario_fim,
+        professores (id, nome),
         modalidades (id, nome)
       )
     )
@@ -163,7 +166,15 @@ const { data: studentsResult, pending, error: studentsError, refresh } = await u
   
   if (error) throw error
 
-  return { rows: data || [], count: count || 0 }
+  const rows = await Promise.all((data || []).map(async aluno => {
+    let displayPhoto: string | null = null
+    if (aluno.foto_url) {
+      try { displayPhoto = await resolveContractPhoto(aluno.foto_url, path => supabase.storage.from('fotos_alunos').createSignedUrl(path, 300)) }
+      catch { /* A lista mantém as iniciais se a foto privada estiver indisponível. */ }
+    }
+    return { ...aluno, displayPhoto }
+  }))
+  return { rows, count: count || 0 }
 }, {
   watch: [debouncedSearch, statusFilter, classFilter, currentPage]
 })
@@ -222,7 +233,7 @@ const mappedStudents = computed(() => {
       statusVariant,
       statusLabel,
       initials,
-      avatar: aluno.foto_url || aluno.avatar_url || aluno.foto || null,
+      avatar: aluno.displayPhoto || null,
       raw: aluno // Guarda os dados originais se precisar nos modais
     }
   })

@@ -29,6 +29,7 @@ export type Database = {
           emergencia_parentesco: string | null
           emergencia_telefone: string | null
           endereco: string | null
+          foto_url: string | null
           id: string
           motivo_cancelamento: string | null
           nome: string
@@ -55,6 +56,7 @@ export type Database = {
           emergencia_parentesco?: string | null
           emergencia_telefone?: string | null
           endereco?: string | null
+          foto_url?: string | null
           id?: string
           motivo_cancelamento?: string | null
           nome: string
@@ -81,6 +83,7 @@ export type Database = {
           emergencia_parentesco?: string | null
           emergencia_telefone?: string | null
           endereco?: string | null
+          foto_url?: string | null
           id?: string
           motivo_cancelamento?: string | null
           nome?: string

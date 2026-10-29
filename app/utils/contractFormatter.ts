@@ -98,9 +98,17 @@ export function formatPhone(phone?: string | null): string {
   return phone
 }
 
+const contractDate = (value: string | Date | number) => {
+  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month, day] = value.split('-').map(Number)
+    return new Date(year!, month! - 1, day!, 12)
+  }
+  return new Date(value)
+}
+
 export function formatDateBR(dateInput?: string | Date | null): string {
   if (!dateInput) return ''
-  const d = typeof dateInput === 'string' ? new Date(dateInput) : dateInput
+  const d = contractDate(dateInput)
   if (isNaN(d.getTime())) return ''
   return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
@@ -110,6 +118,15 @@ export function formatDateBR(dateInput?: string | Date | null): string {
  * estruturado exigido pelo documento de contrato oficial Pop Music
  */
 export function buildPopMusicContractData(aluno: any, contrato: any, turmasList?: any[]): PopMusicContractData {
+  // A prévia administrativa deve reproduzir os dados aceitos, mesmo depois
+  // de uma troca de turma, professor ou edição do cadastro do aluno.
+  const snapshot = contrato?.documento_assinado_snapshot
+  if (snapshot?.aluno && snapshot?.contrato && Array.isArray(snapshot.turmas)) {
+    const data = buildPopMusicContractData(snapshot.aluno, snapshot.contrato, snapshot.turmas)
+    const escola = snapshot.escola || {}
+    return { ...data, escola_nome: escola.nome, escola_cnpj: escola.cnpj,
+      escola_endereco: escola.endereco, escola_telefone: escola.telefone, escola_email: escola.email }
+  }
   const menorPelaData = aluno?.data_nascimento ? isMinorOn(String(aluno.data_nascimento)) : null
   const isMenor = menorPelaData ?? !!aluno?.responsavel_nome
   
@@ -174,7 +191,7 @@ export function buildPopMusicContractData(aluno: any, contrato: any, turmasList?
   const numParcelasExtenso = numeroIntPorExtenso(numParcelas)
 
   // Datas
-  const referenceDate = new Date(contrato?.data_inicio_vigencia || contrato?.data_envio || Date.now())
+  const referenceDate = contractDate(contrato?.data_inicio_vigencia || contrato?.data_envio || Date.now())
   const diaVencimento = String(contrato?.dia_vencimento || 10)
   
   const diaAtual = String(referenceDate.getDate()).padStart(2, '0')
