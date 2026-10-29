@@ -40,7 +40,7 @@ const props = defineProps({
   mask: {
     type: String,
     default: 'none',
-    validator: (value: string) => ['none', 'cpf', 'phone'].includes(value)
+    validator: (value: string) => ['none', 'cpf', 'phone', 'cep'].includes(value)
   },
   max: {
     type: String,
@@ -63,6 +63,9 @@ const handleInput = (event: Event) => {
     v = v.replace(/(\d{3})(\d)/, '$1.$2')
     v = v.replace(/(\d{3})(\d{1,2})$/, '$1-$2')
     val = v
+    target.value = val
+  } else if (props.mask === 'cep') {
+    val = val.replace(/\D/g, '').slice(0, 8).replace(/(\d{5})(\d)/, '$1-$2')
     target.value = val
   } else if (props.mask === 'phone') {
     let v = val.replace(/\D/g, '').slice(0, 11)

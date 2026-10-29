@@ -69,6 +69,40 @@ describe('vínculo automático e troca de professor',()=>{
   } finally {await db.exec('rollback')}
  })
 })
+
+describe('endereço completo na matrícula e no contrato',()=>{
+ const address={logradouro:'Quadra 3',numero:'9',complemento:'Casa 2',bairro:'Centro',cidade:'Novo Gama',uf:'go',cep:'72860-000'}
+ const create=async(value=address)=>(await db.query("select public.criar_matricula_com_endereco('Aluno endereço','98765432100','2000-01-01','11999990000','endereco@example.invalid',$1::uuid[],$2::jsonb,null,null,null,'Contrato com endereço',10) as result",[[classId],JSON.stringify(value)])).rows[0].result
+ it('salva endereço e turma juntos e preserva o endereço assinado após editar',async()=>{
+  await db.exec('begin')
+  try {
+   await db.query("select set_config('request.jwt.claim.sub',$1,true)",[actor])
+   const created=await create()
+   const initial=(await db.query('select endereco,bairro,cidade,uf,cep from public.alunos where id=$1',[created.aluno_id])).rows[0]
+   assert.deepEqual(initial,{endereco:'Quadra 3, 9, Casa 2',bairro:'Centro',cidade:'Novo Gama',uf:'GO',cep:'72860000'})
+   assert.equal((await db.query('select turma_id from public.matriculas_turma where aluno_id=$1',[created.aluno_id])).rows[0].turma_id,classId)
+   await db.query("select public.assinar_contrato_com_consentimento($1,$2,'127.0.0.1','Teste local')",[created.token,created.aluno_id+'/evidencia-teste.jpg'])
+   const changed={...address,logradouro:'Rua Nova',numero:'S/N',complemento:'',cidade:'Brasília',uf:'DF',cep:'70000000'}
+   await db.query("select public.salvar_aluno_com_endereco($1,'Aluno endereço','98765432100','2000-01-01','11999990000','endereco@example.invalid',$2::uuid[],$3::jsonb)",[created.aluno_id,[classId],JSON.stringify(changed)])
+   assert.equal((await db.query('select endereco from public.alunos where id=$1',[created.aluno_id])).rows[0].endereco,'Rua Nova, S/N')
+   const snapshot=(await db.query('select documento_assinado_snapshot from public.contratos where id=$1',[created.contrato_id])).rows[0].documento_assinado_snapshot
+   assert.equal(snapshot.aluno.endereco,'Quadra 3, 9, Casa 2')
+   assert.equal(snapshot.aluno.uf,'GO')
+   assert.equal(snapshot.aluno.cep,'72860000')
+  } finally {await db.exec('rollback')}
+ })
+ it('não cria aluno, turma ou contrato quando o endereço é inválido',async()=>{
+  const count=async()=>(await db.query('select (select count(*) from public.alunos) as alunos,(select count(*) from public.matriculas_turma) as matriculas,(select count(*) from public.contratos) as contratos')).rows[0]
+  const before=await count()
+  await db.exec('begin')
+  try{await db.query("select set_config('request.jwt.claim.sub',$1,true)",[actor]);await assert.rejects(create({...address,uf:'XX'}),/UF valida/)}finally{await db.exec('rollback')}
+  assert.deepEqual(await count(),before)
+ })
+ it('não permite que professor altere endereço por função administrativa',async()=>{
+  await db.exec('begin')
+  try{await db.query("select set_config('request.jwt.claim.sub',$1,true)",[teacherUser]);await assert.rejects(create(),/Apenas a gestao/)}finally{await db.exec('rollback')}
+ })
+})
 describe('exclusão transacional real',()=>{
  it('desfaz todas as remoções quando uma dependência não prevista falha no final',async()=>{
   const s=await student()

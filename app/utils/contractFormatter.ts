@@ -148,7 +148,7 @@ export function buildPopMusicContractData(aluno: any, contrato: any, turmasList?
   const bairro = aluno?.bairro || ''
   const cidade = aluno?.cidade || ''
   const uf = aluno?.uf || ''
-  const cep = aluno?.cep || ''
+  const cep = String(aluno?.cep || '').replace(/^(\d{5})(\d{3})$/, '$1-$2')
 
   // Aluno
   const nomeAluno = aluno?.nome || ''

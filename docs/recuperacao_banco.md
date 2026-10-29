@@ -2,7 +2,7 @@
 
 ## O que foi comprovado
 
-Foi gerada uma baseline sem dados pessoais em `supabase/baseline/20261029_schema.sql`, com estrutura atual e correções 048/049. Ela exige um projeto Supabase novo, com Auth e Storage já instalados; recusa um schema público ocupado. Não reaplicar migrations históricas anteriores à baseline sobre ela.
+Foi gerada uma baseline sem dados pessoais em `supabase/baseline/20261029_schema.sql`, com estrutura atual e correções 048/049/050. Ela exige um projeto Supabase novo, com Auth e Storage já instalados; recusa um schema público ocupado. Não reaplicar migrations históricas anteriores à baseline sobre ela. A cópia privada realizada antes da migration 050 mantém a versão do schema do instante da exportação.
 
 O teste automatizado recria a estrutura, verifica políticas, chaves estrangeiras, relatórios e exclusão transacional. Há também ensaio de cópia e recuperação de um banco PostgreSQL local descartável.
 

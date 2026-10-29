@@ -9,7 +9,7 @@ while(pending.length){const ready=pending.filter(v=>v.dependencies.every(d=>view
 const lines=[
 '-- Baseline da aplicação Pop Music, extraída de pg_catalog em 29/10/2026.',
 '-- Sem dados pessoais. Requer projeto Supabase novo, com Auth e Storage provisionados.',
-'-- Inclui estado histórico até 047 e migrations 048/049 ao final; não reaplicar migrations anteriores.',
+'-- Inclui estado histórico até 047 e migrations 048/049/050 ao final; não reaplicar migrations anteriores.',
 'begin;',
 `do $guard$ begin if exists(select 1 from pg_tables where schemaname='public') then raise exception 'BASELINE_REQUER_SCHEMA_PUBLIC_VAZIO'; end if; if to_regclass('auth.users') is null or to_regclass('storage.buckets') is null then raise exception 'AUTH_E_STORAGE_SUPABASE_OBRIGATORIOS'; end if; end $guard$;`,
 'create schema if not exists extensions;',
@@ -27,6 +27,7 @@ const lines=[
 ...s.buckets.map(b=>`insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values(${literal(b.id)},${literal(b.name)},${b.public?'true':'false'},${b.file_size_limit??'null'},${b.allowed_mime_types?'array['+b.allowed_mime_types.map(literal).join(',')+']::text[]':'null'}) on conflict(id) do update set public=excluded.public,file_size_limit=excluded.file_size_limit,allowed_mime_types=excluded.allowed_mime_types;`),
 'set local check_function_bodies=true;', 'commit;',
 readFileSync('supabase/migrations/202610290048_exclusao_aluno_atomica.sql','utf8'),
-readFileSync('supabase/migrations/202610290049_relatorios_reais.sql','utf8')]
-writeFileSync('supabase/baseline/20261029_schema.sql',lines.join('\n\n')+'\n')
+readFileSync('supabase/migrations/202610290049_relatorios_reais.sql','utf8'),
+readFileSync('supabase/migrations/202610290050_endereco_completo_aluno.sql','utf8')]
+writeFileSync('supabase/baseline/20261029_schema.sql',lines.join('\n\n').trimEnd()+'\n')
 console.log(`Baseline gerada: ${s.tables.length+1} tabelas, ${s.views.length} views; sem linhas de usuários/alunos.`)

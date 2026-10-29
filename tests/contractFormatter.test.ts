@@ -16,7 +16,7 @@ it('preserva a data civil do aluno sem retroceder um dia por conversão UTC', ()
 })
 it('usa nome, turma, valores e data da assinatura mesmo após editar o cadastro', () => {
   const snapshot = {
-    aluno: { nome: 'Nome assinado', data_nascimento: '2000-01-29' },
+    aluno: { nome: 'Nome assinado', data_nascimento: '2000-01-29', endereco: 'Rua Original, 9', bairro: 'Centro', cidade: 'Novo Gama', uf: 'GO', cep: '72860000' },
     contrato: { valor_mensalidade: 180, dia_vencimento: 10, data_inicio_vigencia: '2026-10-29' },
     turmas: [{ dia_semana: 3, horario_inicio: '08:00:00', horario_fim: '09:00:00', modalidades: { nome: 'Teclado' } }],
     escola: { nome: 'Escola assinada' }
@@ -30,4 +30,9 @@ it('usa nome, turma, valores e data da assinatura mesmo após editar o cadastro'
   assert.equal(data.valor_mensalidade, '180,00')
   assert.equal(data.data_dia, '29')
   assert.equal(data.escola_nome, 'Escola assinada')
+  assert.equal(data.endereco_contratante, 'Rua Original, 9')
+  assert.equal(data.bairro_contratante, 'Centro')
+  assert.equal(data.cidade_contratante, 'Novo Gama')
+  assert.equal(data.uf_contratante, 'GO')
+  assert.equal(data.cep_contratante, '72860-000')
 })

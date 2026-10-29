@@ -174,7 +174,9 @@ describe('contrato de integração da matrícula', () => {
   const form = read('app/components/modals/StudentCreateModal.vue')
 
   it('mantém o RPC usado pela tela e todos os seus parâmetros', () => {
-    assert.match(form, /rpc\('criar_matricula_com_contrato'/)
+    assert.match(form, /rpc\('criar_matricula_com_endereco'/)
+    assert.match(form, /p_endereco:/)
+    assert.ok(normalize(read('supabase/migrations/202610290050_endereco_completo_aluno.sql')).includes('resultado:=public.criar_matricula_com_contrato('))
     for (const parameter of [
       'p_nome', 'p_cpf', 'p_data_nascimento', 'p_telefone', 'p_email', 'p_turma_ids',
       'p_responsavel_nome', 'p_responsavel_cpf', 'p_responsavel_telefone',
@@ -500,7 +502,9 @@ describe('edicao transacional do aluno', () => {
   })
 
   it('a tela usa somente a operacao transacional', () => {
-    assert.ok(edit.includes("rpc('salvar_aluno_com_turmas'"))
+    assert.ok(edit.includes("rpc('salvar_aluno_com_endereco'"))
+    assert.ok(edit.includes('p_endereco:'))
+    assert.ok(normalize(read('supabase/migrations/202610290050_endereco_completo_aluno.sql')).includes('perform public.salvar_aluno_com_turmas('))
     assert.doesNotMatch(edit, /from\('alunos'\)\.update/)
     assert.doesNotMatch(edit, /rpc\('atualizar_turmas_aluno'/)
   })

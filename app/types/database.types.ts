@@ -30,6 +30,13 @@ export type Database = {
           emergencia_telefone: string | null
           endereco: string | null
           foto_url: string | null
+          logradouro: string | null
+          numero: string | null
+          complemento: string | null
+          bairro: string | null
+          cidade: string | null
+          uf: string | null
+          cep: string | null
           id: string
           motivo_cancelamento: string | null
           nome: string
@@ -57,6 +64,13 @@ export type Database = {
           emergencia_telefone?: string | null
           endereco?: string | null
           foto_url?: string | null
+          logradouro?: string | null
+          numero?: string | null
+          complemento?: string | null
+          bairro?: string | null
+          cidade?: string | null
+          uf?: string | null
+          cep?: string | null
           id?: string
           motivo_cancelamento?: string | null
           nome: string
@@ -84,6 +98,13 @@ export type Database = {
           emergencia_telefone?: string | null
           endereco?: string | null
           foto_url?: string | null
+          logradouro?: string | null
+          numero?: string | null
+          complemento?: string | null
+          bairro?: string | null
+          cidade?: string | null
+          uf?: string | null
+          cep?: string | null
           id?: string
           motivo_cancelamento?: string | null
           nome?: string

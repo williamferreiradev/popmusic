@@ -64,6 +64,17 @@
           </div>
 
           <!-- Responsável Legal (se houver) -->
+          <div class="rounded-lg border border-light-border bg-light-bg/50 p-4 dark:border-dark-border dark:bg-dark-bg/50">
+            <h3 class="mb-2 text-sm font-bold text-light-text dark:text-offwhite">Endereço do aluno</h3>
+            <div v-if="student.raw?.endereco" class="space-y-1 text-sm text-light-text dark:text-offwhite">
+              <p>{{ student.raw.endereco }}</p>
+              <p>{{ [student.raw.bairro, student.raw.cidade, student.raw.uf].filter(Boolean).join(' · ') }}</p>
+              <p v-if="student.raw.cep">CEP: {{ String(student.raw.cep).replace(/^(\d{5})(\d{3})$/, '$1-$2') }}</p>
+            </div>
+            <p v-else class="text-sm text-light-text/60 dark:text-offwhite/60">Endereço não informado. Complete em Editar aluno.</p>
+          </div>
+
+          <!-- Responsável Legal (se houver) -->
           <div v-if="student.raw?.responsavel_nome" class="bg-light-bg/50 dark:bg-dark-bg/50 p-4 rounded-lg border border-light-border dark:border-dark-border">
             <h3 class="text-sm font-bold text-gold mb-3 flex items-center gap-2">
               <UserCheck class="w-4 h-4 text-gold" /> Responsável Legal

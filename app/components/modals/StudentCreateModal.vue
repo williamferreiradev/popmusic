@@ -118,6 +118,8 @@
         />
       </div>
 
+      <StudentAddressFields v-model="address" />
+
       <!-- Seção do Responsável (Exibida apenas se menor de idade) -->
       <div v-if="isMinor" class="flex flex-col gap-4 mt-2 p-4 bg-gold-soft/30 dark:bg-gold-soft/10 border border-gold/30 rounded-lg">
         <h4 class="text-sm font-bold text-gold flex items-center gap-2">
@@ -247,6 +249,8 @@ import { Loader2, User, CheckCircle2, Copy, MessageCircle, Mail, ExternalLink, C
 import BaseModal from '../BaseModal.vue'
 import BaseInput from '../BaseInput.vue'
 import BaseSelect from '../BaseSelect.vue'
+import StudentAddressFields from '../students/StudentAddressFields.vue'
+import { addressLine, emptyStudentAddress, normalizeStudentAddress } from '~/utils/studentAddress'
 
 import { buildPopMusicContractData } from '~/utils/contractFormatter'
 import { useContratos } from '~/composables/useContratos'
@@ -262,6 +266,7 @@ const emit = defineEmits(['close', 'saved'])
 
 const isLoading = ref(false)
 const formError = ref('')
+const address = ref(emptyStudentAddress())
 const copied = ref(false)
 const selectedModalityIds = ref<string[]>([])
 const selectedTeacherIds = ref<Record<string, string>>({})
@@ -423,6 +428,7 @@ const copyLink = async () => {
 
 const resetForm = () => {
   formError.value = ''
+  address.value = emptyStudentAddress()
   formData.name = ''
   formData.cpf = ''
   formData.birthDate = ''
@@ -483,6 +489,7 @@ const handleSubmit = async () => {
   isLoading.value = true
 
   try {
+    const normalizedAddress = normalizeStudentAddress(address.value)
     await fetchModel()
     const selectedClasses = classOptions.value.filter(opt => formData.instruments.includes(opt.value))
     const totalMensalidade = selectedClasses.reduce((acc, curr) => acc + Number(curr.valor || 180), 0)
@@ -490,7 +497,7 @@ const handleSubmit = async () => {
     const alunoContrato = {
       nome: formData.name.trim(), cpf: formData.cpf.replace(/\D/g, ''),
       data_nascimento: formData.birthDate, telefone: formData.phone.replace(/\D/g, ''),
-      email: formData.email.trim(), responsavel_nome: isMinor.value ? formData.guardianName : null,
+      email: formData.email.trim(), ...normalizedAddress, endereco: addressLine(normalizedAddress), responsavel_nome: isMinor.value ? formData.guardianName : null,
       responsavel_cpf: isMinor.value ? formData.guardianCpf.replace(/\D/g, '') : null,
       responsavel_telefone: isMinor.value ? formData.guardianPhone.replace(/\D/g, '') : null
     }
@@ -500,9 +507,10 @@ const handleSubmit = async () => {
       textoContrato = textoContrato.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), String(val || ''))
     })
 
-    const { data, error } = await (supabase as any).rpc('criar_matricula_com_contrato', {
+    const { data, error } = await (supabase as any).rpc('criar_matricula_com_endereco', {
       p_nome: formData.name, p_cpf: formData.cpf, p_data_nascimento: formData.birthDate,
       p_telefone: formData.phone, p_email: formData.email, p_turma_ids: formData.instruments,
+      p_endereco: normalizedAddress,
       p_responsavel_nome: isMinor.value ? formData.guardianName : null,
       p_responsavel_cpf: isMinor.value ? formData.guardianCpf : null,
       p_responsavel_telefone: isMinor.value ? formData.guardianPhone : null,

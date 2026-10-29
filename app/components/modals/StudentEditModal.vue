@@ -48,6 +48,9 @@
         />
       </div>
 
+      <StudentAddressFields v-model="address" />
+      <p class="text-xs text-light-text/60 dark:text-offwhite/60">A atualização do endereço vale para o cadastro e novos contratos. Contratos já assinados mantêm os dados originais.</p>
+
       <!-- Seção do Responsável (Exibida apenas se menor de idade) -->
       <div v-if="isMinor" class="flex flex-col gap-4 mt-2 p-4 bg-gold-soft/30 dark:bg-gold-soft/10 border border-gold/30 rounded-lg">
         <h4 class="text-sm font-bold text-gold flex items-center gap-2">
@@ -116,6 +119,8 @@ import { Loader2, User } from '@lucide/vue'
 import BaseModal from '../BaseModal.vue'
 import BaseInput from '../BaseInput.vue'
 import BaseSelect from '../BaseSelect.vue'
+import StudentAddressFields from '../students/StudentAddressFields.vue'
+import { emptyStudentAddress, normalizeStudentAddress } from '~/utils/studentAddress'
 
 const props = defineProps({
   isOpen: {
@@ -133,6 +138,7 @@ const emit = defineEmits(['close', 'saved'])
 const supabase = useSupabaseClient()
 const isLoading = ref(false)
 const formError = ref('')
+const address = ref(emptyStudentAddress())
 const teacherFilter = ref('')
 const todayDate = new Date().toISOString().split('T')[0]
 
@@ -202,6 +208,7 @@ watch(() => props.isOpen, async open => { if (open) { formError.value = ''; teac
 watch(() => props.student, (newStudent) => {
   if (newStudent) {
     const raw = newStudent.raw || newStudent
+    address.value = { logradouro: raw.logradouro || raw.endereco || '', numero: raw.numero || '', complemento: raw.complemento || '', bairro: raw.bairro || '', cidade: raw.cidade || '', uf: raw.uf || '', cep: raw.cep || '' }
     formData.name = raw.nome || newStudent.name || ''
     formData.cpf = raw.cpf || newStudent.cpf || ''
     formData.birthDate = raw.data_nascimento || newStudent.birthDate || ''
@@ -242,10 +249,12 @@ const handleSubmit = async () => {
   formError.value = ''
   
   try {
-    const { error } = await (supabase as any).rpc('salvar_aluno_com_turmas', {
+    const normalizedAddress = normalizeStudentAddress(address.value)
+    const { error } = await (supabase as any).rpc('salvar_aluno_com_endereco', {
       p_aluno_id: props.student.id, p_nome: formData.name, p_cpf: formData.cpf,
       p_data_nascimento: formData.birthDate, p_telefone: formData.phone, p_email: formData.email,
       p_turma_ids: formData.instruments, p_responsavel_nome: isMinor.value ? formData.guardianName : null,
+      p_endereco: normalizedAddress,
       p_responsavel_cpf: isMinor.value ? formData.guardianCpf : null,
       p_responsavel_telefone: isMinor.value ? formData.guardianPhone : null
     })
