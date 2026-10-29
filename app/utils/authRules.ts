@@ -4,6 +4,10 @@ export const isStrongPassword = (password: string): boolean => (
 
 export const normalizeAuthEmail = (email: string): string => email.trim().toLowerCase()
 
+export const authSubjectId = (user: { id?: string; sub?: string } | null | undefined): string | null => (
+  user?.id || user?.sub || null
+)
+
 export const isValidAuthEmail = (email: string): boolean => (
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeAuthEmail(email))
 )

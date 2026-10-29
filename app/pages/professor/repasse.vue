@@ -2,7 +2,8 @@
   <div class="p-8 w-full flex flex-col gap-6">
     <header>
       <h1 class="text-2xl font-bold text-light-text dark:text-offwhite">Meu Repasse</h1>
-      <p class="text-sm text-light-text/60 dark:text-offwhite/50 mt-1">Acompanhe os valores de repasse pelas suas aulas.</p>
+      <p class="text-sm text-light-text/60 dark:text-offwhite/50 mt-1">Acompanhe os pagamentos registrados pela gestão. A transferência é feita pela escola fora do sistema.</p>
+      <button class="mt-3 text-sm font-semibold text-primary disabled:opacity-50" :disabled="pending" @click="refresh()">Atualizar repasses</button>
     </header>
 
     <div v-if="pending" class="flex justify-center py-12">
@@ -61,7 +62,7 @@ import { Loader2 } from '@lucide/vue'
 
 const supabase = useSupabaseClient()
 
-const { data: repasses, pending, error: loadError } = await useAsyncData('professor_repasses', async () => {
+const { data: repasses, pending, error: loadError, refresh } = await useAsyncData('professor_repasses', async () => {
   const { data, error } = await supabase
     .from('vw_professor_meu_repasse')
     .select('*')
@@ -78,7 +79,7 @@ const { data: repasses, pending, error: loadError } = await useAsyncData('profes
 const formatarMes = (val: string | null) => {
   if (!val) return '-'
   try {
-    const d = new Date(val)
+    const d = new Date(`${val.slice(0, 10)}T12:00:00`)
     if (isNaN(d.getTime())) return val
     return new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(d)
   } catch {

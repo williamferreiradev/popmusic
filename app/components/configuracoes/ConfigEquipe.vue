@@ -1,12 +1,12 @@
 <template>
   <div class="flex flex-col gap-6">
-    <div class="flex items-center justify-between">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
         <h2 class="text-xl font-bold text-light-text dark:text-offwhite">Equipe</h2>
         <p class="text-sm text-light-text/60 dark:text-offwhite/60">Controle o acesso administrativo ao painel.</p>
       </div>
-      <BaseButton variant="primary" class="flex items-center gap-2" @click="openModal()">
-        <UserPlus class="w-4 h-4" /> Convidar usuário
+      <BaseButton variant="primary" class="flex items-center gap-2" :disabled="isLoadingSave || isGeneratingMemberId !== null" @click="openModal()">
+        <UserPlus class="w-4 h-4" /> Criar acesso
       </BaseButton>
     </div>
 
@@ -48,10 +48,14 @@
             </td>
             <td class="py-3 px-4 text-center">
               <div class="flex items-center justify-center gap-2">
-                <button class="p-1.5 text-light-text/60 dark:text-offwhite/60 hover:text-primary transition-colors" title="Editar" :disabled="member.status === 'Inativo'" @click="openModal(member)">
+                <button v-if="member.status === 'Ativo' && member.email" :disabled="isGeneratingMemberId !== null" class="p-1.5 text-light-text/60 dark:text-offwhite/60 hover:text-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed" title="Validar conta e gerar novo acesso" @click="generateMemberAccess(member)">
+                  <Loader2 v-if="isGeneratingMemberId === member.id" class="w-4 h-4 animate-spin" />
+                  <KeyRound v-else class="w-4 h-4" />
+                </button>
+                <button class="p-1.5 text-light-text/60 dark:text-offwhite/60 hover:text-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed" title="Editar" :disabled="member.status === 'Inativo' || isGeneratingMemberId !== null" @click="openModal(member)">
                   <Pencil class="w-4 h-4" />
                 </button>
-                <button v-if="member.status === 'Ativo'" class="p-1.5 text-light-text/60 dark:text-offwhite/60 hover:text-red-500 transition-colors" title="Desativar" @click="confirmDeactivate(member)">
+                <button v-if="member.status === 'Ativo'" :disabled="isGeneratingMemberId !== null" class="p-1.5 text-light-text/60 dark:text-offwhite/60 hover:text-red-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed" title="Desativar" @click="confirmDeactivate(member)">
                   <UserMinus class="w-4 h-4" />
                 </button>
               </div>
@@ -62,7 +66,7 @@
     </div>
 
     <!-- Modal Nova/Editar -->
-    <BaseModal :is-open="isModalOpen" :title="isEditing ? 'Editar usuário' : 'Convidar novo usuário'" @close="closeModal">
+    <BaseModal :is-open="isModalOpen" :title="isEditing ? 'Editar usuário' : 'Criar acesso de gestão'" @close="closeModal">
       <div class="p-5 flex flex-col gap-4">
         <BaseInput v-model="formData.name" label="Nome Completo" placeholder="Ex: João da Silva" required />
         <BaseInput v-model="formData.email" label="E-mail de acesso" type="email" placeholder="Ex: joao@escola.com" required :disabled="isEditing" />
@@ -79,7 +83,7 @@
           <BaseButton variant="outline" @click="closeModal">Cancelar</BaseButton>
           <BaseButton variant="primary" :disabled="!isFormValid || isLoadingSave" class="flex items-center gap-2" @click="save">
             <Loader2 v-if="isLoadingSave" class="w-4 h-4 animate-spin" />
-            {{ isEditing ? 'Salvar' : 'Enviar convite' }}
+            {{ isEditing ? 'Salvar' : 'Criar acesso' }}
           </BaseButton>
         </div>
       </div>
@@ -100,12 +104,25 @@
       </div>
     </BaseModal>
 
+    <BaseModal :is-open="isAccessOpen" title="Acesso da gestão" @close="closeAccess">
+      <div class="p-5 flex flex-col gap-4">
+        <p class="text-sm text-light-text/70 dark:text-offwhite/70">O sistema não envia e-mail. Copie estas informações e encaminhe diretamente para a pessoa.</p>
+        <div><label class="text-xs font-bold">Login</label><input :value="accessEmail" readonly class="mt-1 w-full rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg px-3 py-2 text-sm text-light-text dark:text-offwhite"></div>
+        <div v-if="temporaryPassword"><label class="text-xs font-bold">Senha temporária</label><input :value="temporaryPassword" readonly class="mt-1 w-full rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg px-3 py-2 text-sm text-light-text dark:text-offwhite"></div>
+        <div><label class="text-xs font-bold">Link</label><input :value="accessLink" readonly class="mt-1 w-full rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg px-3 py-2 text-sm text-light-text dark:text-offwhite" @focus="($event.target as HTMLInputElement).select()"></div>
+        <div class="flex justify-end gap-3">
+          <BaseButton variant="outline" @click="closeAccess">Fechar</BaseButton>
+          <BaseButton variant="primary" @click="copyAccess">{{ accessCopied ? 'Acesso copiado!' : 'Copiar acesso' }}</BaseButton>
+        </div>
+      </div>
+    </BaseModal>
+
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Pencil, UserMinus, UserPlus, Loader2 } from '@lucide/vue'
+import { KeyRound, Pencil, UserMinus, UserPlus, Loader2 } from '@lucide/vue'
 import BaseButton from '../BaseButton.vue'
 import BaseModal from '../BaseModal.vue'
 import BaseInput from '../BaseInput.vue'
@@ -120,8 +137,14 @@ const isModalOpen = ref(false)
 const isDeactivateModalOpen = ref(false)
 const isEditing = ref(false)
 const isLoadingSave = ref(false)
+const isGeneratingMemberId = ref<string | null>(null)
 const formData = ref<{id: string, name: string, email: string, role: 'Gestão'}>({ id: '', name: '', email: '', role: 'Gestão' })
 const userToDeactivate = ref<any>(null)
+const isAccessOpen = ref(false)
+const accessLink = ref('')
+const accessEmail = ref('')
+const temporaryPassword = ref<string | null>(null)
+const accessCopied = ref(false)
 
 const isEmailValid = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.value.email))
 
@@ -134,6 +157,14 @@ const managementHeaders = async () => {
   if (!data.session?.access_token) throw new Error('Sua sessão expirou. Entre novamente.')
   return { Authorization: `Bearer ${data.session.access_token}` }
 }
+
+const requestErrorMessage = (error: any, fallback: string) => String(
+  error?.data?.message
+  || error?.data?.statusMessage
+  || error?.statusMessage
+  || error?.message
+  || fallback
+)
 
 const openModal = (member?: any) => {
   if (member) {
@@ -153,6 +184,7 @@ const closeModal = () => {
 const save = async () => {
   if (!isFormValid.value) return
   isLoadingSave.value = true
+  let generatedAccess: { activationLink: string; temporaryPassword: string | null; email: string } | null = null
 
   try {
     if (isEditing.value) {
@@ -164,7 +196,7 @@ const save = async () => {
 
       if (error) throw error
     } else {
-      await $fetch('/api/admin/invite-user', {
+      const result = await $fetch<{ activationLink: string; temporaryPassword: string | null }>('/api/admin/invite-user', {
         method: 'POST',
         headers: await managementHeaders(),
         body: {
@@ -173,17 +205,64 @@ const save = async () => {
           papel: 'gestao'
         }
       })
-
-      alert(`Convite enviado para ${formData.value.email}.`)
+      generatedAccess = { ...result, email: formData.value.email }
     }
 
     await refresh()
     closeModal()
+    if (generatedAccess) showAccess(generatedAccess.activationLink, generatedAccess.email, generatedAccess.temporaryPassword)
   } catch (error: any) {
     console.error('Erro ao salvar usuário:', error)
-    alert(`Não foi possível concluir. ${error.message || 'Tente novamente.'}`)
+    alert(`Não foi possível concluir. ${requestErrorMessage(error, 'Tente novamente.')}`)
   } finally {
     isLoadingSave.value = false
+  }
+}
+
+const generateMemberAccess = async (member: any) => {
+  if (!member?.email || isGeneratingMemberId.value) return
+  if (!confirm(`Validar a conta e gerar um novo acesso para ${member.email}?`)) return
+  isGeneratingMemberId.value = member.id
+  try {
+    const result = await $fetch<{ activationLink: string; temporaryPassword: string | null }>('/api/admin/invite-user', {
+      method: 'POST',
+      headers: await managementHeaders(),
+      body: { nome: member.name, email: member.email, papel: 'gestao' }
+    })
+    await refresh()
+    showAccess(result.activationLink, member.email, result.temporaryPassword)
+  } catch (error: any) {
+    alert(`Não foi possível gerar o acesso. ${requestErrorMessage(error, 'Tente novamente.')}`)
+  } finally {
+    isGeneratingMemberId.value = null
+  }
+}
+
+const showAccess = (link: string, email: string, password: string | null) => {
+  accessLink.value = link
+  accessEmail.value = email
+  temporaryPassword.value = password
+  accessCopied.value = false
+  isAccessOpen.value = true
+}
+
+const closeAccess = () => {
+  isAccessOpen.value = false
+  accessLink.value = ''
+  accessEmail.value = ''
+  temporaryPassword.value = null
+  accessCopied.value = false
+}
+
+const copyAccess = async () => {
+  const text = temporaryPassword.value
+    ? `Acesso Pop Music\nLogin: ${accessEmail.value}\nSenha temporária: ${temporaryPassword.value}\nLink: ${accessLink.value}\nAltere a senha no primeiro acesso.`
+    : `Acesso Pop Music\nLogin: ${accessEmail.value}\nLink para redefinir a senha: ${accessLink.value}`
+  try {
+    await navigator.clipboard.writeText(text)
+    accessCopied.value = true
+  } catch {
+    alert('Não foi possível copiar automaticamente. Selecione os campos e copie manualmente.')
   }
 }
 

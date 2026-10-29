@@ -68,22 +68,21 @@
             <td class="py-3 px-4 text-center">
               <div class="flex items-center justify-center gap-2">
                 <button
-                  v-if="!teacher.userId"
-                  :disabled="isInvitingId === teacher.id || !teacher.email || !teacher.active"
-                  class="p-1.5 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
-                  :title="teacher.email ? 'Criar conta e gerar link de acesso' : 'Informe o e-mail para gerar o acesso'"
+                  :disabled="isInvitingId !== null || !teacher.email || !teacher.active"
+                  class="text-[10px] font-bold hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
+                  :class="teacher.userId ? 'text-green-600 dark:text-green-400' : 'text-light-text/70 dark:text-offwhite/70'"
+                  :title="teacher.email ? (teacher.userId ? 'Validar o vínculo e gerar um novo acesso' : 'Criar conta e gerar acesso') : 'Informe o e-mail para gerar o acesso'"
                   @click="inviteTeacher(teacher)"
                 >
                   <Loader2 v-if="isInvitingId === teacher.id" class="w-4 h-4 animate-spin" />
-                  <MailPlus v-else class="w-4 h-4" />
+                  <span v-else class="inline-flex items-center gap-1"><MailPlus class="w-4 h-4" />{{ teacher.userId ? 'REPARAR / NOVO LINK' : 'CRIAR ACESSO' }}</span>
                 </button>
-                <button v-else :disabled="isInvitingId === teacher.id || !teacher.active" class="text-[10px] font-bold text-green-600 dark:text-green-400 hover:underline disabled:opacity-40" title="Gerar um novo link de acesso" @click="resendTeacherAccess(teacher)">GERAR NOVO LINK</button>
-                <button class="p-1.5 hover:text-primary" title="Editar" @click="openModal(teacher)"><Pencil class="w-4 h-4" /></button>
-                <button class="p-1.5" :class="teacher.active ? 'hover:text-red-500' : 'hover:text-green-500'" :title="teacher.active ? 'Desativar' : 'Ativar'" @click="toggleActive(teacher)">
+                <button :disabled="isInvitingId !== null" class="p-1.5 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed" title="Editar" @click="openModal(teacher)"><Pencil class="w-4 h-4" /></button>
+                <button :disabled="isInvitingId !== null" class="p-1.5 disabled:opacity-30 disabled:cursor-not-allowed" :class="teacher.active ? 'hover:text-red-500' : 'hover:text-green-500'" :title="teacher.active ? 'Desativar' : 'Ativar'" @click="toggleActive(teacher)">
                   <UserX v-if="teacher.active" class="w-4 h-4" />
                   <UserCheck v-else class="w-4 h-4" />
                 </button>
-                <button class="p-1.5 text-red-600 hover:text-red-500" title="Excluir definitivamente" @click="openDeleteTeacher(teacher)"><Trash2 class="w-4 h-4" /></button>
+                <button :disabled="isInvitingId !== null" class="p-1.5 text-red-600 hover:text-red-500 disabled:opacity-30 disabled:cursor-not-allowed" title="Excluir definitivamente" @click="openDeleteTeacher(teacher)"><Trash2 class="w-4 h-4" /></button>
               </div>
             </td>
           </tr>
@@ -97,9 +96,12 @@
           <BaseInput v-model="form.name" label="Nome completo" placeholder="Ex: João da Silva" required />
           <BaseInput v-model="form.cpf" label="CPF (opcional)" placeholder="000.000.000-00" mask="cpf" />
           <BaseInput v-model="form.phone" label="Telefone / WhatsApp" placeholder="(61) 99999-9999" mask="phone" required />
-          <BaseInput v-model="form.email" label="E-mail" type="email" placeholder="professor@email.com" required />
+          <BaseInput v-model="form.email" label="E-mail" type="email" placeholder="professor@email.com" required :disabled="isLinkedTeacher" />
           <BaseInput v-model="form.pixKey" label="Chave PIX (opcional)" placeholder="CPF, e-mail, telefone ou chave aleatória" />
         </div>
+        <p v-if="isLinkedTeacher" class="text-xs text-amber-700 dark:text-amber-300">
+          Este e-mail identifica a conta de acesso e não pode ser alterado por este formulário.
+        </p>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <BaseSelect v-model="form.commissionType" label="Forma de repasse" :options="commissionOptions" />
@@ -137,7 +139,11 @@
 
     <BaseModal :is-open="isAccessLinkOpen" title="Acesso do professor" @close="closeAccessLink">
       <div class="p-5 flex flex-col gap-4">
-        <p class="text-sm text-light-text/70 dark:text-offwhite/70">Copie e envie estas credenciais ao professor. A senha temporária deverá ser alterada no primeiro acesso.</p>
+        <p class="text-sm text-light-text/70 dark:text-offwhite/70">
+          {{ temporaryPassword
+            ? 'Copie e envie estas credenciais ao professor. A senha temporária deverá ser alterada no primeiro acesso.'
+            : 'A conta já existia. Copie e envie o link seguro para o professor definir uma nova senha.' }}
+        </p>
         <div><label class="text-xs font-bold">Login</label><input :value="accessEmail" readonly class="mt-1 w-full rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg px-3 py-2 text-sm text-light-text dark:text-offwhite"></div>
         <div v-if="temporaryPassword"><label class="text-xs font-bold">Senha temporária</label><input :value="temporaryPassword" readonly class="mt-1 w-full rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg px-3 py-2 text-sm text-light-text dark:text-offwhite"></div>
         <div><label class="text-xs font-bold">Link</label><input :value="accessLink" readonly class="mt-1 w-full rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg px-3 py-2 text-sm text-light-text dark:text-offwhite" @focus="($event.target as HTMLInputElement).select()"></div>
@@ -214,7 +220,9 @@ const { data: pageData, pending, refresh } = await useAsyncData('gestao_professo
     active: teacher.ativo,
     commissionType: teacher.comissao_padrao_tipo,
     commissionValue: Number(teacher.comissao_padrao_valor || 0),
-    modalities: (teacher.professor_modalidades || []).map((item: any) => item.modalidades).filter(Boolean),
+    modalities: (teacher.professor_modalidades || [])
+      .filter((item: any) => item.modalidades)
+      .map((item: any) => ({ id: item.modalidades.id, name: item.modalidades.nome })),
     classCount: teacher.turmas?.filter((turma: any) => turma.ativo).length || 0,
     pixKey: teacher.pix_chave || null
   }))
@@ -226,6 +234,9 @@ const modalities = computed(() => pageData.value?.modalities || [])
 const activeCount = computed(() => teachers.value.filter(item => item.active).length)
 const coveredModalities = computed(() => new Set(teachers.value.flatMap(item => item.modalities.map(modality => modality.id))).size)
 const totalClasses = computed(() => teachers.value.reduce((total, item) => total + item.classCount, 0))
+const isLinkedTeacher = computed(() => Boolean(
+  isEditing.value && teachers.value.find(item => item.id === form.value.id)?.userId
+))
 const isValid = computed(() => form.value.name.trim().length > 2
   && form.value.phone.replace(/\D/g, '').length >= 10
   && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.value.email.trim())
@@ -242,6 +253,14 @@ const managementHeaders = async () => {
   if (!data.session?.access_token) throw new Error('Sua sessão expirou. Entre novamente.')
   return { Authorization: `Bearer ${data.session.access_token}` }
 }
+
+const requestErrorMessage = (error: any, fallback: string) => String(
+  error?.data?.message
+  || error?.data?.statusMessage
+  || error?.statusMessage
+  || error?.message
+  || fallback
+)
 
 const openModal = (teacher?: TeacherView) => {
   isEditing.value = Boolean(teacher)
@@ -261,6 +280,10 @@ const openModal = (teacher?: TeacherView) => {
 
 const closeModal = () => {
   if (isSaving.value) return
+  resetProfessorModal()
+}
+
+const resetProfessorModal = () => {
   isModalOpen.value = false
   form.value = emptyForm()
 }
@@ -269,6 +292,7 @@ const save = async () => {
   if (!isValid.value || isSaving.value) return
   isSaving.value = true
   let professorSaved = false
+  let generatedAccess: { activationLink: string; temporaryPassword: string | null } | null = null
   try {
     const { data: professorId, error } = await (supabase as any).rpc('salvar_professor', {
       p_id: isEditing.value ? form.value.id : null, p_nome: form.value.name,
@@ -280,22 +304,23 @@ const save = async () => {
     professorSaved = true
 
     if (!isEditing.value) {
-      const result = await $fetch<{ activationLink: string; temporaryPassword: string | null }>('/api/admin/invite-user', {
+      generatedAccess = await $fetch<{ activationLink: string; temporaryPassword: string | null }>('/api/admin/invite-user', {
         method: 'POST',
         headers: await managementHeaders(),
         body: { nome: form.value.name, email: form.value.email, papel: 'professor', professorId }
       })
-      showAccessLink(result.activationLink, form.value.email, result.temporaryPassword)
     }
 
     await refresh()
-    closeModal()
+    const savedEmail = form.value.email
+    resetProfessorModal()
+    if (generatedAccess) showAccessLink(generatedAccess.activationLink, savedEmail, generatedAccess.temporaryPassword)
   } catch (error: any) {
     console.error('Erro ao salvar professor:', error)
     if (professorSaved) {
       await refresh()
-      closeModal()
-      alert(`Professor salvo, mas não foi possível gerar o acesso. Use o botão de criar acesso na listagem. ${error.message || ''}`)
+      resetProfessorModal()
+      alert(`Professor salvo, mas não foi possível gerar o acesso. Use o botão de criar acesso na listagem. ${requestErrorMessage(error, '')}`)
     } else {
       alert(`Não foi possível salvar o professor. ${error.message || 'Tente novamente.'}`)
     }
@@ -335,8 +360,9 @@ const toggleActive = async (teacher: TeacherView) => {
 }
 
 const inviteTeacher = async (teacher: TeacherView) => {
-  if (!teacher.email || teacher.userId || isInvitingId.value) return
-  if (!confirm(`Criar a conta e gerar o link de acesso de ${teacher.email}?`)) return
+  if (!teacher.email || isInvitingId.value) return
+  const action = teacher.userId ? 'Validar o vínculo e gerar um novo acesso' : 'Criar a conta e gerar o acesso'
+  if (!confirm(`${action} de ${teacher.email}?`)) return
 
   isInvitingId.value = teacher.id
   try {
@@ -354,24 +380,10 @@ const inviteTeacher = async (teacher: TeacherView) => {
     showAccessLink(result.activationLink, teacher.email, result.temporaryPassword)
   } catch (error: any) {
     console.error('Erro ao convidar professor:', error)
-    alert(`Não foi possível criar o acesso. ${error.message || 'Tente novamente.'}`)
+    alert(`Não foi possível criar o acesso. ${requestErrorMessage(error, 'Tente novamente.')}`)
   } finally {
     isInvitingId.value = null
   }
-}
-
-const resendTeacherAccess = async (teacher: TeacherView) => {
-  if (!teacher.email || !teacher.userId || isInvitingId.value) return
-  if (!confirm(`Gerar um novo link de acesso para ${teacher.email}?`)) return
-  isInvitingId.value = teacher.id
-  try {
-    const result = await $fetch<{ activationLink: string }>('/api/admin/resend-access', { method: 'POST', headers: await managementHeaders(), body: {
-      userId: teacher.userId, professorId: teacher.id
-    } })
-    showAccessLink(result.activationLink, teacher.email)
-  } catch (error: any) {
-    alert(`Não foi possível gerar o novo link. ${error.message || 'Tente novamente.'}`)
-  } finally { isInvitingId.value = null }
 }
 
 const showAccessLink = (link: string, email = '', password: string | null = null) => {
@@ -394,7 +406,11 @@ const copyAccessLink = async () => {
   const credentials = temporaryPassword.value
     ? `Acesso Pop Music\nLogin: ${accessEmail.value}\nSenha temporária: ${temporaryPassword.value}\nLink: ${accessLink.value}\nAltere a senha no primeiro acesso.`
     : `Acesso Pop Music\nLogin: ${accessEmail.value}\nLink para redefinir a senha: ${accessLink.value}`
-  await navigator.clipboard.writeText(credentials)
-  linkCopied.value = true
+  try {
+    await navigator.clipboard.writeText(credentials)
+    linkCopied.value = true
+  } catch {
+    alert('Não foi possível copiar automaticamente. Selecione os campos e copie manualmente.')
+  }
 }
 </script>

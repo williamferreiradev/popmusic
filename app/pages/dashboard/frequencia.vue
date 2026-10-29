@@ -270,6 +270,7 @@ import JustifyAbsenceModal from '~/components/modals/JustifyAbsenceModal.vue'
 
 const supabase = useSupabaseClient()
 const user = useSupabaseUser()
+const actorId = computed(() => user.value?.id || user.value?.sub || null)
 
 type AppState = 'initial' | 'loading' | 'loaded' | 'empty_class' | 'error'
 
@@ -557,7 +558,7 @@ const reopenAttendance = async () => {
       .update({
         ativa: false,
         reaberta_em: new Date().toISOString(),
-        reaberta_por: user.value?.id,
+        reaberta_por: actorId.value,
         motivo_reabertura: reason
       })
       .eq('id', activeClosingId.value)

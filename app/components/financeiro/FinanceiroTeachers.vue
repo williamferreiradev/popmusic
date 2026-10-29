@@ -10,7 +10,12 @@
     </div>
 
     <!-- Grade de Cards -->
-    <div v-if="teachers.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div v-if="teachersLoading" class="p-8 text-center" role="status">Carregando repasses...</div>
+    <div v-else-if="teachersError" class="rounded-lg border border-red-500/40 p-5 text-red-600 dark:text-red-400" role="alert">
+      {{ teachersError }}
+      <button class="ml-2 underline" @click="fetchTeachers()">Tentar novamente</button>
+    </div>
+    <div v-else-if="teachers.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       
       <div 
         v-for="teacher in teachers" 
@@ -182,7 +187,7 @@ import { useFinanceiro, type Teacher } from '../../composables/useFinanceiro'
 import TeacherStatementModal from '../modals/TeacherStatementModal.vue'
 import PayTeacherModal from '../modals/PayTeacherModal.vue'
 
-const { teachers, accounts, fetchTeachers, fetchAccounts, payTeacher } = useFinanceiro()
+const { teachers, teachersLoading, teachersError, accounts, fetchTeachers, fetchAccounts, payTeacher } = useFinanceiro()
 
 onMounted(async () => {
   await Promise.all([fetchTeachers(), fetchAccounts()])
@@ -246,7 +251,8 @@ const handlePayment = async (data: any) => {
     )
     isPayModalOpen.value = false
     closeDrawer()
-    showToast(`Repasse pago! Lançamento de saída criado na conta ${data.account}.`)
+    const accountName = accounts.value.find(account => account.id === data.account)?.nome || 'selecionada'
+    showToast(`Pagamento registrado e saída lançada na conta ${accountName}.`)
   } catch (error: any) {
     operationError.value = `Não foi possível pagar o repasse. ${error.message || 'Tente novamente.'}`
   } finally {

@@ -85,6 +85,8 @@ const pagedChargesTotal = ref(0)
 const receipts = ref<Receipt[]>([])
 const receiptsTotal = ref(0)
 const teachers = ref<Teacher[]>([])
+const teachersError = ref('')
+const teachersLoading = ref(false)
 const cashflow = ref<CashflowEntry[]>([])
 const pagedCashflow = ref<CashflowEntry[]>([])
 const pagedCashflowTotal = ref(0)
@@ -476,6 +478,8 @@ export const useFinanceiro = () => {
 
   // Helper para mapear forma de pagamento para enum do banco: ["pix", "dinheiro", "cartao", "transferencia", "boleto"]
   const fetchTeachers = async () => {
+    teachersLoading.value = true
+    teachersError.value = ''
     try {
       const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10)
       const { data: profs, error: profError } = await supabase
@@ -524,6 +528,9 @@ export const useFinanceiro = () => {
     } catch (error) {
       console.error('Erro ao calcular repasses:', error)
       teachers.value = []
+      teachersError.value = 'Não foi possível carregar os repasses. Verifique a conexão com o Supabase e as migrations do financeiro.'
+    } finally {
+      teachersLoading.value = false
     }
   }
 
@@ -795,6 +802,8 @@ export const useFinanceiro = () => {
     receipts,
     receiptsTotal,
     teachers,
+    teachersError,
+    teachersLoading,
     cashflow,
     pagedCashflow,
     pagedCashflowTotal,

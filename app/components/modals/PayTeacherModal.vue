@@ -11,6 +11,8 @@
         Repasse para <span class="font-bold">{{ teacher?.name }}</span> no valor de <span class="text-primary font-bold">R$ {{ teacher?.totalToReceive?.toFixed(2).replace('.', ',') }}</span>.
       </p>
 
+      <p class="text-sm text-light-text/70 dark:text-offwhite/70">Confirme somente após pagar o professor. Esta ação registra o pagamento e a saída no caixa; a transferência ou o Pix deve ser feito pela escola.</p>
+
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="text-sm font-medium text-light-text dark:text-offwhite mb-1.5 block">Forma de pag. *</label>

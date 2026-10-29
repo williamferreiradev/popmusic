@@ -86,6 +86,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { summarizeTeacherRepasses } from '~/utils/teacherRepasse'
 import { BookOpenCheck, CalendarDays, Loader2, Users, Wallet } from '@lucide/vue'
 
 const supabase = useSupabaseClient()
@@ -134,14 +135,7 @@ const absenceAlerts = computed(() => {
   }
   return [...grouped.values()].filter(item => item.count >= 3).sort((a, b) => b.count - a.count).slice(0, 5)
 })
-const finance = computed(() => (dashboard.value?.repasses || []).reduce((acc: any, item: any) => {
-  const value = Number(item.valor_total || 0)
-  if (item.data_pagamento || item.status === 'pago') {
-    acc.receivedTotal += value
-    if (String(item.data_pagamento || item.mes_referencia).slice(0, 7) === todayIso.slice(0, 7)) acc.receivedMonth += value
-  } else acc.pending += value
-  return acc
-}, { receivedMonth: 0, receivedTotal: 0, pending: 0 }))
+const finance = computed(() => summarizeTeacherRepasses(dashboard.value?.repasses || [], todayIso))
 const nextClass = computed<any | null>(() => {
   if (!weekAgenda.value.length) return null
   const minutes = now.getHours() * 60 + now.getMinutes()

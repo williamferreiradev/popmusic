@@ -15,7 +15,7 @@
 
           <!-- Modal Content -->
           <div 
-            class="relative bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-xl shadow-2xl w-full flex flex-col overflow-hidden transition-all duration-300"
+            class="relative bg-light-surface dark:bg-dark-surface text-light-text dark:text-offwhite border border-light-border dark:border-dark-border rounded-xl shadow-2xl w-full flex flex-col overflow-hidden transition-all duration-300"
             :class="maxWidthClass"
             role="dialog"
             aria-modal="true"

@@ -1,12 +1,17 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { describe, it } from 'node:test'
-import { isStrongPassword, isValidAuthEmail, normalizeAuthEmail } from '../app/utils/authRules.ts'
+import { authSubjectId, isStrongPassword, isValidAuthEmail, normalizeAuthEmail } from '../app/utils/authRules.ts'
 
 const confirmationPage = readFileSync(new URL('../app/pages/confirm.vue', import.meta.url), 'utf8')
 const middleware = readFileSync(new URL('../app/middleware/auth.global.ts', import.meta.url), 'utf8')
 
 describe('regras de autenticação', () => {
+  it('identifica o autor tanto no usuario Auth quanto nas claims JWT', () => {
+    assert.equal(authSubjectId({ id: 'auth-user' }), 'auth-user')
+    assert.equal(authSubjectId({ sub: 'claims-user' }), 'claims-user')
+    assert.equal(authSubjectId(null), null)
+  })
   it('exige senha com oito caracteres, maiúscula, minúscula e número', () => {
     assert.equal(isStrongPassword('Senha123'), true)
     assert.equal(isStrongPassword('senha123'), false)

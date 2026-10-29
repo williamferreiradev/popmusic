@@ -276,11 +276,13 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { authSubjectId } from '~/utils/authRules'
 import { CheckSquare, Users, AlertTriangle, Calendar as CalendarIcon } from '@lucide/vue'
 import JustifyAbsenceModal from '~/components/modals/JustifyAbsenceModal.vue'
 
 const supabase = useSupabaseClient()
 const user = useSupabaseUser()
+const actorId = computed(() => authSubjectId(user.value))
 
 type AppState = 'initial' | 'loading' | 'loaded' | 'empty_class' | 'error'
 
@@ -525,7 +527,7 @@ const markAttendance = async (student: StudentRecord, status: 'presente' | 'falt
         status,
         horario_real: time,
         motivo_justificativa: null,
-        registrado_por: user.value?.id
+        registrado_por: actorId.value
       }).eq('id', student.presencaId)
       if (error) throw error
     } else {
@@ -537,7 +539,7 @@ const markAttendance = async (student: StudentRecord, status: 'presente' | 'falt
         horario_real: time,
         tipo_aula: 'normal',
         origem: 'manual',
-        registrado_por: user.value?.id
+        registrado_por: actorId.value
       }).select().single()
       if (error) throw error
       if (data) student.presencaId = data.id
@@ -571,7 +573,7 @@ const finalizeAttendance = async () => {
     const { error } = await (supabase as any).from('chamadas_aula').insert({
       turma_id: selectedClass.value,
       data_aula: selectedDate.value,
-      finalizada_por: user.value?.id
+      finalizada_por: actorId.value
     })
     if (error) throw error
     isFinalized.value = true
@@ -617,7 +619,7 @@ const handleJustifyConfirm = async (data: { reason: string, observation?: string
         horario_real: time,
         motivo_justificativa: reason,
         observacao: data.observation || null,
-        registrado_por: user.value?.id
+        registrado_por: actorId.value
       }).eq('id', student.presencaId)
       if (error) throw error
     } else {
@@ -631,7 +633,7 @@ const handleJustifyConfirm = async (data: { reason: string, observation?: string
         observacao: data.observation || null,
         tipo_aula: 'normal',
         origem: 'manual',
-        registrado_por: user.value?.id
+        registrado_por: actorId.value
       }).select().single()
       if (error) throw error
       if (inserted) student.presencaId = inserted.id

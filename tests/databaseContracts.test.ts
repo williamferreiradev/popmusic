@@ -702,14 +702,20 @@ describe('pix e exclusao segura do professor', () => {
 
 describe('acesso manual do professor sem smtp', () => {
   const invite = normalize(read('server/api/admin/invite-user.post.ts'))
+  const provisioning = normalize(read('server/services/accessProvisioning.ts'))
   const resend = normalize(read('server/api/admin/resend-access.post.ts'))
   const teachers = normalize(read('app/components/configuracoes/ConfigProfessores.vue'))
+  const team = normalize(read('app/components/configuracoes/ConfigEquipe.vue'))
+  const accessMigration = normalize(read('supabase/migrations/202609160045_acesso_usuarios_transacional.sql'))
 
   it('cria o auth user confirmado com senha temporaria sem tentar enviar email', () => {
     assert.ok(invite.includes('auth.admin.createuser'))
-    assert.ok(invite.includes('password: temporarypassword'))
-    assert.ok(invite.includes('email_confirm: true'))
-    assert.ok(invite.includes('must_change_password: true'))
+    assert.ok(invite.includes('password: input.password'))
+    assert.ok(invite.includes('email_confirm: input.emailconfirm'))
+    assert.ok(invite.includes('app_metadata: input.appmetadata'))
+    assert.ok(provisioning.includes('must_change_password: true'))
+    assert.ok(provisioning.includes('appmetadata: { papel: input.papel }'))
+    assert.ok(invite.includes('randombytes(18)'))
     assert.doesNotMatch(invite, /inviteuserbyemail/)
   })
 
@@ -717,6 +723,8 @@ describe('acesso manual do professor sem smtp', () => {
     assert.ok(resend.includes("type: 'recovery'"))
     assert.ok(teachers.includes('copiar acesso'))
     assert.ok(teachers.includes('navigator.clipboard.writetext'))
+    assert.ok(team.includes('copiar acesso'))
+    assert.doesNotMatch(team, /convite enviado para/)
   })
 
   it('normaliza id e sub da identidade validada no servidor', () => {
@@ -727,12 +735,36 @@ describe('acesso manual do professor sem smtp', () => {
     assert.doesNotMatch(management, /serversupabaseclient/)
   })
 
+  it('envia o bearer da sessao e revalida gestao ativa no backend', () => {
+    const management = normalize(read('server/utils/requireManagement.ts'))
+    assert.ok(teachers.includes('headers: await managementheaders()'))
+    assert.ok(team.includes('headers: await managementheaders()'))
+    assert.ok(invite.includes('requiremanagement(event)'))
+    assert.ok(management.includes("profile.papel !== 'gestao'"))
+    assert.ok(management.includes('!profile.ativo'))
+  })
+
   it('reaproveita conta existente e gera link de recuperação', () => {
     assert.ok(invite.includes("type: 'recovery'"))
-    assert.ok(invite.includes('existingaccount = true'))
-    assert.ok(invite.includes('accessuser = recovery.user'))
-    assert.ok(invite.includes('shoulddeletecreateduser = !existingaccount'))
-    assert.ok(invite.includes('createduserid && shoulddeletecreateduser'))
+    assert.ok(provisioning.includes('repairorphanprofessor'))
+    assert.ok(provisioning.includes('repairedorphan'))
+    assert.ok(provisioning.includes('findauthuserbyemail'))
+    assert.ok(provisioning.includes('isdatabaseprovisioned'))
+    assert.doesNotMatch(invite, /auth\.admin\.deleteuser/)
+    assert.ok(teachers.includes('reparar / novo link'))
+  })
+
+  it('faz perfil e vinculo em uma rpc transacional restrita ao service role', () => {
+    assert.ok(accessMigration.includes('function public.provisionar_acesso_usuario'))
+    assert.ok(accessMigration.includes("raw_app_meta_data ->> 'papel'"))
+    assert.ok(accessMigration.includes('v_ativo := false'))
+    assert.ok(accessMigration.includes("set search_path = ''"))
+    assert.ok(accessMigration.includes('on conflict (id) do update'))
+    assert.ok(accessMigration.includes('p_actor_id uuid'))
+    assert.ok(accessMigration.includes('function public.obter_usuario_auth_por_email'))
+    assert.ok(accessMigration.includes('grant execute on function public.provisionar_acesso_usuario'))
+    assert.ok(accessMigration.includes('to service_role'))
+    assert.ok(accessMigration.includes("notify pgrst, 'reload schema'"))
   })
 })
 
