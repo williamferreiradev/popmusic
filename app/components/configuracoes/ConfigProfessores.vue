@@ -71,11 +71,11 @@
                   :disabled="isInvitingId !== null || !teacher.email || !teacher.active"
                   class="text-[10px] font-bold hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
                   :class="teacher.userId ? 'text-green-600 dark:text-green-400' : 'text-light-text/70 dark:text-offwhite/70'"
-                  :title="teacher.email ? (teacher.userId ? 'Validar o vínculo e gerar um novo acesso' : 'Criar conta e gerar acesso') : 'Informe o e-mail para gerar o acesso'"
+                  :title="teacher.email ? (teacher.userId ? 'Gerar link para redefinir a senha, sem envio de e-mail' : 'Criar conta e gerar acesso') : 'Informe o e-mail para gerar o acesso'"
                   @click="inviteTeacher(teacher)"
                 >
                   <Loader2 v-if="isInvitingId === teacher.id" class="w-4 h-4 animate-spin" />
-                  <span v-else class="inline-flex items-center gap-1"><MailPlus class="w-4 h-4" />{{ teacher.userId ? 'REPARAR / NOVO LINK' : 'CRIAR ACESSO' }}</span>
+                  <span v-else class="inline-flex items-center gap-1"><MailPlus class="w-4 h-4" />{{ teacher.userId ? 'REDEFINIR SENHA' : 'CRIAR ACESSO' }}</span>
                 </button>
                 <button :disabled="isInvitingId !== null" class="p-1.5 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed" title="Editar" @click="openModal(teacher)"><Pencil class="w-4 h-4" /></button>
                 <button :disabled="isInvitingId !== null" class="p-1.5 disabled:opacity-30 disabled:cursor-not-allowed" :class="teacher.active ? 'hover:text-red-500' : 'hover:text-green-500'" :title="teacher.active ? 'Desativar' : 'Ativar'" @click="toggleActive(teacher)">
@@ -142,13 +142,14 @@
         <p class="text-sm text-light-text/70 dark:text-offwhite/70">
           {{ temporaryPassword
             ? 'Copie e envie estas credenciais ao professor. A senha temporária deverá ser alterada no primeiro acesso.'
-            : 'A conta já existia. Copie e envie o link seguro para o professor definir uma nova senha.' }}
+            : 'Abra ou copie o link para definir uma nova senha. Não depende de envio de e-mail e não altera a senha até a nova senha ser salva.' }}
         </p>
         <div><label class="text-xs font-bold">Login</label><input :value="accessEmail" readonly class="mt-1 w-full rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg px-3 py-2 text-sm text-light-text dark:text-offwhite"></div>
         <div v-if="temporaryPassword"><label class="text-xs font-bold">Senha temporária</label><input :value="temporaryPassword" readonly class="mt-1 w-full rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg px-3 py-2 text-sm text-light-text dark:text-offwhite"></div>
         <div><label class="text-xs font-bold">Link</label><input :value="accessLink" readonly class="mt-1 w-full rounded-md border border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg px-3 py-2 text-sm text-light-text dark:text-offwhite" @focus="($event.target as HTMLInputElement).select()"></div>
         <div class="flex justify-end gap-3">
           <BaseButton variant="outline" @click="closeAccessLink">Fechar</BaseButton>
+          <a v-if="!temporaryPassword" :href="accessLink" target="_blank" rel="noopener noreferrer" class="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white">Definir nova senha</a>
           <BaseButton variant="primary" @click="copyAccessLink">{{ linkCopied ? 'Acesso copiado!' : 'Copiar acesso' }}</BaseButton>
         </div>
       </div>
@@ -361,7 +362,7 @@ const toggleActive = async (teacher: TeacherView) => {
 
 const inviteTeacher = async (teacher: TeacherView) => {
   if (!teacher.email || isInvitingId.value) return
-  const action = teacher.userId ? 'Validar o vínculo e gerar um novo acesso' : 'Criar a conta e gerar o acesso'
+  const action = teacher.userId ? 'Gerar um link de redefinição de senha, sem enviar e-mail, para a conta' : 'Criar a conta e gerar o acesso'
   if (!confirm(`${action} de ${teacher.email}?`)) return
 
   isInvitingId.value = teacher.id
