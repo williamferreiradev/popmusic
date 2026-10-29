@@ -275,12 +275,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { authSubjectId } from '~/utils/authRules'
+import { calendarDateKey } from '~/utils/teacherCalendar'
 import { CheckSquare, Users, AlertTriangle, Calendar as CalendarIcon } from '@lucide/vue'
 import JustifyAbsenceModal from '~/components/modals/JustifyAbsenceModal.vue'
 
 const supabase = useSupabaseClient()
+const route = useRoute()
 const user = useSupabaseUser()
 const actorId = computed(() => authSubjectId(user.value))
 
@@ -288,7 +290,7 @@ type AppState = 'initial' | 'loading' | 'loaded' | 'empty_class' | 'error'
 
 const currentState = ref<AppState>('initial')
 const selectedClass = ref('')
-const selectedDate = ref(new Date().toISOString().slice(0, 10))
+const selectedDate = ref(calendarDateKey(new Date()))
 const activeDayPill = ref<string | number>('todos')
 
 // 1. Carregar turmas reais do Supabase
@@ -374,7 +376,7 @@ const handleDateChange = () => {
   }
 }
 
-const todayDate = new Date().toISOString().slice(0, 10)
+const todayDate = calendarDateKey(new Date())
 
 const isRetroactiveDate = computed(() => {
   if (!selectedDate.value) return false
@@ -645,4 +647,17 @@ const handleJustifyConfirm = async (data: { reason: string, observation?: string
     alert('Não foi possível salvar a justificativa. Verifique sua conexão e tente novamente.')
   }
 }
+// A agenda pode abrir uma ocorrência específica, sempre limitada às turmas
+// retornadas pelas políticas do professor autenticado.
+watch(() => [route.query.turma, route.query.data], async () => {
+  const turma = route.query.turma
+  const date = route.query.data
+  if (typeof turma !== 'string' || !(rawTurmas.value || []).some(item => item.id === turma)) return
+  if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    const parsed = new Date(`${date}T12:00:00`)
+    if (!Number.isNaN(parsed.getTime()) && calendarDateKey(parsed) === date) selectedDate.value = date
+  }
+  selectedClass.value = turma
+  await executeSearch()
+}, { immediate: true })
 </script>

@@ -49,7 +49,7 @@
         <article class="overflow-hidden rounded-xl border border-light-border dark:border-dark-border bg-light-surface dark:bg-dark-surface">
           <div class="flex items-center justify-between border-b border-light-border dark:border-dark-border p-4 sm:p-5">
             <div><h2 class="font-bold">Agenda da semana</h2><p class="text-xs text-light-text/60 dark:text-offwhite/60">Todas as suas turmas ativas</p></div>
-            <NuxtLink to="/professor/chamada" class="text-xs font-bold text-primary hover:underline">Fazer chamada</NuxtLink>
+            <NuxtLink to="/professor/agenda" class="text-xs font-bold text-primary hover:underline">Ver calendário</NuxtLink>
           </div>
           <div v-if="!weekAgenda.length" class="p-8 text-center text-sm text-light-text/50 dark:text-offwhite/50">Nenhuma turma cadastrada.</div>
           <div v-else class="divide-y divide-light-border dark:divide-dark-border">

@@ -12,6 +12,8 @@
         v-for="item in menuItems"
         :key="item.path"
         :to="item.path"
+        :title="item.label"
+        :aria-label="item.label"
         class="flex items-center justify-center md:justify-start md:gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors"
         :class="[
           route.path === item.path
@@ -70,6 +72,7 @@ import {
   LayoutDashboard,
   Users,
   CheckSquare,
+  CalendarDays,
   Wallet,
   Sun,
   Moon,
@@ -98,6 +101,7 @@ const handleLogout = async () => {
 
 const menuItems = [
   { label: 'Dashboard', path: '/professor', icon: LayoutDashboard },
+  { label: 'Minha Agenda', path: '/professor/agenda', icon: CalendarDays },
   { label: 'Meus Alunos', path: '/professor/alunos', icon: Users },
   { label: 'Chamada', path: '/professor/chamada', icon: CheckSquare },
   { label: 'Meu Repasse', path: '/professor/repasse', icon: Wallet },
