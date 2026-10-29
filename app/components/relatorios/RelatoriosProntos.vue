@@ -33,41 +33,7 @@
         </div>
 
         <div class="mt-auto pt-2 flex flex-col gap-3">
-          <!-- Expansão para Seletores Específicos -->
-          <template v-if="expandedCard === report.id && report.requiresInput">
-            <div class="animate-in fade-in slide-in-from-top-2 duration-200">
-              <BaseSelect 
-                v-if="report.inputType === 'modalidade'"
-                v-model="reportInputValue"
-                placeholder="Escolha a modalidade"
-                :options="[ {label: 'Violão', value: 'violao'}, {label: 'Teclado', value: 'teclado'}, {label: 'Canto', value: 'canto'} ]"
-              />
-              <BaseSelect 
-                v-if="report.inputType === 'mes'"
-                v-model="reportInputValue"
-                placeholder="Selecione o mês"
-                :options="[ {label: 'Julho', value: '07'}, {label: 'Agosto', value: '08'} ]"
-              />
-            </div>
-            <div class="flex items-center gap-2">
-              <BaseButton variant="primary" class="flex-1" :disabled="!reportInputValue" @click="generateReport(report)">
-                Gerar
-              </BaseButton>
-              <BaseButton variant="outline" @click="expandedCard = null">
-                Cancelar
-              </BaseButton>
-            </div>
-          </template>
-          
-          <template v-else>
-            <BaseButton 
-              variant="outline" 
-              class="w-full border-light-border dark:border-dark-border hover:border-primary dark:hover:border-primary-hover hover:text-primary dark:hover:text-primary-hover transition-colors"
-              @click="handleReportClick(report)"
-            >
-              {{ report.requiresInput ? 'Configurar e Gerar' : 'Gerar Relatório' }}
-            </BaseButton>
-          </template>
+          <BaseButton variant="outline" class="w-full" @click="handleReportClick(report)">Gerar Relatório</BaseButton>
         </div>
       </div>
     </div>
@@ -119,8 +85,6 @@ interface ReportConfig {
   title: string
   description: string
   icon: any
-  requiresInput?: boolean
-  inputType?: 'modalidade' | 'mes'
   columns: TableColumn[]
   hasActions?: boolean
   actionType?: string
@@ -199,8 +163,6 @@ const reports: ReportConfig[] = [
 ]
 
 const searchQuery = ref('')
-const expandedCard = ref<string | null>(null)
-const reportInputValue = ref('')
 
 const activeReport = ref<ReportConfig | null>(null)
 const generatedTitle = ref('')
@@ -215,20 +177,7 @@ const filteredReports = computed(() => {
   return reports.filter(r => r.title.toLowerCase().includes(query) || r.description.toLowerCase().includes(query))
 })
 
-const handleReportClick = (report: ReportConfig) => {
-  if (report.requiresInput) {
-    expandedCard.value = expandedCard.value === report.id ? null : report.id
-    if (report.inputType === 'mes') {
-      const month = new Date().getMonth() + 1
-      reportInputValue.value = month.toString().padStart(2, '0')
-    } else {
-      reportInputValue.value = ''
-    }
-  } else {
-    expandedCard.value = null
-    generateReport(report)
-  }
-}
+const handleReportClick = (report: ReportConfig) => { void generateReport(report) }
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
@@ -236,16 +185,10 @@ const formatCurrency = (value: number) => {
 
 const generateReport = async (report: ReportConfig) => {
   activeReport.value = report
-  expandedCard.value = null
   isLoading.value = true
   reportError.value = ''
   
-  if (report.requiresInput) {
-    const inputLabel = report.inputType === 'modalidade' ? 'Modalidade' : 'Mês'
-    generatedTitle.value = `${report.title} — ${inputLabel}`
-  } else {
-    generatedTitle.value = report.title
-  }
+  generatedTitle.value = report.title
 
   nextTick(() => {
     if (resultPanelRef.value) {
@@ -289,7 +232,7 @@ const generateReport = async (report: ReportConfig) => {
           id, valor, vencimento, status,
           alunos (nome, telefone)
         `)
-        .eq('status', 'atrasada')
+        .or(`status.eq.atrasada,and(status.eq.pendente,vencimento.lt.${new Date().toISOString().slice(0, 10)})`)
       if (error) throw error
 
       activeReportData.value = (cobrancas || []).map((c: any) => {

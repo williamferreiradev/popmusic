@@ -157,9 +157,9 @@
     <ConfirmDeleteModal
       :is-open="isPermanentDeleteOpen"
       title="Excluir aluno definitivamente"
-      :message="`Excluir ${selectedStudent?.name || 'este aluno'} e todos os dados vinculados?`"
-      warning-text="Contratos, parcelas, recibos, presenças, agenda e acesso serão apagados. Esta ação não pode ser desfeita."
-      confirm-text="Excluir tudo"
+      :message="`Excluir o cadastro operacional de ${selectedStudent?.name || 'este aluno'}?`"
+      warning-text="Cadastros com pagamentos, recibos, repasses ou contratos assinados não podem ser excluídos. Use o cancelamento nesses casos. O acesso será desativado e a auditoria preservada. A exclusão não pode ser desfeita."
+      confirm-text="Excluir cadastro"
       :is-loading="isPurging"
       @close="closePermanentDelete"
       @confirm="purgeStudent"
@@ -381,7 +381,7 @@ const purgeStudent = async () => {
     const { data: sessionData } = await supabase.auth.getSession()
     const accessToken = sessionData.session?.access_token
     if (!accessToken) throw new Error('Sua sessão expirou. Entre novamente.')
-    await $fetch('/api/admin/delete-student', {
+    const result = await $fetch<{ cleanupPending: boolean }>('/api/admin/delete-student', {
       method: 'POST',
       headers: { Authorization: `Bearer ${accessToken}` },
       body: { alunoId: selectedStudent.value.id }
@@ -389,8 +389,9 @@ const purgeStudent = async () => {
     isPermanentDeleteOpen.value = false
     selectedStudent.value = null
     emit('refresh')
+    if (result.cleanupPending) purgeError.value = 'Cadastro excluído e perfil desativado. A limpeza de acesso ou fotos ficou pendente; a gestão pode repetir a solicitação pelo identificador do aluno.'
   } catch (error: any) {
-    purgeError.value = `Não foi possível excluir o aluno. ${error.message || 'Tente novamente.'}`
+    purgeError.value = `Não foi possível excluir o aluno. ${error.data?.statusMessage || error.data?.message || error.message || 'Tente novamente.'}`
   } finally {
     isPurging.value = false
   }

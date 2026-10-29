@@ -16,6 +16,7 @@
       </button>
     </div>
 
+    <StudentDeletionQueue :key="cleanupVersion" />
     <!-- Barra de Filtros e Busca -->
     <div class="bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border p-4 rounded-lg shadow-sm flex flex-col sm:flex-row gap-4 transition-colors duration-300">
       
@@ -62,7 +63,7 @@
         :items-per-page="itemsPerPage"
         :total-count="studentsResult?.count || 0"
         @page-change="currentPage = $event"
-        @refresh="refresh"
+        @refresh="refreshAfterChange"
       />
     </div>
 
@@ -83,8 +84,11 @@ import BaseInput from '~/components/BaseInput.vue'
 import BaseSelect from '~/components/BaseSelect.vue'
 import StudentsTable from '~/components/students/StudentsTable.vue'
 import StudentCreateModal from '~/components/modals/StudentCreateModal.vue'
+import StudentDeletionQueue from '~/components/students/StudentDeletionQueue.vue'
 
 const supabase = useSupabaseClient()
+const cleanupVersion = ref(0)
+const refreshAfterChange = () => { cleanupVersion.value++; return refresh() }
 
 // Controle de Modais
 const isCreateModalOpen = ref(false)

@@ -7,7 +7,7 @@
     "typecheck": "nuxt typecheck",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "node --test tests/accessControl.test.ts tests/accessProvisioning.test.ts tests/authRules.test.ts tests/businessRules.test.ts tests/databaseContracts.test.ts tests/rlsContracts.test.ts tests/teacherRepasse.test.ts",
+    "test": "node --test tests/accessControl.test.ts tests/accessProvisioning.test.ts tests/authRules.test.ts tests/businessRules.test.ts tests/databaseContracts.test.ts tests/rlsContracts.test.ts tests/teacherRepasse.test.ts tests/reportAndDeletion.test.ts tests/databaseRecovery.test.mjs tests/recoveryDrill.test.mjs",
     "diagnose:supabase": "node --env-file=.env scripts/diagnostico-supabase.mjs",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
@@ -24,6 +24,7 @@
     "vue-router": "^5.1.0"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.13",
     "@nuxt/eslint": "^1.17.0",
     "eslint": "^10.9.1",
     "typescript": "^6.0.3",

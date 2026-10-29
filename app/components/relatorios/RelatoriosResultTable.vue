@@ -62,6 +62,7 @@
 import { Download, X, Settings, Filter } from '@lucide/vue'
 import BaseButton from '../BaseButton.vue'
 import BaseBadge from '../BaseBadge.vue'
+import { escapeCsvCell } from '~/utils/csv'
 
 export interface TableColumn {
   key: string
@@ -113,7 +114,7 @@ const getBadgeVariant = (value: string) => {
 const exportCSV = () => {
   if (props.data.length === 0) return
 
-  const escapeCell = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`
+  const escapeCell = escapeCsvCell
   const headers = props.columns.map(c => escapeCell(c.label)).join(';')
   
   const rows = props.data.map(row => {

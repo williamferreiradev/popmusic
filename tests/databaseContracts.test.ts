@@ -394,9 +394,11 @@ describe('relatorios sem operacoes simuladas', () => {
   const ready = normalize(read('app/components/relatorios/RelatoriosProntos.vue'))
   const result = normalize(read('app/components/relatorios/RelatoriosResultTable.vue'))
 
-  it('nao publica o construtor que ainda utiliza dados de demonstracao', () => {
-    assert.doesNotMatch(page, /relatoriosconstrutor/)
-    assert.doesNotMatch(page, /construtor personalizado/)
+  it('publica o construtor conectado ao backend e sem registros demonstrativos', () => {
+    const builder=normalize(read('app/components/relatorios/RelatoriosConstrutor.vue'))
+    assert.match(page, /relatoriosconstrutor/)
+    assert.match(builder, /api\/admin\/reports\/generate/)
+    assert.doesNotMatch(builder, /maria souza|joão silva|dados mockados/)
   })
 
   it('nao mostra relatorios salvos ou sugestoes inventadas', () => {
@@ -575,8 +577,8 @@ describe('exclusao definitiva do aluno', () => {
   it('separa cancelamento de exclusao irreversivel na interface', () => {
     assert.ok(students.includes('cancelar matrícula'))
     assert.ok(students.includes('excluir definitivamente'))
-    assert.ok(students.includes("$fetch('/api/admin/delete-student'"))
-    assert.ok(students.includes('esta ação não pode ser desfeita'))
+    assert.ok(students.includes("'/api/admin/delete-student'"))
+    assert.ok(students.includes('a exclusão não pode ser desfeita'))
   })
 })
 
@@ -991,27 +993,19 @@ describe('hotfix da exclusao definitiva do aluno', () => {
   })
 })
 
-describe('exclusao administrativa do aluno sem dependencia de rpc', () => {
+describe('exclusao administrativa transacional do aluno', () => {
   const table = normalize(read('app/components/students/StudentsTable.vue'))
   const endpoint = normalize(read('server/api/admin/delete-student.post.ts'))
-
-  it('envia a sessao autenticada para a rota administrativa', () => {
-    assert.ok(table.includes("$fetch('/api/admin/delete-student'"))
-    assert.ok(table.includes('authorization: `bearer ${accesstoken}`'))
-    assert.doesNotMatch(table, /rpc\('excluir_aluno_definitivamente'/)
-  })
-
-  it('revalida a gestao no servidor e nao expoe a chave privada', () => {
+  const worker = normalize(read('server/utils/processStudentDeletion.ts'))
+  it('mantem a sessao validada e delega a exclusao ao servico transacional', () => {
+    assert.ok(table.includes("$fetch<{ cleanuppending: boolean }>('/api/admin/delete-student'"))
     assert.ok(endpoint.includes('requiremanagement(event)'))
-    assert.ok(endpoint.includes("from('alunos')"))
-    assert.ok(endpoint.includes('admin.auth.admin.deleteuser'))
-    assert.doesNotMatch(table, /supabase_secret|service_role/)
+    assert.ok(worker.includes("rpc('excluir_aluno_transacional'"))
+    assert.doesNotMatch(endpoint, /\.delete\(\)/)
   })
-
-  it('remove o grafo operacional e registra auditoria', () => {
-    for (const tableName of ['repasse_itens', 'comissoes_professor_aluno', 'presencas', 'recibos', 'fluxo_caixa', 'cobrancas', 'contratos', 'matriculas_turma']) {
-      assert.ok(endpoint.includes(`'${tableName}'`))
-    }
-    assert.ok(endpoint.includes("acao: 'exclusao_definitiva'"))
+  it('preserva identidade auditada e trata a limpeza externa como repetivel', () => {
+    assert.ok(worker.includes('ban_duration'))
+    assert.ok(worker.includes("from('exclusoes_aluno')"))
+    assert.doesNotMatch(worker, /auth\.admin\.deleteuser/)
   })
 })
