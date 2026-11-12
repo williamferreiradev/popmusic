@@ -172,26 +172,33 @@ export default defineEventHandler(async (event) => {
     let emailSent = false
     if (aluno.email) {
       try {
-        const host = getRequestHost(event)
-        const protocol = host.includes('localhost') ? 'http' : 'https'
-        const contractUrl = `${protocol}://${host}/assinar/${token}`
-        const isMenor = !!(aluno.responsavel_nome || aluno.nome_responsavel)
+        const internalSecret = process.env.INTERNAL_EMAIL_SECRET
+        if (!internalSecret) {
+          // Falha explícita em vez de enviar segredo vazio: sem a variável o
+          // endpoint de confirmação rejeitaria toda chamada em silêncio.
+          safeServerWarning('assinatura:email-config', new Error('INTERNAL_EMAIL_SECRET não configurado no servidor'))
+        } else {
+          const host = getRequestHost(event)
+          const protocol = host.includes('localhost') ? 'http' : 'https'
+          const contractUrl = `${protocol}://${host}/assinar/${token}`
+          const isMenor = !!(aluno.responsavel_nome || aluno.nome_responsavel)
 
-        const emailResult: any = await $fetch('/api/send-signed-confirmation-email', {
-          method: 'POST',
-          headers: { 'x-internal-email-secret': process.env.INTERNAL_EMAIL_SECRET || '' },
-          body: {
-            contractId: contract.id,
-            studentName: aluno.nome,
-            studentEmail: aluno.email,
-            guardianName: isMenor ? (aluno.responsavel_nome || aluno.nome_responsavel) : undefined,
-            contractUrl,
-            monthlyFee: valor,
-            dueDate: diaVenc,
-            pixKey: ''
-          }
-        })
-        emailSent = emailResult?.success === true
+          const emailResult: any = await $fetch('/api/send-signed-confirmation-email', {
+            method: 'POST',
+            headers: { 'x-internal-email-secret': internalSecret },
+            body: {
+              contractId: contract.id,
+              studentName: aluno.nome,
+              studentEmail: aluno.email,
+              guardianName: isMenor ? (aluno.responsavel_nome || aluno.nome_responsavel) : undefined,
+              contractUrl,
+              monthlyFee: valor,
+              dueDate: diaVenc,
+              pixKey: ''
+            }
+          })
+          emailSent = emailResult?.success === true
+        }
       } catch (emailErr) {
         safeServerWarning('assinatura:email', emailErr)
       }

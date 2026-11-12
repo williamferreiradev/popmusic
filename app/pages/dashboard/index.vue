@@ -19,44 +19,40 @@
 
     <!-- Grade de 4 cards de métrica -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <DashboardMetricCard 
-        title="Alunos ativos" 
-        :value="alunosAtivosCount?.toString() || '0'" 
+      <DashboardMetricCard
+        title="Alunos ativos"
+        :value="alunosAtivosCount?.toString() || '0'"
         to="/dashboard/alunos"
         variant="neutral"
-        :chart-data="[120, 125, 130, 138, 136, 140, 142]"
       >
         <template #icon><Users class="w-4 h-4 text-light-text/50 dark:text-offwhite/50" /></template>
       </DashboardMetricCard>
 
-      <DashboardMetricCard 
-        title="Turmas hoje" 
-        :value="turmasHojeCount?.toString() || '0'" 
+      <DashboardMetricCard
+        title="Turmas hoje"
+        :value="turmasHojeCount?.toString() || '0'"
         to="/dashboard/agenda"
         variant="neutral"
-        :chart-data="[8, 10, 12, 12, 10, 11, 12]"
       >
         <template #icon><CalendarDays class="w-4 h-4 text-light-text/50 dark:text-offwhite/50" /></template>
       </DashboardMetricCard>
 
-      <DashboardMetricCard 
-        title="Inadimplência" 
-        :value="inadimplenciaCount?.toString() || '0'" 
+      <DashboardMetricCard
+        title="Inadimplência"
+        :value="inadimplenciaCount?.toString() || '0'"
         description="cobranças em atraso"
         to="/dashboard/financeiro"
         variant="alert-red"
-        :chart-data="[2, 3, 5, 4, 7, 6, 8]"
       >
         <template #icon><AlertCircle class="w-4 h-4 text-[#ff8a8a]" /></template>
       </DashboardMetricCard>
 
-      <DashboardMetricCard 
-        title="Risco de evasão" 
-        value="0" 
-        description="alunos sinalizados"
-        to="/dashboard/frequencia"
+      <DashboardMetricCard
+        title="Alunos trancados"
+        :value="trancadosCount?.toString() || '0'"
+        description="matrículas pausadas"
+        to="/dashboard/alunos"
         variant="alert-gold"
-        :chart-data="[0, 0, 0, 0, 0, 0, 0]"
       >
         <template #icon><AlertTriangle class="w-4 h-4 text-gold" /></template>
       </DashboardMetricCard>
@@ -110,7 +106,15 @@ const { data: inadimplenciaCount, refresh: refreshInadimplencia } = await useAsy
   return count || 0
 })
 
+const { data: trancadosCount, refresh: refreshTrancados } = await useAsyncData('trancadosCount', async () => {
+  const { count } = await supabase
+    .from('alunos')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'trancado')
+  return count || 0
+})
+
 const handleStudentCreated = async () => {
-  await Promise.all([refreshAlunos(), refreshTurmas(), refreshInadimplencia()])
+  await Promise.all([refreshAlunos(), refreshTurmas(), refreshInadimplencia(), refreshTrancados()])
 }
 </script>

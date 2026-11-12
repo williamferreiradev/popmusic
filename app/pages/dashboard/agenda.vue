@@ -167,7 +167,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from '@lucide/vue'
 import AgendaDetailModal from '~/components/modals/AgendaDetailModal.vue'
 
@@ -220,11 +220,31 @@ const { data: rawTurmas, error: turmasError } = await useAsyncData('agenda_turma
   return data || []
 })
 
+// Fotos privadas: converte caminhos do bucket em URLs assinadas uma vez por carga.
+const signedPhotos = ref<Record<string, string>>({})
+watch(rawTurmas, (turmas) => {
+  const pendentes: Array<{ alunoId: string, path: string }> = []
+  for (const t of turmas || []) {
+    for (const m of t.matriculas_turma || []) {
+      if (m.data_fim || !m.alunos?.contratos?.length) continue
+      const alunoId = m.alunos?.id || m.id
+      const contracts = [...m.alunos.contratos].sort((a: any, b: any) => String(b.criado_em).localeCompare(String(a.criado_em)))
+      const photoPath = contracts.find((c: any) => c.foto_assinatura_url)?.foto_assinatura_url
+      if (photoPath && !signedPhotos.value[alunoId]) pendentes.push({ alunoId, path: photoPath })
+    }
+  }
+  for (const { alunoId, path } of pendentes) {
+    supabase.storage.from('fotos_alunos').createSignedUrl(path, 300).then(({ data }) => {
+      if (data?.signedUrl) signedPhotos.value[alunoId] = data.signedUrl
+    }).catch(() => { /* foto ausente ou caminho inválido: mantém avatar vazio */ })
+  }
+}, { immediate: true })
+
 const appointments = computed(() => {
   return (rawTurmas.value || []).map((t: any) => {
     const startH = t.horario_inicio ? t.horario_inicio.substring(0, 5) : '10:00'
     const endH = t.horario_fim ? t.horario_fim.substring(0, 5) : '11:00'
-    
+
     // Duração em horas
     const [h1, m1] = startH.split(':').map(Number)
     const [h2, m2] = endH.split(':').map(Number)
@@ -240,10 +260,14 @@ const appointments = computed(() => {
       const pendingPayments = (m.alunos?.cobrancas || []).filter((c: any) =>
         c.status === 'atrasada' || (c.status === 'pendente' && c.vencimento < today)
       ).length
+      // O bucket é privado: o caminho do Storage não serve em <img>. A URL
+      // assinada é resolvida sob demanda (signedPhotos) e aplicada por reatividade.
+      const photoPath = contracts.find((c: any) => c.foto_assinatura_url)?.foto_assinatura_url || ''
       return {
         id: m.alunos?.id || m.id,
         name: m.alunos?.nome || 'Aluno',
-        photo: contracts.find((c: any) => c.foto_assinatura_url)?.foto_assinatura_url || '',
+        photoPath,
+        photo: signedPhotos.value[m.alunos?.id || m.id] || '',
         financialStatus: pendingPayments > 0 ? 'pendente' : 'em_dia',
         pendingPayments,
         status: 'agendado'

@@ -70,18 +70,20 @@ const chartColor = computed(() => {
 })
 
 const chartPath = computed(() => {
-  const data = props.chartData.length > 0 ? props.chartData : [10, 15, 8, 20, 12, 25, 22]
+  // Sem série real fornecida, o card renderiza uma linha neutra em vez de
+  // sugerir um histórico que não existe.
+  const data = props.chartData.length > 1 ? props.chartData : [12, 12]
   const max = Math.max(...data)
   const min = Math.min(...data)
   const range = max - min || 1
-  
+
   const points = data.map((val, i) => {
     const x = (i / (data.length - 1)) * 100
     // Inverte o eixo Y para o SVG (0 é o topo)
     const y = 30 - (((val - min) / range) * 20 + 5)
     return `${x},${y}`
   })
-  
+
   return `M ${points.join(' L ')}`
 })
 </script>
