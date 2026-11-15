@@ -1,3 +1,8 @@
+-- ATENCAO: SCRIPT LEGADO. NAO EXECUTE NO BANCO ATUAL.
+-- A versao canonica e segura esta na migration
+-- supabase/migrations/202609160045_acesso_usuarios_transacional.sql.
+-- Executar este arquivo sobrescreve o trigger novo e volta a criar todo usuario
+-- como aluno, alem de remover as protecoes de search_path e idempotencia.
 -- ============================================================================
 -- TRIGGER: CRIAÇÃO AUTOMÁTICA DE USUÁRIO
 -- Executar no SQL Editor do Supabase

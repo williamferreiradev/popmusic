@@ -1,113 +1,144 @@
-# Arquitetura de Segurança do Banco de Dados — Pop Music
+# Arquitetura de segurança — Pop Music
 
-**Versão:** 1.0
-**Arquivos relacionados:** `01_schema.sql` · `02_rls_policies.sql` · `03_views_seguranca.sql`
-**Ordem de execução no Supabase:** rodar os 3 arquivos nessa ordem, no SQL Editor do Supabase ou via `supabase db push`.
+**Estado documentado:** setembro de 2026
+**Aplicação:** Nuxt 4 + Supabase + Vercel
 
----
+## 1. Princípio de segurança
 
-## 1. Princípio geral
+O Pop Music trata dados pessoais, contratos, frequência e informações financeiras. A ocultação de telas e botões melhora a experiência, mas não é uma barreira de segurança. A autorização é aplicada em camadas:
 
-Este sistema mexe com CPF, dado de saúde (tipo sanguíneo), endereço, e dinheiro (mensalidade, repasse de professor). A decisão de arquitetura mais importante foi: **a segurança não pode depender só da tela**. Se a segurança estivesse só no código do frontend (ex: "essa tela só mostra esse botão pra secretaria"), qualquer pessoa com conhecimento técnico poderia chamar a API do Supabase diretamente e ver dado de outro aluno. Por isso, toda regra de quem-vê-o-quê está no **próprio banco de dados**, via Row Level Security (RLS) do Postgres — o mecanismo nativo do Supabase pra isso.
+1. Supabase Auth identifica o usuário.
+2. A tabela `public.usuarios` guarda o papel e o estado ativo do perfil.
+3. Row Level Security limita quais linhas cada papel pode acessar.
+4. Views seguras reduzem as colunas expostas aos dashboards de professor e aluno.
+5. Funções transacionais concentram operações com várias escritas relacionadas.
+6. Rotas administrativas do Nuxt validam a sessão da gestão antes de usar a chave secreta no servidor.
 
-Duas camadas trabalham juntas:
+As migrations que implementam essas regras estão em `supabase/migrations`. Não existem mais arquivos isolados `01_schema.sql`, `02_rls_policies.sql` ou `03_views_seguranca.sql` como fonte válida de instalação.
 
-1. **RLS (linha):** decide quais *registros* uma pessoa pode ver. Ex: "professor só vê presenças das turmas dele".
-2. **Views (coluna):** decide quais *campos* daquele registro aparecem. Ex: "professor vê o nome do aluno, mas nunca vê o CPF dele".
+## 2. Papéis de usuário
 
----
+| Papel | Escopo esperado |
+|---|---|
+| `gestao` | Administração operacional, cadastros, contratos, financeiro, relatórios e criação/reparo de acessos |
+| `professor` | Próprias turmas, agenda, alunos vinculados, frequência e próprio repasse |
+| `aluno` | Próprias aulas, frequência, cobranças e contrato |
 
-## 2. Os 4 papéis (`papel_usuario`)
+O papel persistido usa o valor sem acento `gestao`. Comparações com `gestão` estão incorretas.
 
-| Papel | Quem é | Acesso |
+O vínculo de identidade segue esta cadeia:
+
+```text
+auth.users.id -> public.usuarios.id -> professores.usuario_id ou alunos.usuario_id
+```
+
+A migration `202609160045_acesso_usuarios_transacional.sql` é obrigatória para o fluxo atual. Ela protege o trigger, mantém perfis administrativos inativos até a validação, serializa reparos e grava perfil mais vínculo do professor na mesma transação PostgreSQL. A identidade no Auth é criada por uma API separada; por isso o serviço confirma o estado após timeouts e reutiliza com segurança uma conta parcial em nova tentativa, sem apagá-la automaticamente.
+
+## 3. Chaves e variáveis de ambiente
+
+| Variável | Onde pode ser usada | Finalidade |
 |---|---|---|
-| `gestao` | Dono/diretor da escola | Total — inclusive financeiro, configurações, edição de modelo de contrato |
-| `professor` | Dá aula | Só enxerga as próprias turmas, os alunos delas (sem dado financeiro/CPF), o próprio repasse |
-| `aluno` | Aluno ou responsável | Só enxerga o próprio registro: seu contrato, sua cobrança, sua frequência |
+| `NUXT_PUBLIC_SUPABASE_URL` | Navegador e servidor | URL do projeto Supabase |
+| `NUXT_PUBLIC_SUPABASE_KEY` | Navegador e servidor | Chave publicável; o acesso continua limitado por RLS |
+| `NUXT_SUPABASE_SECRET_KEY` | Somente servidor | Operações administrativas, como provisionar usuários |
+| `NUXT_PUBLIC_APP_URL` | Navegador e servidor | URL canônica da aplicação e redirecionamentos |
 
-A tabela `usuarios` (que estende `auth.users` do Supabase) é a fonte da verdade de qual papel cada pessoa logada tem. Toda função de política (`meu_papel()`, `meu_professor_id()`, `meu_aluno_id()`) consulta essa tabela.
+Regras obrigatórias:
 
----
+- Nunca prefixar a chave secreta com `NUXT_PUBLIC_`.
+- Nunca gravar uma chave real em código, documentação, commit ou log.
+- Nunca criar um cliente administrativo no frontend.
+- Rotas que usam `NUXT_SUPABASE_SECRET_KEY` devem validar primeiro a sessão e o papel `gestao` do solicitante.
+- A chave publicável não substitui RLS; todas as tabelas expostas pela API precisam de políticas adequadas.
 
-## 3. Os 3 dashboards e de onde cada um lê dado
+## 4. Migrations e estado do banco
 
-### 3.1 Dashboard Gestão/Secretaria (já em construção)
+As migrations são versionadas em `supabase/migrations` e aplicadas em ordem lexicográfica. A mais recente e obrigatória neste estado do projeto é:
 
-Consulta as **tabelas diretamente** (`alunos`, `contratos`, `cobrancas`, etc.) — porque RLS já libera acesso total pra esses dois papéis, e eles precisam ver todos os campos, inclusive CPF e financeiro, pra fazer o trabalho operacional.
+```text
+202609160045_acesso_usuarios_transacional.sql
+```
 
-### 3.2 Dashboard do Professor (a construir)
+A Vercel publica o código Nuxt, mas **não aplica migrations no Supabase**. O operador deve aplicar as migrations pendentes antes do deploy correspondente e confirmar o resultado no banco.
 
-Consulta **as views `vw_professor_*`**, nunca as tabelas base:
-- `vw_professor_agenda` — a agenda dele, com ocupação de cada turma.
-- `vw_professor_alunos` — lista de alunos das turmas dele, sem CPF/endereço/financeiro.
-- `vw_professor_meu_repasse` — quanto ele tem a receber, sem ver repasse de outro professor.
-- Tela de Chamada Rápida (já especificada em documento anterior) grava direto em `presencas`, protegida por RLS (só grava se a turma for dele).
+Os arquivos abaixo são históricos e não devem ser executados:
 
-**Estrutura sugerida do Dashboard do Professor:**
-- Tela inicial: agenda do dia (`vw_professor_agenda` filtrada por hoje).
-- Aba "Meus alunos": lista simples com nome/contato/frequência (`vw_professor_alunos`).
-- Aba "Meu repasse": resumo do mês corrente e histórico (`vw_professor_meu_repasse`).
-- Chamada Rápida: mesma tela já especificada no documento de Frequência, reaproveitada aqui.
+- `03_seed.sql`: seed antigo, incompatível com identificadores e colunas do schema atual.
+- `04_user_trigger.sql`: versão antiga do trigger de usuário, substituída pelas migrations de segurança e provisionamento.
 
-### 3.3 Dashboard do Aluno (a construir)
+Também não se deve seguir documentação antiga que manda executar `01_schema.sql`, `02_rls_policies.sql` e `03_views_seguranca.sql`: esses arquivos não existem no fluxo atual.
 
-Consulta as views `vw_aluno_*`:
-- `vw_aluno_meu_perfil` — próprios dados de contato.
-- `vw_aluno_minhas_turmas` — turmas em que está matriculado.
-- `vw_aluno_minha_frequencia` — histórico de presença, pro aluno acompanhar o próprio desempenho.
-- `vw_aluno_minhas_cobrancas` — mensalidades, pra ele conferir o que está pago/pendente.
-- `vw_aluno_meu_contrato` — status do contrato e link pra baixar o PDF.
+### Limitação conhecida: banco vazio
 
-**Estrutura sugerida do Dashboard do Aluno:**
-- Tela inicial: próxima aula + status da mensalidade (pago/pendente) em destaque.
-- Aba "Minhas aulas": turmas e horários.
-- Aba "Minha frequência": gráfico simples de presença (reaproveita o mesmo padrão visual já usado no Dossiê, seção 4.2 da Especificação de Telas).
-- Aba "Financeiro": lista de cobranças, com botão de pagar (se pendente) e baixar recibo (se pago).
-- Aba "Contrato": status e download.
+O repositório ainda não contém uma migration-base completa que construa o schema inteiro em um projeto Supabase vazio. As migrations disponíveis são incrementais e pressupõem o banco histórico já existente. Até uma baseline ser criada e testada, a instalação segura é suportada apenas sobre o projeto existente ou sobre um backup validado dele.
 
----
+Essa dívida impede afirmar que `supabase db push` sozinho provisiona um ambiente novo do zero.
 
-## 4. Os dois fluxos que NÃO usam login (atenção especial de segurança)
+## 5. RLS, views e dashboards
 
-Dois pontos do sistema já especificados em documentos anteriores são acessados **sem autenticação**: a tela de assinatura de contrato e o check-in por QR Code. Esses dois não podem simplesmente usar a `anon key` do Supabase com acesso direto às tabelas — isso abriria brecha pra alguém adivinhar um token e ver contrato de outra pessoa. A solução é usar **Supabase Edge Functions com `service_role`**, que rodam no servidor e validam a regra de negócio antes de tocar no banco.
+### Gestão
 
-### 4.1 Assinatura de contrato (link por WhatsApp/e-mail)
+O dashboard administrativo acessa os recursos operacionais permitidos ao papel `gestao`. Ações privilegiadas, como criar acesso de professor, passam por endpoints do servidor e validam explicitamente o usuário autenticado e seu papel ativo.
 
-- O client anônimo (o navegador do aluno) **nunca** faz `select * from contratos`.
-- Ele chama uma Edge Function (ex: `POST /contrato-por-token`), passando só o `token` que veio na URL.
-- A função, rodando com `service_role` (que ignora RLS, mas só dentro desse código controlado por vocês), busca o contrato por `token`, valida `token_expira_em > now()`, e retorna **só os campos necessários pra exibir a tela** (texto do contrato, nome do aluno, status) — nunca a tabela inteira.
-- Ao aceitar, outra Edge Function (`POST /contrato-aceitar`) recebe o token + os metadados (IP, user-agent, capturados no próprio servidor da function, não confiando no que o client manda) e grava o aceite.
+### Professor
 
-### 4.2 Check-in por QR Code
+O dashboard do professor está implementado e consulta views restritas:
 
-- O QR Code na sala aponta pra uma URL com um identificador da turma+horário (não o ID direto da turma, algo como um token de sala temporário, renovado periodicamente, pra evitar que alguém fotografe o QR e reuse depois do horário).
-- O client chama uma Edge Function (`POST /checkin`), que valida a janela de tempo (15 min antes/depois, conforme já configurado em Configurações → Frequência) e grava a presença com `origem = 'qr_code'`.
-- Essa function também roda com `service_role`, e é o único caminho de escrita em `presencas` que não passa pelo usuário autenticado professor/gestão.
+- `vw_professor_agenda`: agenda e ocupação das próprias turmas.
+- `vw_professor_alunos`: alunos vinculados às próprias turmas, sem expor o conjunto completo de dados administrativos.
+- `vw_professor_meu_repasse`: valores do próprio professor.
 
-**Ponto de atenção para quem for implementar:** nunca deixar a `service_role key` exposta no frontend — ela só pode existir no ambiente de servidor da Edge Function. Isso é padrão do Supabase, mas vale reforçar porque é o tipo de erro que, se acontecer, derruba toda a arquitetura de segurança construída aqui.
+A marcação de frequência permanece condicionada ao vínculo do professor com a turma e às regras de chamada aplicadas pelo banco.
 
----
+### Aluno
 
-## 5. Trilha de auditoria
+A área do aluno está implementada sobre views restritas:
 
-A tabela `auditoria` (seção 15 do schema) guarda quem alterou o quê, em tabelas sensíveis. Ela não é gravada por policy de client — só por trigger de banco ou por Edge Function com `service_role`. Recomendo (próximo passo, não incluído neste pacote inicial) criar triggers `after insert/update/delete` nas tabelas `alunos`, `contratos` e `cobrancas` que gravam automaticamente em `auditoria`, guardando o `dados_antes`/`dados_depois` em JSON. Isso é especialmente relevante pra LGPD: se um dia precisar provar quem acessou ou alterou o dado de um aluno, a trilha já existe.
+- `vw_aluno_meu_perfil`
+- `vw_aluno_minhas_turmas`
+- `vw_aluno_minha_frequencia`
+- `vw_aluno_minhas_cobrancas`
+- `vw_aluno_meu_contrato`
 
----
+Cada view usa a identidade autenticada para limitar o resultado ao próprio aluno. Conceder `SELECT` a `authenticated` não torna os dados globais quando o filtro seguro da view e as políticas correspondentes estão corretos.
 
-## 6. Checklist de segurança antes de ir para produção
+## 6. Operações sem sessão administrativa
 
-- [ ] RLS habilitado em **todas** as tabelas que contêm dado de aluno, contrato ou financeiro.
-- [ ] Nenhuma tabela sensível com policy `using (true)` sem filtro de papel.
-- [ ] `service_role key` presente **apenas** em variáveis de ambiente do servidor.
-- [ ] Dashboard do Professor consultando **só** as views.
-- [ ] Dashboard do Aluno consultando **só** as views.
-- [ ] Tela de assinatura de contrato e check-in QR passando por Edge Function.
+Links públicos de contrato usam token e endpoints do servidor. O navegador não recebe a chave secreta e não consulta livremente as tabelas. O servidor valida token, validade, estado do contrato e campos aceitos antes de ler ou gravar.
 
----
+Qualquer novo fluxo público deve seguir o mesmo padrão:
 
-## 7. Próximos passos sugeridos
+```text
+navegador sem privilégio -> endpoint controlado -> validação -> cliente administrativo no servidor -> resposta mínima
+```
 
-1. Rodar os 3 arquivos SQL num projeto Supabase novo.
-2. Criar o seed inicial de dados (`03_seed.sql`).
-3. Implementar as duas Edge Functions descritas na seção 4.
-4. Construir o Dashboard do Professor e do Aluno.
+Tokens devem ser imprevisíveis, expirar, ter uso limitado e nunca aparecer em logs desnecessários.
+
+## 7. Auditoria e integridade
+
+As migrations atuais incluem trilha automática de auditoria e restrições de integridade para operações sensíveis. Funções transacionais são preferidas quando uma ação altera várias entidades, por exemplo:
+
+- matrícula, contrato e cobranças;
+- baixa manual e repasse;
+- criação do perfil, vínculo e reparo de acesso;
+- cancelamento e exclusão definitiva.
+
+Uma falha não deve produzir vínculos contraditórios. Como Auth e PostgreSQL não compartilham uma transação, uma identidade incompleta pode permanecer recuperável quando o estado remoto é incerto; a repetição da operação deve concluir o mesmo acesso, nunca criar outro ou excluir uma conta válida. O provisionamento deve ser testado verificando simultaneamente `auth.users`, `public.usuarios` e a coluna `usuario_id` do perfil correspondente.
+
+## 8. Checklist operacional de produção
+
+- [ ] Backup recente e restaurável do Supabase.
+- [ ] Todas as migrations pendentes aplicadas em ordem, incluindo `202609160045`.
+- [ ] RLS habilitado nas tabelas sensíveis e sem privilégios indevidos para `anon`.
+- [ ] Views de professor e aluno usando segurança e filtros esperados.
+- [ ] `NUXT_SUPABASE_SECRET_KEY` configurada somente no ambiente de servidor da Vercel.
+- [ ] URL e chave publicável apontando para o mesmo projeto Supabase.
+- [ ] `npm test`, `npm run typecheck`, `npm run lint` e `npm run build` aprovados.
+- [ ] Login e redirecionamento testados para `gestao`, `professor` e `aluno`.
+- [ ] Criação e reparo de acesso testados sem registros órfãos.
+- [ ] Teste de leitura cruzada confirma que professor e aluno não veem dados de terceiros.
+- [ ] Logs de produção não contêm senha temporária, token ou chave secreta.
+
+## 9. Próxima melhoria estrutural
+
+Criar uma migration-base única, revisada e reproduzível, que permita provisionar um projeto Supabase vazio. Depois disso, validar uma restauração completa em ambiente descartável e manter apenas seeds compatíveis, idempotentes e sem dados pessoais reais.

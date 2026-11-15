@@ -1,3 +1,7 @@
+-- ATENCAO: SEED LEGADO, INCOMPATIVEL COM O SCHEMA ATUAL BASEADO EM UUID.
+-- NAO EXECUTE ESTE ARQUIVO NO PROJETO DE PRODUCAO.
+-- Ele foi preservado apenas como historico. Os dados atuais devem ser criados
+-- pelo onboarding ou por um seed novo gerado a partir do schema real.
 -- ============================================================================
 -- 03_seed.sql
 -- Inserção de dados iniciais para testes (Modalidades, Turmas)

@@ -1,4 +1,8 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
+// LEGADO / NAO IMPLANTAR.
+// O fluxo atual sem SMTP vive em server/api/admin/invite-user.post.ts e usa a
+// migration 202609160045. Esta funcao antiga nao participa do deploy da Vercel
+// e permanece apenas como referencia historica ate ser removida do Supabase.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const allowedOrigins = (Deno.env.get('ALLOWED_ORIGINS') || '')
