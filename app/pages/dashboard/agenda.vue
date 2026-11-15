@@ -7,10 +7,19 @@
           <CalendarIcon class="w-6 h-6 text-primary" />
           Agenda
         </h1>
-        <p class="text-sm text-light-text/70 dark:text-offwhite/70">{{ appointmentsTodayCount }} agendamentos hoje</p>
+        <p class="text-sm text-light-text/70 dark:text-offwhite/70">
+          <template v-if="hojeTemAula">
+            <span class="font-semibold text-green-600 dark:text-green-400">{{ appointmentsTodayCount }} aula(s) hoje</span>
+            <span class="opacity-60"> · {{ totalAlunosHoje }} aluno(s) esperado(s)</span>
+          </template>
+          <template v-else>
+            <span class="opacity-60">Nenhuma aula hoje</span>
+            <span v-if="proximaAulaTexto" class="opacity-60"> · próxima {{ proximaAulaTexto }}</span>
+          </template>
+        </p>
       </div>
 
-      <div class="flex flex-wrap items-center gap-6">
+      <div class="flex flex-wrap items-center gap-4">
         <!-- Legenda -->
         <div class="flex items-center gap-4 text-xs font-medium text-light-text dark:text-offwhite">
           <div class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-blue-500"/> Agendado</div>
@@ -19,40 +28,36 @@
           <div class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-orange-500"/> Faltou</div>
         </div>
 
-        <div class="flex items-center gap-4">
-          <!-- Botão Hoje -->
-          <button 
-            class="px-4 py-1.5 rounded-md text-sm font-medium border border-light-border dark:border-dark-border text-primary hover:bg-light-border dark:hover:bg-dark-border transition-colors"
+        <!-- Navegação -->
+        <div class="flex items-center gap-1.5">
+          <button
+            class="px-3 py-1.5 rounded-md text-sm font-semibold border border-light-border dark:border-dark-border text-primary hover:bg-primary/10 transition-colors"
             @click="goToToday"
           >
             Hoje
           </button>
-          
-          <!-- Controles Navegação -->
-          <div class="flex items-center gap-2">
-            <button class="p-1 rounded-md text-light-text/60 dark:text-offwhite/60 hover:text-light-text dark:hover:text-offwhite hover:bg-light-border dark:hover:bg-dark-border transition-colors" @click="prev">
-              <ChevronLeft class="w-5 h-5" />
-            </button>
-            <span class="text-sm font-medium text-light-text dark:text-offwhite min-w-[120px] text-center">
-              {{ currentPeriodLabel }}
-            </span>
-            <button class="p-1 rounded-md text-light-text/60 dark:text-offwhite/60 hover:text-light-text dark:hover:text-offwhite hover:bg-light-border dark:hover:bg-dark-border transition-colors" @click="next">
-              <ChevronRight class="w-5 h-5" />
-            </button>
-          </div>
-          
-          <!-- View Toggle -->
-          <div class="flex bg-light-surface dark:bg-dark-surface rounded-md border border-light-border dark:border-dark-border p-1">
-            <button 
-              v-for="v in ['Dia', 'Semana', 'Mês']" 
-              :key="v"
-              class="px-3 py-1 text-sm font-medium rounded-md transition-colors"
-              :class="view === v ? 'bg-light-border dark:bg-dark-border text-light-text dark:text-offwhite' : 'text-light-text/50 dark:text-offwhite/50 hover:text-light-text dark:hover:text-offwhite'"
-              @click="view = v"
-            >
-              {{ v }}
-            </button>
-          </div>
+          <button class="p-1.5 rounded-md text-light-text/60 dark:text-offwhite/60 hover:text-light-text dark:hover:text-offwhite hover:bg-light-border dark:hover:bg-dark-border transition-colors" aria-label="Período anterior" @click="prev">
+            <ChevronLeft class="w-4 h-4" />
+          </button>
+          <span class="text-sm font-semibold text-light-text dark:text-offwhite min-w-[150px] text-center capitalize">
+            {{ currentPeriodLabel }}
+          </span>
+          <button class="p-1.5 rounded-md text-light-text/60 dark:text-offwhite/60 hover:text-light-text dark:hover:text-offwhite hover:bg-light-border dark:hover:bg-dark-border transition-colors" aria-label="Próximo período" @click="next">
+            <ChevronRight class="w-4 h-4" />
+          </button>
+        </div>
+
+        <!-- View Toggle -->
+        <div class="flex bg-light-surface dark:bg-dark-surface rounded-md border border-light-border dark:border-dark-border p-1">
+          <button
+            v-for="v in ['Dia', 'Semana', 'Mês']"
+            :key="v"
+            class="px-3 py-1 text-sm font-medium rounded-md transition-colors"
+            :class="view === v ? 'bg-primary text-white shadow-sm' : 'text-light-text/50 dark:text-offwhite/50 hover:text-light-text dark:hover:text-offwhite'"
+            @click="view = v"
+          >
+            {{ v }}
+          </button>
         </div>
       </div>
     </div>
@@ -65,68 +70,84 @@
     <div v-if="!turmasError" class="flex-1 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-lg shadow-sm overflow-hidden flex flex-col">
       
       <!-- Cabeçalho dos Dias (Semana) -->
-      <div v-if="view === 'Semana'" class="grid grid-cols-[60px_repeat(7,1fr)] border-b border-light-border dark:border-dark-border">
-        <div class="border-r border-light-border dark:border-dark-border"/> <!-- Célula Vazia pros Horários -->
-        <div 
-          v-for="day in currentWeekDays" 
-          :key="day.date" 
-          class="flex flex-col items-center justify-center py-3 border-r last:border-r-0 border-light-border dark:border-dark-border text-center"
+      <div v-if="view === 'Semana'" class="grid grid-cols-[64px_repeat(7,1fr)] border-b border-light-border dark:border-dark-border bg-light-bg/50 dark:bg-dark-bg/40">
+        <div class="border-r border-light-border dark:border-dark-border"/>
+        <div
+          v-for="day in currentWeekDays"
+          :key="day.date"
+          class="flex flex-col items-center justify-center gap-1 py-2.5 border-r last:border-r-0 border-light-border dark:border-dark-border text-center"
+          :class="isToday(day.fullDate) ? 'bg-primary/5' : ''"
         >
-          <span class="text-xs font-bold text-light-text/50 dark:text-offwhite/50 uppercase tracking-wider">{{ day.shortName }}</span>
-          <span 
-            class="text-lg font-bold mt-1 w-8 h-8 flex items-center justify-center rounded-full"
+          <span class="text-[11px] font-bold uppercase tracking-wider" :class="isToday(day.fullDate) ? 'text-primary' : 'text-light-text/50 dark:text-offwhite/50'">{{ day.shortName }}</span>
+          <span
+            class="text-base font-bold w-8 h-8 flex items-center justify-center rounded-full"
             :class="isToday(day.fullDate) ? 'bg-primary text-white' : 'text-light-text dark:text-offwhite'"
           >
             {{ day.date }}
+          </span>
+          <span v-if="aulasNoDia(day.fullDate)" class="text-[10px] font-semibold text-light-text/45 dark:text-offwhite/45">
+            {{ aulasNoDia(day.fullDate) }} aula(s)
           </span>
         </div>
       </div>
 
       <!-- Corpo da Agenda (Semana) -->
-      <div v-if="view === 'Semana'" class="flex-1 overflow-y-auto relative">
-        <div class="grid grid-cols-[60px_repeat(7,1fr)] relative min-w-[800px]">
-          
-          <!-- Linhas de Horário -->
-          <div class="col-span-full grid grid-cols-[60px_1fr] relative mt-4">
-            <div class="flex flex-col w-full absolute inset-0 pointer-events-none">
-              <div v-for="hour in hours" :key="hour" class="h-20 border-b border-light-border/50 dark:border-dark-border/50 flex w-full relative">
-                <span class="absolute -top-3 left-2 text-xs text-light-text/50 dark:text-offwhite/50 bg-light-surface dark:bg-dark-surface px-1">{{ hour }}</span>
-              </div>
-            </div>
-            
-            <!-- Colunas Verticais -->
-            <div class="col-start-2 w-full h-[1120px] grid grid-cols-7 relative">
-              <div v-for="i in 7" :key="i" class="border-r border-light-border/50 dark:border-dark-border/50 last:border-r-0 relative">
-                
-                <!-- Blocos de Agendamento -->
-                <div 
-                  v-for="apt in getAppointmentsForDayIndex(i - 1)" 
-                  :key="apt.id"
-                  class="group absolute rounded-md border p-2 text-xs cursor-pointer transition-[filter,transform,box-shadow] duration-150 flex flex-col gap-1 overflow-hidden shadow-sm hover:z-30 hover:-translate-y-px hover:brightness-110 hover:shadow-lg focus-visible:z-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                  :style="getStyleForAppointment(apt, i - 1)"
-                  :class="getBgColorClass(apt.status)"
-                  :title="`${apt.time}–${apt.endTime} · ${apt.className} · ${apt.teacherName}`"
-                  tabindex="0"
-                  @click="openAppointment(apt)"
-                  @keydown.enter="openAppointment(apt)"
-                  @keydown.space.prevent="openAppointment(apt)"
-                >
-                  <div class="flex min-w-0 items-start justify-between gap-1 font-bold text-blue-900 dark:text-blue-100">
-                    <span class="flex min-w-0 items-center gap-1 truncate">
-                      <span class="w-1.5 h-1.5 rounded-full shrink-0" :class="getDotColorClass(apt.status)"/>
-                      <span class="truncate">{{ apt.className }}</span>
-                    </span>
-                    <span class="text-[9px] bg-black/10 dark:bg-white/10 px-1 py-0.5 rounded shrink-0">{{ apt.capacity === 1 ? '1:1' : `${apt.students.length}/${apt.capacity}` }}</span>
-                  </div>
-                  <div class="truncate text-[11px] text-blue-800/80 dark:text-blue-200/80 leading-tight">
-                    {{ apt.teacherName }}
-                  </div>
-                  <div class="truncate text-[10px] font-medium text-blue-800/60 dark:text-blue-200/60 mt-auto">
-                    {{ apt.time }}–{{ apt.endTime }}
-                  </div>
-                </div>
+      <div v-if="view === 'Semana'" class="flex-1 overflow-auto">
+        <div class="grid grid-cols-[64px_repeat(7,1fr)] min-w-[860px]">
 
-              </div>
+          <!-- Coluna de horários -->
+          <div class="border-r border-light-border dark:border-dark-border">
+            <div v-for="hour in hours" :key="hour" class="h-16 relative">
+              <span class="absolute -top-2 right-2 text-[11px] font-medium tabular-nums text-light-text/40 dark:text-offwhite/40">{{ hour }}</span>
+            </div>
+          </div>
+
+          <!-- Colunas dos dias -->
+          <div
+            v-for="(day, dayIndex) in currentWeekDays"
+            :key="day.date"
+            class="relative border-r last:border-r-0 border-light-border dark:border-dark-border"
+            :class="isToday(day.fullDate) ? 'bg-primary/[0.03]' : ''"
+          >
+            <!-- Linhas de hora -->
+            <div class="absolute inset-0 pointer-events-none">
+              <div v-for="hour in hours" :key="hour" class="h-16 border-b border-light-border/40 dark:border-dark-border/40"/>
+            </div>
+
+            <!-- Blocos de aula -->
+            <div
+              v-for="apt in getAppointmentsForDayIndex(dayIndex)"
+              :key="apt.id"
+              class="group absolute z-10 rounded-lg border-l-[3px] px-2 py-1.5 text-left cursor-pointer transition-all duration-150 overflow-hidden shadow-sm hover:z-30 hover:shadow-md hover:brightness-105 focus-visible:z-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              :style="getStyleForAppointment(apt, dayIndex)"
+              :class="getBgColorClass(apt.status)"
+              :title="`${apt.time}–${apt.endTime} · ${apt.className} · ${apt.teacherName} · ${apt.roomName}`"
+              tabindex="0"
+              @click="openAppointment(apt)"
+              @keydown.enter="openAppointment(apt)"
+              @keydown.space.prevent="openAppointment(apt)"
+            >
+              <p class="truncate text-[13px] font-bold leading-tight">{{ apt.className }}</p>
+              <p class="truncate text-[11px] leading-tight opacity-75">{{ apt.teacherName }}</p>
+              <p class="truncate text-[11px] font-semibold leading-tight opacity-90 tabular-nums">
+                {{ apt.time }}–{{ apt.endTime }}
+              </p>
+              <p v-if="apt.semHorarioDefinido" class="truncate text-[10px] leading-tight opacity-60">
+                horário amplo · {{ apt.roomName }}
+              </p>
+              <p v-else class="truncate text-[10px] leading-tight opacity-60">{{ apt.roomName }}</p>
+              <span class="mt-1 inline-flex items-center gap-1 rounded bg-black/10 dark:bg-white/10 px-1.5 py-0.5 text-[10px] font-bold">
+                <Users class="w-3 h-3" />
+                {{ apt.students.length }}/{{ apt.capacity }}
+              </span>
+            </div>
+
+            <!-- Estado vazio do dia -->
+            <div
+              v-if="!getAppointmentsForDayIndex(dayIndex).length"
+              class="absolute inset-x-2 top-1/2 -translate-y-1/2 text-center"
+            >
+              <p class="text-[11px] font-medium text-light-text/25 dark:text-offwhite/25">Sem aulas</p>
             </div>
           </div>
 
@@ -134,22 +155,58 @@
       </div>
 
       <div v-else-if="view === 'Dia'" class="flex-1 overflow-y-auto p-4 sm:p-6">
-        <p class="mb-1 text-lg font-bold capitalize">{{ currentDayLabel }}</p>
-        <p class="mb-4 text-sm opacity-60">{{ dayAppointments.length }} aula(s)</p>
+        <div class="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+          <p class="text-lg font-bold capitalize">{{ currentDayLabel }}</p>
+          <p class="text-sm text-light-text/60 dark:text-offwhite/60">
+            {{ dayAppointments.length }} aula(s) · {{ dayAlunosTotal }} aluno(s)
+          </p>
+        </div>
         <div class="grid gap-3">
-          <button v-for="apt in dayAppointments" :key="apt.id" class="rounded-lg border border-blue-500/30 bg-blue-500/10 p-4 text-left hover:brightness-110" @click="openAppointment(apt)">
-            <div class="flex justify-between gap-3"><div><p class="font-bold">{{ apt.time }} · {{ apt.className }}</p><p class="text-sm opacity-70">{{ apt.teacherName }} · {{ apt.roomName }}</p></div><span class="text-sm font-semibold text-primary">{{ apt.students.length }}/{{ apt.capacity }} alunos</span></div>
+          <button
+            v-for="apt in dayAppointments"
+            :key="apt.id"
+            class="flex items-center gap-4 rounded-lg border-l-4 p-4 text-left transition-all hover:shadow-md hover:brightness-105"
+            :class="getBgColorClass(apt.status)"
+            @click="openAppointment(apt)"
+          >
+            <div class="w-20 shrink-0 text-center">
+              <p class="text-sm font-bold tabular-nums">{{ apt.time }}</p>
+              <p class="text-[11px] opacity-60 tabular-nums">{{ apt.endTime }}</p>
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="truncate font-bold">{{ apt.className }}</p>
+              <p class="truncate text-sm opacity-75">{{ apt.teacherName }} · {{ apt.roomName }}</p>
+              <p v-if="apt.semHorarioDefinido" class="text-[11px] opacity-60">Horário amplo (turma sem faixa definida)</p>
+            </div>
+            <span class="shrink-0 rounded-full bg-black/10 dark:bg-white/10 px-3 py-1 text-xs font-bold">
+              {{ apt.students.length }}/{{ apt.capacity }} alunos
+            </span>
           </button>
-          <p v-if="!dayAppointments.length" class="rounded-lg border border-dashed p-12 text-center opacity-50">Nenhuma aula programada para este dia.</p>
+          <div v-if="!dayAppointments.length" class="rounded-lg border border-dashed border-light-border dark:border-dark-border p-12 text-center">
+            <p class="text-sm font-medium text-light-text/50 dark:text-offwhite/50">Nenhuma aula programada para este dia.</p>
+          </div>
         </div>
       </div>
       <div v-else class="flex-1 overflow-auto p-4">
         <div class="grid min-w-[760px] grid-cols-7 border-l border-t border-light-border dark:border-dark-border">
-          <div v-for="name in ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom']" :key="name" class="border-b border-r p-2 text-center text-xs font-bold">{{ name }}</div>
-          <div v-for="cell in monthCells" :key="cell.key" class="min-h-28 border-b border-r p-2" :class="cell.inMonth ? '' : 'opacity-40'">
-            <span class="inline-flex h-7 w-7 items-center justify-center rounded-full text-sm" :class="cell.isToday ? 'bg-primary text-white font-bold' : ''">{{ cell.day }}</span>
-            <button v-for="apt in cell.appointments.slice(0,3)" :key="apt.id" class="mt-1 block w-full truncate rounded bg-blue-500/10 px-2 py-1 text-left text-xs" @click="openAppointment(apt)">{{ apt.time }} {{ apt.className }}</button>
-            <p v-if="cell.appointments.length > 3" class="text-[11px] opacity-50">+{{ cell.appointments.length - 3 }} aula(s)</p>
+          <div v-for="name in ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom']" :key="name" class="border-b border-r border-light-border dark:border-dark-border bg-light-bg/50 dark:bg-dark-bg/40 p-2 text-center text-[11px] font-bold uppercase tracking-wider text-light-text/60 dark:text-offwhite/60">{{ name }}</div>
+          <div
+            v-for="cell in monthCells"
+            :key="cell.key"
+            class="min-h-28 border-b border-r border-light-border dark:border-dark-border p-2"
+            :class="[cell.inMonth ? '' : 'opacity-40', cell.isToday ? 'bg-primary/5' : '']"
+          >
+            <span class="inline-flex h-7 w-7 items-center justify-center rounded-full text-sm" :class="cell.isToday ? 'bg-primary text-white font-bold' : 'font-medium'">{{ cell.day }}</span>
+            <button
+              v-for="apt in cell.appointments.slice(0,3)"
+              :key="apt.id"
+              class="mt-1 block w-full truncate rounded border-l-2 px-2 py-1 text-left text-[11px] font-medium transition-colors hover:brightness-110"
+              :class="getBgColorClass(apt.status)"
+              @click="openAppointment(apt)"
+            >
+              {{ apt.time }} {{ apt.className }}
+            </button>
+            <p v-if="cell.appointments.length > 3" class="mt-1 text-[11px] font-medium opacity-50">+{{ cell.appointments.length - 3 }} aula(s)</p>
           </div>
         </div>
       </div>
@@ -168,8 +225,16 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from '@lucide/vue'
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Users } from '@lucide/vue'
 import AgendaDetailModal from '~/components/modals/AgendaDetailModal.vue'
+import {
+  dataDaAulaNaSemana,
+  ehHorarioAmplo,
+  formatarDuracao,
+  minutesFromTime,
+  toCivilDate,
+  turmaVisivelNaData
+} from '~/utils/agendaSchedule'
 
 const supabase = useSupabaseClient()
 
@@ -241,27 +306,30 @@ watch(rawTurmas, (turmas) => {
 }, { immediate: true })
 
 const appointments = computed(() => {
+  const todayCivil = toCivilDate(new Date())
+
   return (rawTurmas.value || []).map((t: any) => {
     const startH = t.horario_inicio ? t.horario_inicio.substring(0, 5) : '10:00'
     const endH = t.horario_fim ? t.horario_fim.substring(0, 5) : '11:00'
 
-    // Duração em horas
-    const [h1, m1] = startH.split(':').map(Number)
-    const [h2, m2] = endH.split(':').map(Number)
-    const durationHours = Math.max(0.5, ((h2 * 60 + m2) - (h1 * 60 + m1)) / 60)
+    const durationMinutes = Math.max(30, minutesFromTime(endH) - minutesFromTime(startH))
+    const durationHours = durationMinutes / 60
 
-    // Ajuste dia_semana do Postgres (0 = Dom, 1 = Seg, ..., 6 = Sáb)
-    // para o índice da grade (0 = Seg, 1 = Ter, ..., 5 = Sáb, 6 = Dom)
+    // dia_semana do Postgres (0 = Dom … 6 = Sáb) → índice da grade (0 = Seg … 6 = Dom)
     const dateOffset = t.dia_semana === 0 ? 6 : t.dia_semana - 1
+    const dataDaAula = dataDaAulaNaSemana(currentWeekStart.value, t.dia_semana)
 
-    const today = new Date().toISOString().slice(0, 10)
-    const matriculados = (t.matriculas_turma || []).filter((m: any) => !m.data_fim).map((m: any) => {
+    // A turma só aparece a partir da matrícula mais antiga vigente: impede o
+    // aluno cadastrado numa quinta de surgir na aula de quarta da semana
+    // anterior. Regra testada em tests/agendaSchedule.test.ts.
+    const vinculosAtivos = (t.matriculas_turma || []).filter((m: any) => !m.data_fim)
+    const visivel = turmaVisivelNaData(dataDaAula, t.matriculas_turma || [], todayCivil)
+
+    const matriculados = vinculosAtivos.map((m: any) => {
       const contracts = [...(m.alunos?.contratos || [])].sort((a: any, b: any) => String(b.criado_em).localeCompare(String(a.criado_em)))
       const pendingPayments = (m.alunos?.cobrancas || []).filter((c: any) =>
-        c.status === 'atrasada' || (c.status === 'pendente' && c.vencimento < today)
+        c.status === 'atrasada' || (c.status === 'pendente' && c.vencimento < todayCivil)
       ).length
-      // O bucket é privado: o caminho do Storage não serve em <img>. A URL
-      // assinada é resolvida sob demanda (signedPhotos) e aplicada por reatividade.
       const photoPath = contracts.find((c: any) => c.foto_assinatura_url)?.foto_assinatura_url || ''
       return {
         id: m.alunos?.id || m.id,
@@ -282,10 +350,15 @@ const appointments = computed(() => {
       roomName: t.salas?.nome || 'Sala',
       capacity: t.capacidade_maxima || 5,
       dateOffset,
+      dataDaAula,
+      visivel,
+      // Faixa de 10h (08:00–18:00) desenha compacta em vez de ocupar a tela.
+      semHorarioDefinido: ehHorarioAmplo(startH, endH),
       time: startH,
       endTime: endH,
-      duration: `${durationHours}h`,
+      duration: formatarDuracao(startH, endH),
       durationHours,
+      durationMinutes,
       status: 'agendado',
       students: matriculados
     }
@@ -293,14 +366,41 @@ const appointments = computed(() => {
 })
 
 const appointmentsTodayCount = computed(() => {
-  // Simplificação: no mock real, filtraríamos por 'today'
-  const today = new Date().getDay()
-  const gridIndex = today === 0 ? 6 : today - 1
-  return appointments.value.filter(a => a.dateOffset === gridIndex).length
+  const hoje = toCivilDate(new Date())
+  return appointments.value.filter(a => a.visivel && a.dataDaAula === hoje).length
+})
+
+const hojeTemAula = computed(() => appointmentsTodayCount.value > 0)
+
+const totalAlunosHoje = computed(() => {
+  const hoje = toCivilDate(new Date())
+  return appointments.value
+    .filter(a => a.visivel && a.dataDaAula === hoje)
+    .reduce((soma, a) => soma + a.students.length, 0)
+})
+
+// Próxima aula a partir de hoje (para o cabeçalho quando não há aula hoje).
+const proximaAulaTexto = computed(() => {
+  const hoje = toCivilDate(new Date())
+  const futuras = appointments.value
+    .filter(a => a.visivel && a.dataDaAula > hoje)
+    .sort((a, b) => a.dataDaAula.localeCompare(b.dataDaAula) || a.time.localeCompare(b.time))
+  const proxima = futuras[0]
+  if (!proxima) return ''
+  const [ano, mes, dia] = proxima.dataDaAula.split('-').map(Number)
+  const data = new Date(ano, mes - 1, dia)
+  const rotulo = data.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit' })
+  return `${rotulo} às ${proxima.time}`
 })
 
 const gridIndexForDate = (date: Date) => date.getDay() === 0 ? 6 : date.getDay() - 1
-const dayAppointments = computed(() => appointments.value.filter(a => a.dateOffset === gridIndexForDate(currentDate.value)).sort((a, b) => a.time.localeCompare(b.time)))
+const dayAlunosTotal = computed(() => dayAppointments.value.reduce((s, a) => s + a.students.length, 0))
+const dayAppointments = computed(() => {
+  const civil = toCivilDate(currentDate.value)
+  return appointments.value
+    .filter(a => a.visivel && a.dataDaAula === civil)
+    .sort((a, b) => a.time.localeCompare(b.time))
+})
 const currentDayLabel = computed(() => currentDate.value.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }))
 const monthCells = computed(() => {
   const year = currentDate.value.getFullYear(), month = currentDate.value.getMonth()
@@ -308,7 +408,14 @@ const monthCells = computed(() => {
   start.setDate(first.getDate() - gridIndexForDate(first))
   return Array.from({ length: 42 }, (_, index) => {
     const date = new Date(start); date.setDate(start.getDate() + index)
-    return { key: date.toISOString().slice(0, 10), day: date.getDate(), inMonth: date.getMonth() === month, isToday: isToday(date), appointments: appointments.value.filter(a => a.dateOffset === gridIndexForDate(date)) }
+    const civil = toCivilDate(date)
+    return {
+      key: civil,
+      day: date.getDate(),
+      inMonth: date.getMonth() === month,
+      isToday: isToday(date),
+      appointments: appointments.value.filter(a => a.visivel && a.dataDaAula === civil)
+    }
   })
 })
 
@@ -382,62 +489,50 @@ const goToToday = () => {
 
 // Helpers para Grade
 const getAppointmentsForDayIndex = (index: number) => {
-  // No mundo real, faríamos um parse da data do agendamento para ver se cai neste dia.
-  // Como estamos com mock, vamos usar o dateOffset (0 = seg, 6 = dom).
-  return appointments.value.filter(a => a.dateOffset === index)
+  return appointments.value.filter(a => a.visivel && a.dateOffset === index)
 }
 
-const minutesFromTime = (time: string) => {
-  const [hour = 0, minute = 0] = time.split(':').map(Number)
-  return hour * 60 + minute
+const aulasNoDia = (date: Date) => {
+  const civil = toCivilDate(date)
+  return appointments.value.filter(a => a.visivel && a.dataDaAula === civil).length
 }
+
+const ROW_HEIGHT = 64 // h-16 do Tailwind: 1 hora = 64px
+const START_HOUR = 8
 
 const getStyleForAppointment = (apt: any, dayIndex: number) => {
-  const [h, m] = apt.time.split(':').map(Number)
-  const startHour = 8 // nosso calendário começa às 08:00
-  const rowHeight = 80 // 5rem = 80px (h-20 do tailwind)
-  
-  const offsetHours = h - startHour + (m / 60)
-  const top = offsetHours * rowHeight
-  
-  const height = apt.durationHours * rowHeight
-
-  // Eventos que disputam o mesmo intervalo são divididos em colunas.
   const start = minutesFromTime(apt.time)
   const end = minutesFromTime(apt.endTime)
+
+  // Turma com horário amplo (ex.: 08:00–18:00) não representa uma aula de 10h:
+  // desenha um bloco compacto no início da faixa, com o rótulo "horário amplo".
+  const alturaMinutos = apt.semHorarioDefinido ? 60 : apt.durationMinutes
+  const top = ((start - START_HOUR * 60) / 60) * ROW_HEIGHT
+  const height = (alturaMinutos / 60) * ROW_HEIGHT
+
+  // Aulas que disputam o mesmo intervalo dividem a largura da coluna.
   const simultaneous = getAppointmentsForDayIndex(dayIndex)
     .filter(item => minutesFromTime(item.time) < end && minutesFromTime(item.endTime) > start)
     .sort((a, b) => a.time.localeCompare(b.time) || String(a.id).localeCompare(String(b.id)))
   const column = Math.max(0, simultaneous.findIndex(item => item.id === apt.id))
   const columns = Math.max(1, simultaneous.length)
-  const gap = 3
-  
+  const gap = 2
+
   return {
-    top: `${top}px`,
-    height: `${Math.max(height, 44)}px`,
+    top: `${Math.max(0, top)}px`,
+    height: `${Math.max(height, 46)}px`,
     left: `calc(${(column / columns) * 100}% + ${gap}px)`,
     width: `calc(${100 / columns}% - ${gap * 2}px)`
   }
 }
 
 const getBgColorClass = (status: string) => {
-  // Fundo super clarinho e azulado (estilo Google Calendar / Print)
   switch (status) {
-    case 'concluido': return 'bg-green-500/10 dark:bg-green-500/20 border-green-500/30'
-    case 'cancelado': return 'bg-red-500/10 dark:bg-red-500/20 border-red-500/30'
-    case 'faltou': return 'bg-orange-500/10 dark:bg-orange-500/20 border-orange-500/30'
-    case 'agendado': 
-    default: return 'bg-blue-500/10 dark:bg-blue-500/20 border-blue-500/30'
-  }
-}
-
-const getDotColorClass = (status: string) => {
-  switch (status) {
-    case 'concluido': return 'bg-green-500'
-    case 'cancelado': return 'bg-red-500'
-    case 'faltou': return 'bg-orange-500'
-    case 'agendado': 
-    default: return 'bg-blue-500'
+    case 'concluido': return 'bg-green-500/15 dark:bg-green-500/20 border-green-500 text-green-900 dark:text-green-100'
+    case 'cancelado': return 'bg-red-500/15 dark:bg-red-500/20 border-red-500 text-red-900 dark:text-red-100'
+    case 'faltou': return 'bg-orange-500/15 dark:bg-orange-500/20 border-orange-500 text-orange-900 dark:text-orange-100'
+    case 'agendado':
+    default: return 'bg-blue-500/15 dark:bg-blue-500/20 border-blue-500 text-blue-900 dark:text-blue-100'
   }
 }
 
